@@ -1,0 +1,19 @@
+{
+  "name": "pagevis",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "test",
+    "start": "node server.js"
+  },
+  "author": "clarityacuity",
+  "license": "ISC",
+  "dependencies": {
+    "cron": "^1.1.1",
+    "express": "^4.14.0",
+    "fbgraph": "^1.3.0",
+    "mongodb": "^2.2.16",
+    "mongoose": "^4.7.7"
+  }
+}

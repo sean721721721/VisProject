@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  	<head>
+    	<title>FB pagedata</title>
+    	<meta charset="utf-8">
+
+    	<!--references of css style-->
+	    <link href="http://getbootstrap.com/2.3.2/assets/css/bootstrap.css" rel="stylesheet" type="text/css" />
+	    <link href="http://getbootstrap.com/2.3.2/assets/css/bootstrap-responsive.css" rel="stylesheet" type="text/css" />
+	    <link href="http://calendarview.org/releases/1.2/stylesheets/calendarview.css" rel="stylesheet" type="text/css" />
+
+	    <!--references if some js template-->
+	    <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap.js"></script>
+	    <script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7/prototype.js"></script>
+	    <script src="http://calendarview.org/releases/1.2/javascripts/calendarview.js"></script>
+	    <!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
+
+	    <style type="text/css">
+	    </style>
+	</head>
+
+  	<body>
+    	<div class="navbar navbar-static-top navbar-inverse">
+      		<div class="navbar-inner" align="center">
+	      		<button class="btn btn-link btn-inverse offset1" id="user-info" class="muted"></button>
+	      		<button type="button" class="btn btn-inverse" id="fb-auth"></button>
+            <button type="button" class="btn btn-inverse" onclick="sendTokenToServer()">Submit</button>
+      		</div>
+    	</div>
+    	<div id="fb-root"></div>
+    	<script>
+        var button;
+        var userInfo;
+        var ACCESS_TOKEN;
+
+        window.fbAsyncInit = function()
+        {
+             FB.init({ appId: '776254465843486',//'209749319230763', //change the appId to your appId
+                status: true,
+                cookie: true,
+                xfbml: true,
+                oauth: true});
+
+
+           function updateButton(response)
+           {
+                button       =   document.getElementById('fb-auth');
+                userInfo     =   document.getElementById('user-info');
+
+                if (response.authResponse)
+                {
+                    //user is already logged in and connected
+                    FB.api('/me', function(info) {
+                        login(response, info);
+                    });
+
+                    button.onclick = function() {
+                        FB.logout(function(response) {
+                            logout(response);
+                        });
+                    };
+                }
+                else
+                {
+                    //user is not connected to your app or logged out
+                    button.innerHTML = '<i class="icon-user icon-white"></i> '+'Log in';
+                    button.onclick = function()
+                    {
+                        FB.login(function(response) {
+                            if (response.authResponse) {
+                                FB.api('/me', function(info) {
+                                    login(response, info);
+                                });
+                            }
+                        }, {scope:'email,user_birthday,status_update,publish_stream,user_about_me,export_stream,read_stream,user_friends'});
+                    }
+                }
+            }
+
+            // run once with current status and whenever the status changes
+            FB.getLoginStatus(updateButton);
+            FB.Event.subscribe('auth.statusChange', updateButton);
+        };
+
+        (function() {
+            var e = document.createElement('script'); e.async = true;
+            e.src = document.location.protocol
+                + '//connect.facebook.net/en_US/all.js';
+            document.getElementById('fb-root').appendChild(e);
+        }());
+
+
+        function login(response, info)
+        {
+            if (response.authResponse)
+            {
+                var accessToken = response.authResponse.accessToken;
+
+                userInfo.innerHTML ='<img src="https://graph.facebook.com/' + info.id + '/picture" height="24" width="24">  ' + info.name;
+                                   //+ "<br /> Your Access Token: " + accessToken;
+               //userInfo.innerHTML ='<img src="https://graph.facebook.com/' + info.id + '/picture" height="24" width="24">  ';
+                button.innerHTML = '<i class="icon-user icon-white"></i> '+'Log out';
+                //document.getElementById('other').style.display = "block";
+
+                //sendTokenToServer(accessToken);
+                ACCESS_TOKEN = accessToken;
+            }
+        }
+
+        function logout(response)
+        {
+            userInfo.innerHTML                             =   "";
+            document.getElementById('debug').innerHTML     =   "";
+        }
+
+        function sendTokenToServer()
+        {
+            console.log(ACCESS_TOKEN);
+            var oReq = new XMLHttpRequest();
+            //oReq.onload = reqListener;
+            var qurl = "crawler" + "?token=" + ACCESS_TOKEN;
+
+            //console.log(qurl);
+            oReq.open("get", qurl, true);
+            oReq.send();
+        }
+      </script>
+  		<!-- <body onload="checkCookie()"> -->
+    </body>
+</html>
