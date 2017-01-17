@@ -10,8 +10,9 @@ fetch(myRequest)
         //console.log(json);
         var userlist = [];
         make_userlist(json, userlist);
-        console.log(userlist.length);
-        make_table(json, userlist);
+        console.log(userlist);
+        var table = make_table(json, userlist);
+        render_table(table);
     })
     .catch(function (err) {});
 
@@ -76,23 +77,45 @@ function make_userlist(json, userlist) {
 }
 
 function make_table(json, userlist) {
-    var table = document.getElementById("table");
-    console.log("do");
-    table.innerHTML = "";
-    table.innerHTML += "<tr id = table head>" +
-        "<th>" + " " + "</th>";
-    for (var i = 0, l = userlist.length; i < l; i++) {
-        var user = userlist[i];
-        // Create an empty <tr> element and add it to the 1st position of the table
-        var row = table.insertRow(i);
-        // Insert new cells (<td> elements) at the position of the "new" <tr> element
-        var cell = row.insertCell(j);
-        // Add some text to the new cells
-        cell.innerHTML = "NEW CELL";
-        //console.log(user.name);
-        table.innerHTML += "<th>" + user.name + "</th>";
+    var table = [];
+    //table head
+    var row0 = ["posts/users"];
+    for (var p = 0, pl = json.data.length; p < pl; p++) {
+        var post = json.data[p];
+        row0.push(post.id);
     }
+    table.push(row0);
+    for (var n = 0, ul = userlist.length; n < ul; n++) {
+        var row = [];
+        var username = userlist[n].name;
+        row.push(username);
+        for (var p = 0, pl = json.data.length; p < pl; p++) {
+            var post = json.data[p];
+            var count = 0;
+            for (var k = 0, al = userlist[n].post.length; k < al; k++) {
+                var action = userlist[n].post[k];
+                if (action == post.id) {
+                    count += 1;
+                }
+            }
+            row.push(count);
+        }
+        table.push(row);
+    }
+    console.log(table);
+    return table;
+}
 
-    table.innerHTML += "</tr>";
-    //console.log(table.innerHTML);
+function render_table(table) {
+    var tbody = document.getElementById("table");
+    //console.log("do");
+    for (var i = 0, il = table.length; i < il; i++) {
+        var row = tbody.insertRow(i);
+        console.log("i");
+        for (var j = 0, jl = table[i].length; j < jl; j++) {
+            var cell = row.insertCell(j);
+            cell.innerHTML = table[i][j];
+        }
+    }
+    console.log("gg");
 }
