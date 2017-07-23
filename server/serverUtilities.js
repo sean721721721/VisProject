@@ -1,3 +1,4 @@
+/* eslint-disable */
 var graph = require('fbgraph'), // npm install fbgraph
 
 	fs = require('fs'), // File System
@@ -30,12 +31,19 @@ var getdateformat = function getdateformat() {
 	return "_" + curr_month + "-" + curr_date + "-(" + curr_hour + ")-" + curr_year;
 };
 
-var dirpath = ""; // G:\\Dropbox\\sharevis-data\\
+var dirpath = "/media/villager/B65AC6D95AC69611/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
+	dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/";
 
 
 var savejson = function savejson(name, jsondata) {
 	//fs.writeFile(name +".json", JSON.stringify(jsondata));
 	fs.writeFile(dirpath + name + getdateformat() + ".json", JSON.stringify(jsondata));
+	fs.writeFile(dirpathAfter20141202 + name + getdateformat() + ".json", JSON.stringify(jsondata));
+};
+
+var savejson_offline = function savejson(name, jsondata) {
+	//fs.writeFile(name +".json", JSON.stringify(jsondata));
+	fs.writeFile("./vaidata/" + name + getdateformat() + ".json", JSON.stringify(jsondata));
 };
 
 var updatejson = function updatejson(name, jsondata) {
@@ -75,6 +83,15 @@ var createfolder = function createfolder(id) {
 		fs.mkdirSync(dirpath);
 		console.log("Not find folder '" + id + getdateformat() + "', create new folder.");
 	}
+
+	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
+	if (fs.existsSync("/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/")) {
+		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+	} else {
+		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+		fs.mkdirSync(dirpathAfter20141202);
+		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
+	}
 };
 
 var createfolder_sharevis = function createfolder_sharevis(id) {
@@ -103,6 +120,22 @@ var createfolder_sharevis = function createfolder_sharevis(id) {
 
 		fs.mkdirSync(dirpath + "post/");
 	}
+
+	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
+	if (fs.existsSync("/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/")) {
+		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+	} else {
+		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+		fs.mkdirSync(dirpathAfter20141202);
+		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
+	}
+
+	if (fs.existsSync("/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/" + "post/")) {
+
+	} else {
+		fs.mkdirSync(dirpathAfter20141202 + "post/");
+		console.log("Not find folder'" + id + getdateformat() + "post/" + "', create new folder.");
+	}
 };
 
 var save_photo_id = function save_photo_id(id) {
@@ -121,7 +154,7 @@ var save_photo_id = function save_photo_id(id) {
 var fill_zero_field = function fill_zero_field(res_posts) {
 	if (!res_posts.version) {
 		res_posts.version = {
-			"api version": 2.8
+			"api version": 2.6
 		};
 	}
 	for (var i = 0; i < res_posts.data.length; i++) {
@@ -163,7 +196,7 @@ var getpicture = function getpicture(userid, res_posts) {
 		}
 	});
 
-	console.log(pictureurl);
+	//console.log(pictureurl);
 	return pictureurl;
 };
 
@@ -231,11 +264,10 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 
 		var recurpaging = function recurpaging(res, depth, MAX_DEPTH, callback) {
 			if (depth >= MAX_DEPTH) {
-				console.log("resursive paging: " + MAX_DEPTH);
-				console.log(field_query + ".length: " + data_query.data.length);
+				//console.log("resursive paging: " + MAX_DEPTH);
+				//console.log(field_query + ".length: " + data_query.data.length);
 				//savejson("data_query", data_query);
 				callback(null, data_query);
-				return;
 			}
 
 			if (res.data && res.paging && res.paging.next) {
@@ -246,10 +278,10 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 					// page depth
 					depth++;
 					//console.log(res);
-					console.log("page " + depth + " " + field_query + ".length: " + res.data.length);
+					// console.log("page " + depth + " " + field_query + ".length: " + res.data.length);
 
 					//data_query.data = data_query.data.concat(res.data);
-					data_query.data.push.apply(data_query.data, res.data);
+					Array.prototype.push.apply(data_query.data, res.data);
 
 					//console.log("data_query: " + data_query.data );
 					//savejson("data_query", data_query);
@@ -259,8 +291,8 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 					}, 1);
 				});
 			} else {
-				console.log("[resursive paging: end --------------]");
-				console.log(field_query + ".length: " + data_query.data.length);
+				//console.log("[resursive paging: end --------------]");
+				//console.log(field_query + ".length: " + data_query.data.length);
 				//savejson("data_query", data_query);
 				callback(null, data_query);
 			}
@@ -274,13 +306,120 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 		};
 		data_query.data = res.data; //data_query.data.concat(res.data);
 		data_query.postid = postid;
-		console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
+		//console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
 		var id = postid;
 
 		recurpaging(res, 1, MAX_DEPTH, callback);
 		return;
 	});
 };
+
+//format json
+var format_json = function format_json(inputdata, outputjson) {
+	var data = [];
+	// console.log(inputdata.data)
+	var sub = inputdata.data;
+	for (var i = 0; i < sub.length; i++) {
+		var reactions = {
+			"like": sub[i].reaction_detail.LIKE,
+			"love": sub[i].reaction_detail.LOVE,
+			"haha": sub[i].reaction_detail.HAHA,
+			"wow": sub[i].reaction_detail.WOW,
+			"angry": sub[i].reaction_detail.ANGRY,
+			"sad": sub[i].reaction_detail.SAD,
+			"thankful": sub[i].reaction_detail.TNANKFUL
+		};
+		var context = [];
+		if (sub[i].comments) {
+			var sub1 = sub[i].comments.data
+			// console.log(sub1);
+			for (var j = 0; j < sub1.length; j++) {
+				// console.log(sub1[j]);
+				if (sub1[j].comments) {
+					// console.log("sub+" + j);
+					var sub2 = sub1[j].comments.data;
+					// console.log(sub2);
+					var reply = [];
+					for (var k = 0; k < sub2.length; k++) {
+						// console.log("l="+sub2.length);
+						reply.push({
+							"created_time": sub2[k].created_time,
+							"from": sub2[k].from,
+							"message": sub2[k].message,
+							"like_count": sub2[k].like_count,
+							"id": sub2[k].id
+						});
+					}
+					// console.log(reply)
+					context.push({
+						"from": sub1[j].from,
+						"like_count": sub1[j].like_count,
+						"message": sub1[j].message,
+						"comments": reply,
+						"comment_count": sub1[j].comment_count,
+						"created_time": sub1[j].created_time,
+						"id": sub1[j].id
+					})
+					// console.log(context)
+				} else {
+					context.push({
+						"from": sub1[j].from,
+						"like_count": sub1[j].like_count,
+						"message": sub1[j].message,
+						"comment_count": sub1[j].comment_count,
+						"created_time": sub1[j].created_time,
+						"id": sub1[j].id
+					})
+				}
+				// console.log("sub0")
+			}
+		}
+
+
+		var comments = {
+			"context": context,
+			"summary": sub[i].comments.summary.total_count
+		};
+		if (sub[i].attachments) {
+			var attachments = {
+				"description": sub[i].attachments.data[0].description,
+				"url": sub[i].attachments.data[0].url,
+				"title": sub[i].attachments.data[0].title,
+				"type": sub[i].attachments.data[0].type
+			}
+		} else {
+			var attachments = null;
+		}
+		data.push({
+			"id": sub[i].id,
+			"created_time": sub[i].created_time,
+			"type": sub[i].type,
+			"message": sub[i].message,
+			"from": sub[i].from,
+			"shares": sub[i].shares.count,
+			"likes": reactions.like,
+			"reactions": reactions,
+			"comments": comments,
+			"attachments": attachments
+		});
+	}
+	inputdata.data = data;
+	outputjson = {
+		"data": data
+	};
+	return inputdata;
+}
+
+var add_reactionuser = function add_reactionuser(data, userlist) {
+	for (var i = 0; i < data.data.length; i++) {
+		for (var j = 0; j < userlist.length; j++) {
+			if (userlist[j].postid === data.data[i].id) {
+				data.data[i].reactions["list"] = userlist[j].data;
+			}
+		}
+	}
+	return data;
+}
 /*
 		//batch
 					var batch_recursive = function get_recursive(postid, field_query, subfield_query, MAX_DEPTH, callback) {
@@ -301,7 +440,6 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 								callback(err, res);
 								return;
 							}
-
 							var recurpaging = function recurpaging(res, depth, MAX_DEPTH, callback) {
 								if (depth >= MAX_DEPTH) {
 									console.log("resursive paging: " + MAX_DEPTH);
@@ -310,7 +448,6 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 									callback(null, data_query);
 									return;
 								}
-
 								if (res.data && res.paging && res.paging.next) {
 									graph.batch(res.paging.next, function(err, res) {
 										if (err) {
@@ -320,13 +457,10 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 										depth++;
 										//console.log(res);
 										console.log("page " + depth + " " + field_query + ".length: " + res.data.length);
-
 										//data_query.data = data_query.data.concat(res.data);
 										data_query.data.push.apply(data_query.data, res.data);
-
 										//console.log("data_query: " + data_query.data );
 										//savejson("data_query", data_query);
-
 										setTimeout(function() {
 											recurpaging(res, depth, MAX_DEPTH, callback);
 										}, 1);
@@ -338,7 +472,6 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 									callback(null, data_query);
 								}
 							};
-
 							//console.log(res);
 							//console.log(res.data);
 							//console.log("res.data.length: " + res.data.length );
@@ -347,7 +480,6 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 							};
 							data_query.data = res.data; //data_query.data.concat(res.data);
 							console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
-
 							recurpaging(res, 1, MAX_DEPTH, callback);
 							return;
 						});
@@ -400,5 +532,7 @@ exports.fill_zero_field = fill_zero_field;
 exports.getpicture = getpicture;
 exports.saveinformation = saveinformation;
 exports.get_recursive = get_recursive;
+exports.format_json = format_json;
+exports.add_reactionuser = add_reactionuser;
 exports.insert2postdb = insert2postdb;
 exports.add_query_time = add_query_time;

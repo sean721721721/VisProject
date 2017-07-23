@@ -1,11 +1,22 @@
+/* eslint-disable */
 var myRequest = new Request('table', {
     method: 'get'
 });
+
+// function processStatus(response) {
+//     // 狀態 "0" 是處理本地檔案 (例如Cordova/Phonegap等等)
+//     if (response.status === 200 || response.status === 0) {
+//         return Promise.resolve(response)
+//     } else {
+//         return Promise.reject(new Error(response.statusText))
+//     }
+// }
 
 fetch(myRequest)
     .then(function (response) {
         return response.json();
     })
+    // .then(processStatus)
     .then(function (json) {
         //console.log(json);
         var userlist = [];
@@ -111,11 +122,11 @@ function render_table(table) {
     //console.log("do");
     for (var i = 0, il = table.length; i < il; i++) {
         var row = tbody.insertRow(i);
-        console.log("i");
+        //console.log("i");
         for (var j = 0, jl = table[i].length; j < jl; j++) {
             var cell = row.insertCell(j);
             cell.innerHTML = table[i][j];
         }
     }
-    console.log("gg");
+    //console.log("gg");
 }

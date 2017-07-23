@@ -1,0 +1,13 @@
+{
+    "extends": "google",
+    "env": {
+        "browser": true,
+        "node": true,
+        "es6": true
+    },
+    "parser": "esprima",
+    "rules": {
+        "semi": "error",
+        "max-len": "off"
+    }
+}

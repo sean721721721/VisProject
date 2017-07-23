@@ -1,0 +1,27 @@
+body {
+    background: #f0f8ff;
+    text-align: center;
+}
+
+h1 {
+    font-family: "Times New Roman", Times, serif;
+}
+
+table {
+    width: 100%;
+}
+
+table,
+th,
+td {
+    border: 1px solid black;
+}
+
+th,
+td {
+    text-align: center;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2
+}

@@ -1,3 +1,4 @@
+/* eslint-disable */
 var fs = require('fs');
 
 var callback = function callback(req, res) {

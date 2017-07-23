@@ -1,11 +1,753 @@
-<!DOCTYPE <html>
-    <head>
-        <title>FB Page Vis</title>
-        <meta name="" content="">
-        <link rel="stylesheet" type="text/css" href="">
-        <script></script>
-    </head>
-    <body>
-        <h1>hi</h1>
-    </body>
-</html>>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>FB pagedata</title>
+  <meta charset="utf-8">
+
+  <!--references of css style-->
+  <link href="http://w3resource.com/twitter-bootstrap/twitter-bootstrap-v2/docs/assets/css/bootstrap.css" rel="stylesheet">
+  <link href="http://getbootstrap.com/2.3.2/assets/css/bootstrap.css" rel="stylesheet" type="text/css" />
+  <link href="http://getbootstrap.com/2.3.2/assets/css/bootstrap-responsive.css" rel="stylesheet" type="text/css" />
+  <link href="http://calendarview.org/releases/1.2/stylesheets/calendarview.css" rel="stylesheet" type="text/css" />
+
+  <!--references if some js template-->
+  <script src="http://code.jquery.com/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7/prototype.js"></script>
+
+  <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap.js"></script>
+  <script src="http://calendarview.org/releases/1.2/javascripts/calendarview.js"></script>
+  <script type="text/javascript" src="http://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+  <!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
+
+  <style type="text/css">
+    .popover {
+      max-width: 500px;
+      width: auto;
+    }
+    
+    .link {
+      fill: none;
+      stroke: #666;
+      stroke-width: 1.5px;
+    }
+    /*
+  #licensing
+  {
+  fill: green;
+}
+*/
+    
+    .link.licensing {
+      stroke: green;
+    }
+    
+    .link.resolved {
+      stroke-dasharray: 0, 2 1;
+    }
+    
+    .link.sharedposts {
+      stroke: green;
+    }
+    
+    .link.sharedposts_tm {}
+    
+    .link.share_via {
+      stroke: red;
+      stroke-width: 2px;
+    }
+    
+    .link.post_content {
+      stroke-dasharray: 0, 2 1;
+    }
+    /*
+circle
+{
+fill: #ccc;
+stroke: #333;
+stroke-width: 1.5px;
+}
+*/
+    
+    text {
+      font: 10px sans-serif;
+      pointer-events: none;
+      text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+    }
+    
+    rect {
+      fill: white;
+    }
+    
+    rect:hover {
+      fill: white;
+    }
+    
+    table {
+      table-layout: fixed;
+      color: DimGray;
+      text-align: center;
+      border: 1px solid #98bf21;
+    }
+    
+    tr:hover {
+      background-color: #CFEEFF;
+      color: #494949;
+      white-space: inherit;
+      overflow: visible;
+    }
+    
+    .ellipsis {
+      width: 35%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .ellipsis:hover {
+      white-space: inherit;
+      overflow: visible;
+      text-overflow: inherit;
+    }
+    
+    #tooltip {
+      position: absolute;
+      width: 200px;
+      height: auto;
+      padding: 10px;
+      background-color: white;
+      -webkit-border-radius: 10px;
+      -moz-border-radius: 10px;
+      border-radius: 10px;
+      -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+      -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+    }
+    
+    #tooltip.hidden {
+      display: none;
+    }
+    
+    #tooltip p {
+      margin: 0;
+      font-family: sans-serif;
+      font-size: 16px;
+      line-height: 20px;
+    }
+    
+    #logo img {
+      height: 50px;
+      width: 50px;
+      border-radius: 25px;
+      -webkit-border-radius: 25px;
+      -moz-border-radius: 25px;
+    }
+    
+    body {
+      font-family: Trebuchet MS;
+    }
+    
+    div.calendar {
+      max-width: 240px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    div.calendar table {
+      width: 100%;
+      margin-top: 150px;
+    }
+    /**************************************Loading effect*/
+    
+    .wrapperloading {
+      position: absolute;
+      height: 200px;
+      width: 200px;
+      top: 50%;
+      margin-top: -100px;
+      left: 50%;
+      margin-left: -100px;
+    }
+    
+    .wrapperloading .loading.down {
+      position: absolute;
+      height: 100px;
+      width: 100px;
+      top: 50%;
+      margin-top: -50px;
+      left: 50%;
+      margin-left: -50px;
+      border-radius: 150px;
+      border: 3px solid #fff;
+      border-left-color: #fff;
+      border-top-color: #0080FF;
+      border-bottom-color: #0080FF;
+      border-right-color: #fff;
+      -webkit-animation: rotation 1s linear infinite;
+      -moz-animation: rotation 1s linear infinite;
+      -o-animation: rotation 1s linear infinite;
+      animation: rotation 1s linear infinite;
+    }
+    
+    @-webkit-keyframes rotation {
+      0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+      50% {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        transform: rotate(180deg);
+      }
+      100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+    
+    @-moz-keyframes rotation {
+      0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+      50% {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        transform: rotate(180deg);
+      }
+      100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+    
+    @-o-keyframes rotation {
+      0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+      50% {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        transform: rotate(180deg);
+      }
+      100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+    
+    @keyframes rotation {
+      0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+      50% {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        transform: rotate(180deg);
+      }
+      100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+    /**************************************Loading effect*/
+  </style>
+
+  <script>
+    function setupCalendars() {
+      // Popup Calendar
+      Calendar.setup({
+        dateField: 'sinceDateField',
+        triggerElement: 'sinceDateField'
+      })
+      Calendar.setup({
+        dateField: 'untilDateField',
+        triggerElement: 'untilDateField'
+      })
+    }
+    Event.observe(window, 'load', function () {
+      setupCalendars()
+    })
+  </script>
+</head>
+
+<body>
+  <div class="navbar navbar-static-top navbar-inverse">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" >Pagedata</a>
+        <form class="navbar-form pull-left">
+          <i class="icon-info-sign icon-white" id="pagedata_title"></i>
+          <div class="input-append btn-group">
+            <input class="input-medium" type="text" id="inputuserid" placeholder="請輸入Fanpage ID" onkeypress="KeyPress(event);">
+            <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+              &thinsp;
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a onclick="dropdownSubmit(&quot;台大新聞E論壇&quot;, &quot;NewseForum&quot;)">台大新聞E論壇</a></li>
+              <li><a onclick="dropdownSubmit(&quot;Appendectomy Project 割闌尾計畫&quot;, &quot;Appendectomy&quot;)">Appendectomy Project 割闌尾計畫</a></li>
+              <li><a onclick="dropdownSubmit(&quot;[我是學生，我反旺中] 反媒體巨獸青年聯盟&quot;, &quot;formoshock&quot;)">[我是學生，我反旺中] 反媒體巨獸青年聯盟</a></li>
+              <li><a onclick="dropdownSubmit(&quot;Sunflower Movement 太陽花學運&quot;, &quot;sunflowermovement&quot;)">Sunflower Movement 太陽花學運</a></li>
+              <li><a onclick="dropdownSubmit(&quot;我反服貿、全臺聲援大串聯&quot;, &quot;692664184110781&quot;)">我反服貿、全臺聲援大串聯</a></li>
+              <li><a onclick="dropdownSubmit(&quot;遍地開花！反黑箱服貿協議&quot;, &quot;portestallover&quot;)">遍地開花！反黑箱服貿協議</a></li>
+              <li><a onclick="dropdownSubmit(&quot;反服貿學生組織&quot;, &quot;756831544335745&quot;)">反服貿學生組織</a></li>
+              <li><a onclick="dropdownSubmit(&quot;海外留學生聲援台灣反服貿運動&quot;, &quot;twstudentsabroad&quot;)">海外留學生聲援台灣反服貿運動</a></li>
+              <li><a onclick="dropdownSubmit(&quot;SAVE TAIWAN！FIGHT FOR DEMOCRACY！在英台灣學生反黑箱服貿總部&quot;, &quot;wesavetaiwan&quot;)">SAVE TAIWAN！FIGHT FOR DEMOCRACY！在英台灣學生反黑箱服貿總部</a></li>
+              <li><a onclick="dropdownSubmit(&quot;反服貿聯盟&quot;, &quot;734899333209359&quot;)">反服貿聯盟</a></li>
+              <li><a onclick="dropdownSubmit(&quot;DStreet 街頭公民審議&quot;, &quot;twdstreet&quot;)">DStreet 街頭公民審議</a></li>
+              <li><a onclick="dropdownSubmit(&quot;不要服貿，不要被國民黨強暴！&quot;, &quot;691777560844943&quot;)">不要服貿，不要被國民黨強暴！</a></li>
+              <li><a onclick="dropdownSubmit(&quot;台南反服貿／全台反服貿大串聯&quot;, &quot;AntiCSATSinTAINAN&quot;)">台南反服貿／全台反服貿大串聯</a></li>
+              <li><a onclick="dropdownSubmit(&quot;連勝文&quot;, &quot;seanlien2014&quot;)">連勝文</a></li>
+              <li><a onclick="dropdownSubmit(&quot;柯文哲&quot;, &quot;DoctorKoWJ&quot;)">柯文哲</a></li>
+              <li><a onclick="dropdownSubmit(&quot;陳菊 (花媽) 市長&quot;, &quot;kikuChen&quot;)">陳菊 (花媽) 市長</a></li>
+              <li><a onclick="dropdownSubmit(&quot;馬英九總統&quot;, &quot;MaYingjeou&quot;)">馬英九總統</a></li>
+            </ul>
+          </div>
+          <!--
+          <div class="input-append btn-group">
+            <input class="input-small" type="text" id="inputopt" placeholder="撈取選項" onkeypress="KeyPress(event);">
+            <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+              &thinsp;
+              <span class="caret"></span>
+            </a>
+            
+            <ul class="dropdown-menu">
+              <li><a onclick="dropdownOption(&quot;Comments&quot;, &quot;Comments&quot;)">Comments</a></li>
+              <li><a onclick="dropdownOption(&quot;Reactions&quot;, &quot;Reactions&quot;)">Reactions</a></li>
+              <li><a onclick="dropdownOption(&quot;Comments+Reactions&quot;, &quot;Comments+Reactions&quot;)">Comments+Reactions</a></li>
+            </ul>
+          </div>
+          -->
+          <!--<div id="sinceDateField" class="btn btn-primary dateField"><i class="icon-calendar icon-white"></i> Since</div>
+          <div id="untilDateField" class="btn btn-primary dateField"><i class="icon-calendar icon-white"></i> Until</div>-->
+          <input class="input-small" id="sinceDateField" type="text" placeholder="yyyy-mm-dd">
+          <input class="input-small" id="untilDateField" type="text" placeholder="yyyy-mm-dd">
+          <button type="button" class="btn btn-info" id="submit" onclick="button_submit()"><i class="icon-search icon-white"></i> Submit</button>
+         <!-- <button type="button" class="btn btn-success" id="auto" onclick="button_autosubmit()"><i class="icon-font icon-white"></i> Auto-Submit</button> -->
+          <span style="color: rgb(226, 226, 226);">Cache:</span> <input type="checkbox" id="cacheCheck" value="cacheCheckValue"
+            checked>
+          <!--<button type="button" class="btn btn-inverse" id="clear" onclick = "button_clear()">Clear</button>-->
+          <button class="btn btn-link btn-inverse offset" id="user-info" class="muted"></button>
+          <button type="button" class="btn btn-i nverse" id="fb-auth"></button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="pageinfo" class="container">
+    <!--<img id="pageimg" src="" class="img-polaroid">-->
+    <p id="pagemessage" style="margin-top: 25px"></p>
+  </div>
+
+  <div class="container">
+    <!--<form class="navbar-form pull-left">
+    <div id="sinceDateField" class="dateField" style="margin-top: 45px;float: left">Since</div>
+    <div id="untilDateField" class="dateField" style="margin-top: 45px;float: left">Until</div>
+  </form>-->
+    <table class="table table-bordered table-condensed sortable">
+      <thead id="thead">
+        <tr>
+          <th width="4%" class="sorttable_numeric">#</th>
+          <th width="5%">Type</th>
+          <th style="text-align:center" width="18%" class="sorttable_numeric">Create time (GMT +0800)</th>
+          <th style="text-align:center" width="18%" class="sorttable_numeric">Post ID</th>
+          <th style="text-align:center" class="ellipsis">Post message</th>
+          <th style="text-align:center" width="7%" class="sorttable_numeric">Shares</th>
+          <!--th style="text-align:center" width="7%" class="sorttable_numeric">Likes<button type="button" class="showorhide" id="showorhide" onclick="reactions_submit()">Reactions</button></th-->
+          <th style="text-align:center" width="10%" class="sorttable_numeric" id="myCollapsible">Reactions</th>
+          <th style="text-align:center" width="8%" class="sorttable_numeric">Comments</th>
+          <th style="text-align:center" width="8%" class="sorttable_numeric">Download</th>
+        </tr>
+      </thead>
+
+      <tbody id="tbody">
+        <!--
+      <tr>
+      <td>263222741363_735591163126596</td>
+      <td>[男女] 關於磨合期\n       \n但是現實中 很多地方誠意就是個屁...\n</td>
+      <td>18</td>
+    </tr>
+    <tr>
+    <td>2</td>
+    <td>263222741363_735589359793443</td>
+    <td>[影片] 笑中帶淚的愛情 - 強迫症之戀 (中文字幕)\n       \n換個角度想如果因為女友離開他治好她的強迫症何嘗不是好事\n</td>
+    <td>1</td>
+  </tr>
+-->
+      </tbody>
+    </table>
+
+    <footer class="footer">
+      <p id="download">
+        <span><i></i></span>
+      </p>
+      <p>
+        <span><i></i></span> Powered by NCCU CGLab.<br> For more information please visit our <a href="http://fbvisnccucglab.logdown.com/">developers blog</a>
+      </p>
+    </footer>
+  </div>
+
+  <div id="fb-root"></div>
+  <script src="fbappid.js"></script>
+  <script>
+    //var ACCESS_TOKEN;
+    var userid;
+    var opt;
+    var since;
+    var until;
+    var sincedate;
+    var untildate;
+    var window_fb = null;
+    function dropdownSubmit(fanpageName, fanpageId) {
+      var inputuserid = document.getElementById("inputuserid");
+      inputuserid.value = fanpageId;
+    }
+    function dropdownOption(optname, opt) {
+      var inputopt = document.getElementById("inputopt");
+      inputopt.value = opt;
+    }
+    function KeyPress(event) {
+      if (event.keyCode == 13) {
+        button_submit();
+      }
+    }
+    function set_since_until(since, until) {
+      var sinceyyyy = parseInt(since[0]);
+      var sincemm = parseInt(since[1]) - 1;
+      var sincedd = parseInt(since[2]);
+      var untilyyyy = parseInt(until[0]);
+      var untilmm = parseInt(until[1]) - 1;
+      var untildd = parseInt(until[2]);
+      sincedate = new Date(sinceyyyy, sincemm, sincedd);
+      untildate = new Date(untilyyyy, untilmm, untildd);
+      sincedate.setDate(sincedate.getDate() + 1);
+      untildate.setDate(untildate.getDate() + 1);
+      sincedate = sincedate.toISOString();
+      untildate = untildate.toISOString();
+    }
+    function button_submit() {
+      userid = document.getElementById("inputuserid").value;
+      //opt = document.getElementById("inputopt").value;
+      since = document.getElementById("sinceDateField").value.split("-");
+      until = document.getElementById("untilDateField").value.split("-");
+      set_since_until(since, until);
+      setCookie("ACCESS_TOKEN", ACCESS_TOKEN);
+      var pagemessage = document.getElementById("pagemessage");
+      var tbody = document.getElementById("tbody");
+      pagemessage.innerHTML = '';
+      tbody.innerHTML = '<div class="wrapperloading"><div class="loading up"></div><div class="loading down"></div></div>';
+      fbget(userid, ACCESS_TOKEN, opt, sincedate, untildate);
+      //openwindow();
+    }
+    function openwindow() {
+      if (window_fb === null || window_fb.closed) {
+        window_fb = window.open("http://www.facebook.com/" + userid, 'fb', config = 'left=800,width=800,height=1000');
+        window_fb.moveTo(800, 0);
+      } else {
+        window_fb.close();
+        window_fb = window.open("http://www.facebook.com/" + userid, 'fb', config = 'left=800,width=800,height=1000');
+        window_fb.moveTo(800, 0);
+      }
+    }
+    function button_autosubmit() {
+      userid = document.getElementById("inputuserid").value;
+      opt = document.getElementById("inputopt").value;
+      since = document.getElementById("sinceDateField").value.split("-");
+      until = document.getElementById("untilDateField").value.split("-");
+      set_since_until(since, until);
+      setCookie("ACCESS_TOKEN", ACCESS_TOKEN);
+      var pagemessage = document.getElementById("pagemessage");
+      var tbody = document.getElementById("tbody");
+      pagemessage.innerHTML = '';
+      tbody.innerHTML = '<div class="wrapperloading"><div class="loading up"></div><div class="loading down"></div></div>';
+      fbget(userid, ACCESS_TOKEN, opt, sincedate, untildate);
+      opensharevis(ACCESS_TOKEN);
+    }
+    /*
+        function reactions_submit(){
+          userid = document.getElementById("inputuserid").value;
+          since = document.getElementById("sinceDateField").value.split("-");
+          until = document.getElementById("untilDateField").value.split("-");
+          set_since_until(since, until);
+          setCookie("ACCESS_TOKEN", ACCESS_TOKEN);
+          var pagemessage = document.getElementById("pagemessage");
+          var tbody = document.getElementById("tbody");
+          pagemessage.innerHTML = '';
+          tbody.innerHTML = '<div class="wrapperloading"><div class="loading up"></div><div class="loading down"></div></div>';
+          fbget(userid, ACCESS_TOKEN, sincedate, untildate);
+        }
+    */
+    function opensharevis(ACCESS_TOKEN) {
+      if (window_fb === null || window_fb.closed) {
+        window_fb = window.open("sharevis.html?postid=" + 756151861098890 + "&token=" + ACCESS_TOKEN);
+        window_fb.moveTo(800, 0);
+      } else {
+        window_fb.close();
+        window_fb = window.open("sharevis.html?postid=" + 756151861098890 + "&token=" + ACCESS_TOKEN);
+        window_fb.moveTo(800, 0);
+      }
+    }
+    /*function button_clear()
+    {
+    nodes ={};
+    links ={};
+    d3.select("svg").remove();
+    run_d3();
+    document.getElementById("fbmessage").innerHTML = "";
+    window_fb.close();
+    }*/
+    function setCookie(cname, cvalue) {
+      var d = new Date();
+      d.setTime(d.getTime() + (60 * 60 * 1000));
+      var expires = "expires=" + d.toGMTString();
+      document.cookie = cname + "=" + cvalue + "; " + expires;
+    }
+    function getCookie(cname) {
+      var name = cname + "=";
+      var ca = document.cookie.split(';');
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+      }
+      return "";
+    }
+    function sendfromshare() {
+      var parameters = location.search.substring(1).split("&");
+      var temp = parameters[0].split("=");
+      userid = unescape(temp[1]);
+      //temp = parameters[1].split("=");
+      //token = unescape(temp[1]);
+      temp = parameters[1].split("=");
+      getsince = unescape(temp[1]);
+      temp = parameters[2].split("=");
+      getuntil = unescape(temp[1]);
+      document.getElementById("inputuserid").value = userid;
+      //ACCESS_TOKEN = token;
+      document.getElementById("sinceDateField").value = getsince;
+      document.getElementById("untilDateField").value = getuntil;
+    }
+    setTimeout("button_submit()", 2000);
+    /*function checkCookie()
+    {
+    ACCESS_TOKEN = getCookie("ACCESS_TOKEN");
+    if (ACCESS_TOKEN!="")
+    {
+    //alert("ACCESS_TOKEN " + ACCESS_TOKEN);
+    document.getElementById("inputAccesstoken").value = ACCESS_TOKEN;
+    }
+    // else {
+    //   user = prompt("Please enter your name:","");
+    //   if (user!="" && user!=null) {
+    //     setCookie("username",user,30);
+    //   }
+    // }
+    }*/
+  </script>
+  <!--script>
+    $('#myCollapsible').collapse();
+    function reactions_submit() {
+      $('#myCollapsible').collapse({
+        toggle: false
+      });
+      $('#myCollapsible').collapse.toggle;
+      $('#myCollapsible').on('hidden.bs.collapse', function() {
+        // do something…
+      })
+    }
+  </script-->
+  <script>
+    jQuery.noConflict();
+    jQuery("#pagedata_title").popover({
+      html: 'true',
+      placement: 'bottom', // top, bottom, left or right
+      content: '<img src="http://i.imgur.com/u4AC16i.png" title="Hosted by imgur.com"/><img src="http://i.imgur.com/lZQEFBN.png" title="Hosted by imgur.com"/>',
+      trigger: 'hover', //<--- you need a trigger other than manual
+      delay: {
+        show: 500,
+        hide: 1000
+      }
+    });
+    var links;
+    var nodes = {};
+    /*var fb_related_url = document.getElementById("postid_input").value,
+              url_pieces = fb_related_url.split("/");
+    */
+    function fbget(userid, token, opt, sincedate, untildate) {
+      function reqListener() {
+        //console.log(this.responseText);
+        if (true) {
+          var data = JSON.parse(this.responseText);
+          console.log(data);
+          if (data.error) {
+            alert(data.error.message);
+            return false;
+          }
+          console.log(data);
+          var tbody = document.getElementById("tbody");
+          tbody.innerHTML = "";
+          var post_counter = 0;
+          if (data.message == "No posts!") {
+            alert("該時間內沒有貼文!");
+          } else {
+            var d = new Date(),
+              curr_hour = d.getHours(),
+              curr_date = d.getDate(),
+              curr_month = d.getMonth() + 1, //Months are zero based
+              curr_year = d.getFullYear();
+            for (var i = 0; i <= data.data.length; i++) {
+              pagemessage.innerHTML = "<center><h2><span id=\"logo\"><img src=\"http://graph.facebook.com/" + userid + "/picture\">&nbsp;&nbsp;" + "<a href = \"http://www.facebook.com/" + userid + "\" target=_blank>" + data.data[i].from.name + "</a>" + "</span></h2></center>";
+              var underline_pos = data.data[i].id.search("_");
+              var id = data.data[i].id.substring(underline_pos + 1);
+              var useridnum = data.data[i].id.substring(0, underline_pos);
+              //var count = [0, 0, 0, 0, 0, 0, 0];
+              var posts_id = useridnum + "_" + id;
+              var path = useridnum + "_" + curr_month + "-" + curr_date + "-(" + curr_hour + ")-" + curr_year;
+              data.data[i].created_time = new Date(data.data[i].created_time).toLocaleString();
+              if (data.data[i].message) {
+                post_counter++;
+                //fbreactionget(useridnum,data.data[i].id,token,count);
+                //console.log(count);
+                //console.log(data);
+                if (data.data[i].type === "photo") {
+                  var json = JSON.stringify(data.data[i]);
+                  var blob = new Blob([json], { type: "application/json" });
+                  var url = URL.createObjectURL(blob);
+                  tbody.innerHTML +=
+                    "<tr id = tbody" + i + ">" +
+                    "<td>" + post_counter + "</td>" +
+                    "<td>" + data.data[i].type + "</td>" +
+                    "<td style=\"text-align:center\">" + data.data[i].created_time + "</td>" +
+                    "<td style=\"text-align:center\">" + "<a href = \"http://www.facebook.com/" + useridnum + "/posts/" + id + "\" target=_blank>" + id + "</a>" + "</td>" +
+                    "<td class=ellipsis>" + data.data[i].message + "</td>" +
+                    //"<td style=\"text-align:center\">"+"<a href = \"sharevis.html?postid="+data.data[i].object_id+"&token="+token+"\" target=_blank>"+data.data[i].shares.count+"</a>"+"</td>"+
+                    "<td style=\"text-align:center\">" + "<a href = \"sharevis.html?postid=" + posts_id + "\" target=_blank>" + data.data[i].shares + "</a>" + "</td>" +
+                    //"<td style=\"text-align:center\">" + "<a href = \"crawlervis.html?postid=" + data.data[i].id + "\" target=_blank>" + data.data[i].likes.summary.total_count + "</a>" + "</td>" +
+                    //"<td class=\"ellipsis\" style=\"text-align:center\">" + "like:" + count[0] + " love:" + count[1] + " wow:" + count[2] + " haha:" + count[3] + " sad:" + count[4] + " angry:" + count[5] + " thinkful:" + count[6] + "</td>" +
+                    "<td class=\"ellipsis\" style=\"text-align:center\">"
+                    + "<div class=\"dropdown\">"
+                    + "<a href = \"crawlervis.html?postid=" + data.data[i].id + "\" target=_blank class=\"btn btn-default dropdown-toggle\" role=\"button\" id=\"dropdownMenu1\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"true\">"
+                    + "ALL:" + data.data[i].likes
+                    + "<span class=\"caret\">" + "</span>" + "</a>"
+                    + "<ul class=\"dropdown-menu\" aria-labelledby=\"dropdownMenu1\">"
+                    + "<li>" + "<a href=\"#\">" + "like:" + data.data[i].reactions.LIKE + "<img src=\"img/like.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "love:" + data.data[i].reactions.LOVE + "<img src=\"img/love.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "wow:" + data.data[i].reactions.WOW + "<img src=\"img/wow.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "haha:" + data.data[i].reactions.HAHA + "<img src=\"img/haha.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "sad:" + data.data[i].reactions.SAD + "<img src=\"img/sad.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "angry:" + data.data[i].reactions.ANGRY + "<img src=\"img/angry.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "thankful:" + data.data[i].reactions.THANKFUL + "<img src=\"img/thankful.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>" + "</ul>" + "</div>" + "</td>" +
+                    "<td style=\"text-align:center\">" + "<a href = \"comment_viewer.html?postid=" + data.data[i].id + "&sincedate=" + sincedate + "&untildate=" + untildate + "&path=" + path + "\" target=_blank>" + data.data[i].comments.summary + "</a>" + "</td>" +
+                    "<td style=\"text-align:center\"><a download = \"" + data.data[i].id + ".json\" href = \"" + url + "\">" + "<img src=\"img/download.jpg\" class=\"img-circle\" style=\"width:24px;height:24px\">" + "</a></td>" +
+                    "</tr>";
+                } else {
+                  var json = JSON.stringify(data.data[i]);
+                  var blob = new Blob([json], { type: "application/json" });
+                  var url = URL.createObjectURL(blob);
+                  tbody.innerHTML +=
+                    "<tr id = tbody" + i + ">" +
+                    "<td>" + post_counter + "</td>" +
+                    "<td>" + data.data[i].type + "</td>" +
+                    "<td style=\"text-align:center\">" + data.data[i].created_time + "</td>" +
+                    "<td style=\"text-align:center\">" + "<a href = \"http://www.facebook.com/" + data.data[i].id + "\" target=_blank>" + id + "</a>" + "</td>" +
+                    "<td class=\"ellipsis\">" + data.data[i].message + "</td>" +
+                    //"<td style=\"text-align:center\">"+"<a href = \"sharevis.html?postid="+data.data[i].id.substring(underline_pos+1)+"&token="+token+"\" target=_blank>"+data.data[i].shares.count+"</a>"+"</td>"+
+                    "<td style=\"text-align:center\">" + "<a href = \"sharevis.html?postid=" + posts_id + "\" target=_blank>" + data.data[i].shares + "</a>" + "</td>" +
+                    //"<td style=\"text-align:center\">" + "<a href = \"crawlervis.html?postid=" + data.data[i].id + "\" target=_blank>" + data.data[i].likes.summary.total_count + "</a>" + "</td>" +
+                    //"<td class=\"ellipsis\" style=\"text-align:center\">" + "like:" + count[0] + " love:" + count[1] + " wow:" + count[2] + " haha:" + count[3] + " sad:" + count[4] + " angry:" + count[5] + " thinkful:" + count[6] + "</td>" +
+                    /*"<td class=\"ellipsis\" style=\"text-align:center\">" + "<a href = \"crawlervis.html?postid=" + data.data[i].id + "\" target=_blank>" + data.data[i].likes.summary.total_count + "</a>" + "<ul style=\"list-style-type:none\">"
+                     + "<li>" + "like:" + data.data[i].reactions.LIKE + "<img src=\"img/like.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>"
+                     + "<li>" + "love:" + data.data[i].reactions.LOVE + "<img src=\"img/love.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>"
+                     + "<li>" + "wow:" + data.data[i].reactions.WOW + "<img src=\"img/wow.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>"
+                     + "<li>" + "haha:" + data.data[i].reactions.HAHA + "<img src=\"img/haha.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>"
+                     + "<li>" + "sad:" + data.data[i].reactions.SAD + "<img src=\"img/sad.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>"
+                     + "<li>" + "angry:" + data.data[i].reactions.ANGRY + "<img src=\"img/angry.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>"
+                     + "<li>" + "thankful:" + data.data[i].reactions.THANKFUL + "<img src=\"img/thankful.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</li>" + "</ul>" + "</td>" +*/
+                    "<td class=\"ellipsis\" style=\"text-align:center\">"
+                    + "<div class=\"dropdown\">"
+                    + "<a href = \"crawlervis.html?postid=" + data.data[i].id + "\" target=_blank class=\"btn btn-default dropdown-toggle\" role=\"button\" id=\"dropdownMenu1\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"true\">"
+                    + "ALL:" + data.data[i].likes
+                    + "<span class=\"caret\">" + "</span>" + "</a>"
+                    + "<ul class=\"dropdown-menu\" aria-labelledby=\"dropdownMenu1\">"
+                    + "<li>" + "<a href=\"#\">" + "like:" + data.data[i].reactions.LIKE + "<img src=\"img/like.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "love:" + data.data[i].reactions.LOVE + "<img src=\"img/love.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "wow:" + data.data[i].reactions.WOW + "<img src=\"img/wow.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "haha:" + data.data[i].reactions.HAHA + "<img src=\"img/haha.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "sad:" + data.data[i].reactions.SAD + "<img src=\"img/sad.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "angry:" + data.data[i].reactions.ANGRY + "<img src=\"img/angry.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>"
+                    + "<li>" + "<a href=\"#\">" + "thankful:" + data.data[i].reactions.THANKFUL + "<img src=\"img/thankful.jpg\" class=\"img-circle\" style=\"width:16px;height:16px\">" + "</a>" + "</li>" + "</ul>" + "</div>" + "</td>" +
+                    "<td style=\"text-align:center\">" + "<a href = \"comment_viewer.html?postid=" + data.data[i].id + "&sincedate=" + sincedate + "&untildate=" + untildate + "&path=" + path + "\" target=_blank>" + data.data[i].comments.summary + "</a>" + "</td>" +
+                    "<td style=\"text-align:center\"><a download = \"" + data.data[i].id + ".json\" href = \"" + url + "\">" + "<img src=\"img/download.jpg\" class=\"img-circle\" style=\"width:24px;height:24px\">" + "</a></td>" +
+                    "</tr>";
+                }
+              }
+            }          
+}
+        } else {
+          //TODO: preprocess nodes and links in server side
+          var data = JSON.parse(this.responseText);
+          if (data.error) {
+            alert(data.error.message);
+          }
+        }
+      }; // end of function reqListener ()
+      var oReq = new XMLHttpRequest();
+      oReq.onload = reqListener;
+      var qurl = "PageVis" + "?userid=" + userid + "&token=" + token + "&opt=" + opt + "&sincedate=" + sincedate + "&untildate=" + untildate;
+      var iscache = document.getElementById("cacheCheck").checked;
+      //console.log("iscache="+ iscache);
+      if (iscache !== undefined) {
+        qurl = qurl + "&iscache=" + iscache;
+      }
+      //console.log(qurl);
+      oReq.open("get", qurl, true);
+      oReq.send();
+    }; // end of function fbget
+  </script>
+
+  <script>
+    sendfromshare();
+    //button_submit();
+    window_fb = window.open("http://www.facebook.com/" + userid, 'fb', config = 'left=800,width=800,height=1200');
+    window_fb.moveTo(800, 0);
+  </script>
+  <!-- <body onload="checkCookie()"> -->
+</body>
+
+</html>

@@ -1,10 +1,12 @@
+/* eslint-disable */
 // import modules
 var express = require('express'), // npm install express
   app = express(),
 
-  pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
+  //pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
+  ansyc = require('./server/ansyc.js'),
   croncrawlerHandler = require('./server/croncrawlerHandler.js'),
-  mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
+// mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
   tableHandler = require('./server/tableHandler.js');
 // sharevisExpressHandler			    = require('./server/sharevisExpressHandler.js'),
 // pagedataExpressHandler			    = require('./server/pagedataExpressHandler.js'),
@@ -23,7 +25,8 @@ var options = {
 
 //var conf = require("./config").facebook;
 
-app.get('/pagevis', pagevisExpressHandler.callback);
+//app.get('/pagevis', pagevisExpressHandler.callback);
+app.get('/pagevis', ansyc.callback);
 app.get('/crawler', croncrawlerHandler.callback);
 //app.get('/db', mongodbExpressHandler.callback);
 app.get('/table', tableHandler.callback);

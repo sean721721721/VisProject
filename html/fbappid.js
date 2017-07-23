@@ -1,3 +1,4 @@
+/* eslint-disable */
 //var fbappid = '220713978118497'
 var fbappid = '776254465843486';
 // var loginfb = {
