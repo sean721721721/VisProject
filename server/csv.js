@@ -1,53 +1,7 @@
 /* eslint-disable */
 var fs = require('fs');
+var readFiles = require('./readfile.js');
 
-/**
- * Promise all
- * @author Loreto Parisi (loretoparisi at gmail dot com)
- */
-function promiseAllP(items, block) {
-    var promises = [];
-    items.forEach(function (item, index) {
-        promises.push(function (item, i) {
-            return new Promise(function (resolve, reject) {
-                return block.apply(this, [item, index, resolve, reject]);
-            });
-        }(item, index))
-    });
-    return Promise.all(promises);
-} //promiseAll
-
-/**
- * read files
- * @param dirname string
- * @return Promise
- * @author Loreto Parisi (loretoparisi at gmail dot com)
- * @see http://stackoverflow.com/questions/10049557/reading-all-files-in-a-directory-store-them-in-objects-and-send-the-object
- */
-function readFiles(dirname) {
-    return new Promise((resolve, reject) => {
-        fs.readdir(dirname, function (err, filenames) {
-            if (err) return reject(err);
-            promiseAllP(filenames,
-                    (filename, index, resolve, reject) => {
-                        //console.log(filename)
-                        fs.readFile(dirname + '/' + filename, 'utf-8', function (err, content) {
-                            if (err) return reject(err);
-                            return resolve({
-                                filename: filename,
-                                contents: JSON.parse(content)
-                            });
-                        });
-                    })
-                .then(results => {
-                    return resolve(results);
-                })
-                .catch(error => {
-                    return reject(error);
-                });
-        });
-    });
-}
 
 function user_list(files) {
     var userlist = [];
@@ -356,9 +310,9 @@ function clearString(s) {
 
 var folders = ['2010', '2011', '2012'];
 folders.forEach(folder => {
-    var root = "/media/villager/B65AC6D95AC69611/Crawler_data/greenpeace";
+    var root = "/windows/D/Crawler_data/greenpeace";
     //console.log(typeof(root + '/' + folder))
-    readFiles(root + '/' + folder)
+    readFiles.readFiles(root + '/' + folder)
         .then(function (files) {
             console.log("loaded ", files.length)
             //fs.writeFileSync(root + "_" + folder + ".json", JSON.stringify(user_list(files)))
@@ -382,6 +336,3 @@ folders.forEach(folder => {
             console.log(error);
         });
 });
-
-//var exports = module.exports = {};
-//exports.callback = callback;

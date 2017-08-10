@@ -77,7 +77,6 @@ var callback = function callback(req, res) {
                     } else if (res_posts.data.length != 0) {
                         res_posts = serverUtilities.fill_zero_field(res_posts);
                         var picture = serverUtilities.getpicture(userid, res_posts);
-
                         var postid = [];
                         var res_comments = [];
                         var res_reactions = [];
@@ -91,13 +90,13 @@ var callback = function callback(req, res) {
                             var counts = [0, 0, 0, 0, 0, 0, 0];
                             reactioncounts.push(counts);
                         }
-
                         console.log("l=" + res_posts.data.length);
                         for (var i = 0; i < res_posts.data.length; i++) {
                             postid[i] = res_posts.data[i].id;
                         }
                         //console.log(res_posts);
                         //each_posts(postid, res_posts, res_comments, res_reactions, reactionusers);
+                        a0(res_posts)
 
                         async function each_posts(id, res) {
                             console.log("---------- each loops ----------")
@@ -107,7 +106,6 @@ var callback = function callback(req, res) {
                                 } else {
                                     reject(new Error('postslength=0'))
                                 }
-                                //postid.forEach(function (id) {})
                             })
                             /*.then(value => {
                                 console.log(value);
@@ -131,13 +129,6 @@ var callback = function callback(req, res) {
                                     return await each_posts(id, res);
                                     console.log("end: id = " + id)
                                 }));
-                                /*
-                                for (var i = 0; i < postid.length; i++) {
-                                    console.log(res);
-                                    id = postid[i];
-                                    console.log("start: id = " + id)
-                                    await each_posts(id);
-                                }*/
                                 console.log("-------- res done --------");
                                 next(res_posts, res_comments, res_reactions, reactionusers);
                                 console.log("hello end a2");
@@ -151,8 +142,6 @@ var callback = function callback(req, res) {
                             console.log("hello end a1");
                         }
 
-                        a0(res_posts)
-
                         function get_recursive_comments(id) {
                             console.log("get_recursive_comments")
                             return new Promise((resolve, reject) => {
@@ -164,7 +153,6 @@ var callback = function callback(req, res) {
                                         res_comments.push(res);
                                         p1--;
                                     }
-
                                     if (err || !res) {
                                         if (!res) {
                                             console.log("Err res.comments===null: ");
