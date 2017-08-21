@@ -21,7 +21,7 @@ module.exports = function () {
     });
 
     var subcomment = new Schema({
-        created_time: String,
+        created_time: Date,
         from: fromSchema,
         message: String,
         like_count: Number,
@@ -34,7 +34,7 @@ module.exports = function () {
         message: String,
         comments: [subcomment],
         comment_count: Number,
-        created_time: String,
+        created_time: Date,
         id: String
     });
 
@@ -62,7 +62,7 @@ module.exports = function () {
 
     var postSchema = new Schema({
         id: String,
-        created_time: String,
+        created_time: Date,
         type: String,
         message: String,
         from: fromSchema,
