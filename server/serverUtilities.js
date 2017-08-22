@@ -31,8 +31,8 @@ var getdateformat = function getdateformat() {
 	return "_" + curr_month + "-" + curr_date + "-(" + curr_hour + ")-" + curr_year;
 };
 
-var dirpath = "/media/villager/B65AC6D95AC69611/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
-	dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/";
+var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
+	dirpathAfter20141202 = "/windows/D/pagedata after 20141202/";
 
 
 var savejson = function savejson(name, jsondata) {
@@ -85,10 +85,10 @@ var createfolder = function createfolder(id) {
 	}
 
 	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
-	if (fs.existsSync("/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/")) {
-		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/")) {
+		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
 	} else {
-		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
 		fs.mkdirSync(dirpathAfter20141202);
 		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
 	}
@@ -122,15 +122,15 @@ var createfolder_sharevis = function createfolder_sharevis(id) {
 	}
 
 	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
-	if (fs.existsSync("/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/")) {
-		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/")) {
+		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
 	} else {
-		dirpathAfter20141202 = "/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/";
+		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
 		fs.mkdirSync(dirpathAfter20141202);
 		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
 	}
 
-	if (fs.existsSync("/media/villager/B65AC6D95AC69611/pagedata after 20141202/" + id + getdateformat() + "/" + "post/")) {
+	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/" + "post/")) {
 
 	} else {
 		fs.mkdirSync(dirpathAfter20141202 + "post/");

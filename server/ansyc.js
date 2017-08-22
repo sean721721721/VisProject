@@ -81,9 +81,6 @@ var callback = function callback(req, res) {
                         var res_comments = [];
                         var res_reactions = [];
                         var reactionusers = [];
-                        var p1 = res_posts.data.length;
-                        var p2 = res_posts.data.length;
-                        var p4 = res_posts.data.length;
                         var reactioncounts = [];
 
                         for (var c = 0; c < res_posts.data.length; c++) {
@@ -95,295 +92,8 @@ var callback = function callback(req, res) {
                             postid[i] = res_posts.data[i].id;
                         }
                         //console.log(res_posts);
-                        //each_posts(postid, res_posts, res_comments, res_reactions, reactionusers);
-                        a0(res_posts)
+                        asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
 
-                        async function each_posts(id, res) {
-                            console.log("---------- each loops ----------")
-                            return new Promise(function (resolve, reject) {
-                                if (id !== undefined) {
-                                    resolve(main(id, res));
-                                } else {
-                                    reject(new Error('postslength=0'))
-                                }
-                            })
-                            /*.then(value => {
-                                console.log(value);
-                            }).catch(function (err) {
-                                console.log(err.message)
-                            });*/
-                        };
-
-                        async function a1(res_posts) {
-                            console.log("hello a1 and start a2");
-                            if (postid.length > 0) {
-                                var id;
-                                var res = [
-                                    [],
-                                    [],
-                                    []
-                                ];
-                                await Promise.all(postid.map(async function (item) {
-                                    id = item;
-                                    console.log("start: id = " + id)
-                                    return await each_posts(id, res);
-                                    console.log("end: id = " + id)
-                                }));
-                                console.log("-------- res done --------");
-                                next(res_posts, res_comments, res_reactions, reactionusers);
-                                console.log("hello end a2");
-                            }
-                            //var value = await each_posts(postid, res_posts, res_comments, res_reactions, reactionusers)
-                        }
-
-                        async function a0(res_posts) {
-                            console.log("hello a0 and start a1");
-                            await a1(res_posts);
-                            console.log("hello end a1");
-                        }
-
-                        function get_recursive_comments(id) {
-                            console.log("get_recursive_comments")
-                            return new Promise((resolve, reject) => {
-                                serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, function (err, res) {
-                                    // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
-                                    console.log(res.data.length)
-                                    if (res.data.length == 0) {
-                                        console.log(res)
-                                        res_comments.push(res);
-                                        p1--;
-                                    }
-                                    if (err || !res) {
-                                        if (!res) {
-                                            console.log("Err res.comments===null: ");
-                                            console.dir(res);
-                                            //callback({"error": {"message": "No reaction."}}, res_reactions);
-                                        }
-                                        console.dir(err);
-                                        reject(new Error('error!'))
-                                    } else {
-                                        // console.log(data_query.data[i].comments)
-                                        var data_query = {
-                                            "data": []
-                                        };
-                                        data_query.data = res.data; //data_query.data.concat(res.data);
-                                        data_query.postid = id;
-                                        // console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
-                                        console.log(data_query.postid)
-                                        // console.log(data_query.data)
-                                        var l = res.data.length;
-                                        console.log("rl=" + l)
-                                        var p3 = 0;
-                                        console.log("resolve comments");
-                                        resolve(each_comment(res, id, l, p3, res_comments, data_query));
-                                    }
-                                })
-                            })
-                            /*.catch(function (err) {
-                                console.log(err.message)
-                            });*/
-                        }
-
-                        async function each_comment(res, id, l, p3, res_comments, data_query) {
-                            console.log("---------- each subcomments loops ----------")
-                            return new Promise(function (resolve, reject) {
-                                res.data.forEach(function (item, index) {
-                                    if (item.comments) {
-                                        var reply = item.comments,
-                                            tar = data_query.data[index].comments;
-                                        paging(reply, tar, 1, 100, function (err, res) {
-                                            console.log("reply: " + index)
-                                            console.log("rl=" + l)
-                                            p3++;
-                                            // console.log(id + " " + p3)
-                                            if (p3 >= l) {
-                                                res_comments.push(data_query);
-                                                p1--;
-                                                console.log("p1=" + p1);
-                                                console.log("push: " + id)
-                                                //next(p1, p2, p4);
-                                            }
-                                        })
-                                    } else {
-                                        p3++;
-                                        // console.log(id + " " + p3)
-                                        if (p3 >= l) {
-                                            res_comments.push(data_query);
-                                            p1--;
-                                            console.log("p1=" + p1);
-                                            console.log("push: " + id)
-                                            //next(p1, p2, p4);
-                                            console.log("resolve subcomments");
-                                            resolve(res_comments);
-                                        }
-                                    }
-                                });
-                                //postid.forEach(function (id) {})
-                            })
-                            /*.catch(function (err) {
-                                console.log(err.message)
-                            });*/
-                        };
-
-                        function get_recursive_reactions(id) {
-                            console.log("get_recursive_reactions")
-                            return new Promise((resolve, reject) => { // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
-                                serverUtilities.get_recursive(id, "reactions", "", 100, function (err, res) {
-                                    // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
-                                    if (err || !res) {
-                                        if (!res) {
-                                            console.log("Err res.comments===null: ");
-                                            console.dir(res);
-                                            //callback({"error": {"message": "No reaction."}}, res_reactions);
-                                        }
-                                        console.dir(err);
-                                        reject(new Error('error!'))
-                                    } else {
-                                        // console.log("id=" + id)
-                                        reactionusers.push(res);
-                                        //console.log("err");
-                                        p4--;
-                                        //next(p1, p2, p4);
-                                        //serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions);
-                                        //next();
-                                        console.log("resolve reactionusers");
-                                        resolve(reactionusers);
-                                    }
-                                });
-                            })
-                            /*.catch(function (err) {
-                                console.log(err)
-                            })*/
-                        }
-
-                        function get_reaction_counts(id, p2) {
-                            console.log("get_reaction_counts")
-                            return new Promise((resolve, reject) => {
-                                var params = "?fields=reactions.type(LIKE).limit(0).summary(true).as(like),reactions.type(LOVE).limit(0).summary(true).as(love),reactions.type(WOW).limit(0).summary(true).as(wow),reactions.type(HAHA).limit(0).summary(true).as(haha),reactions.type(SAD).limit(0).summary(true).as(sad),reactions.type(ANGRY).limit(0).summary(true).as(angry), reactions.type(THANKFUL).limit(0).summary(true).as(thankful)";
-                                graph.get(id + params, function (err, res) {
-                                    if (err || !res) {
-                                        if (!res) {
-                                            console.log("Err res.reactions===null: ");
-                                            console.dir(res);
-                                            //callback({"error": {"message": "No reaction."}}, res_reactions);
-                                        }
-                                        console.dir(err);
-                                        reject(new Error('error!'))
-                                        //res.send({ "error": { "message": JSON.stringify(err) } });
-                                    } else {
-                                        // console.log("id=" + id)
-                                        res_reactions.push(res);
-                                        //console.log("err");
-                                        p2--;
-                                        console.log("resolve reactions");
-                                        resolve(res_reactions);
-                                        //next(p1, p2, p4);
-                                        //serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions);
-                                        //next();
-                                    }
-                                });
-                            })
-                            /*.catch(function (err) {
-                                console.log(err)
-                            })*/
-                        }
-
-                        async function main(id, res) {
-                            try {
-                                console.log("---------- main loop ----------")
-                                var result = await Promise.all([get_recursive_comments(id), get_recursive_reactions(id), get_reaction_counts(id, p2)]);
-                                console.log(result);
-                                res[0].push(result[0]);
-                                res[1].push(result[1]);
-                                res[2].push(result[2]);
-                                console.log(res);
-                                return res;
-                            } catch (e) {
-                                console.log(e)
-                            }
-                        }
-
-                        var paging = function paging(res, tar, depth, MAX_DEPTH, callback) {
-                            // console.log("depth=" + depth)
-                            if (depth >= MAX_DEPTH) {
-                                console.log("resursive paging: " + MAX_DEPTH);
-                                // p3++;
-                                // console.log(p3);
-                                callback(null, tar);
-                                return;
-                            }
-                            if (res.data && res.paging && res.paging.next) {
-                                graph.get(res.paging.next, function (err, res) {
-                                    if (err) {
-                                        callback(err, res);
-                                    }
-                                    depth++;
-                                    Array.prototype.push.apply(tar.data, res.data);
-                                    setTimeout(function () {
-                                        paging(res, tar, depth, MAX_DEPTH, callback);
-                                    }, 1);
-                                });
-                            } else {
-                                // console.log("[resursive paging: depth = " + depth + "]");
-                                // p3++;
-                                // console.log(p3);
-                                callback(null, tar);
-                                return;
-                            }
-                        }
-
-                        var fill_reactions = function fill_reactions(res_posts, res_reactions) {
-                            for (var i = 0; i < res_posts.data.length; i++) {
-                                for (var j = 0; j < res_reactions.length; j++) {
-                                    if (!(res_posts.data[i].reaction_detail)) {
-                                        if (res_posts.data[i].id == res_reactions[j].id) {
-                                            res_posts.data[i].reaction_detail = {
-                                                "LIKE": res_reactions[j].like.summary.total_count,
-                                                "LOVE": res_reactions[j].love.summary.total_count,
-                                                "WOW": res_reactions[j].wow.summary.total_count,
-                                                "HAHA": res_reactions[j].haha.summary.total_count,
-                                                "SAD": res_reactions[j].sad.summary.total_count,
-                                                "ANGRY": res_reactions[j].angry.summary.total_count,
-                                                "THANKFUL": res_reactions[j].thankful.summary.total_count,
-                                            };
-                                        }
-                                    }
-                                }
-                            }
-                            //console.log(res_posts);
-                            return res_posts;
-                        };
-
-                        var fill_comments = function fill_comments(res_posts, res_comments) {
-                            for (var i = 0; i < res_posts.data.length; i++) {
-                                for (var j = 0; j < res_comments.length; j++) {
-                                    if (res_posts.data[i].id == res_comments[j].postid) {
-                                        res_posts.data[i].comments.data = res_comments[j].data;
-                                    }
-                                }
-                            }
-                            //console.log(res_posts);
-                            return res_posts;
-                        };
-
-                        var next = function next(res_posts, res_comments, res_reactions, reactionusers) {
-                            console.log("---------- next ----------")
-                            //if (p1 === 0 && p2 === 0 && p4 === 0) {
-                            var save_posts = [];
-                            // console.log(101);
-                            serverUtilities.savejson("comments_" + sincedate + "_" + untildate + "_" + userid, res_comments); //*
-                            serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions); //*
-                            serverUtilities.savejson("reactionusers_" + sincedate + "_" + untildate + "_" + userid, reactionusers); //*
-                            save_posts = fill_reactions(res_posts, res_reactions);
-                            save_posts = fill_comments(save_posts, res_comments);
-                            // serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
-                            save_posts = serverUtilities.format_json(res_posts, save_posts);
-                            save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
-                            serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
-                            //console.log(res_posts);
-                            console.log("done");
-                            //}
-                        }
                     } else {
                         console.log("res_posts.length === 0 ");
                         console.dir(res_posts);
@@ -392,6 +102,253 @@ var callback = function callback(req, res) {
             }; //graph.get(userid, {fields: ""}, function(err, res0) {
         };
     });
+};
+
+async function asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+    try {
+        console.log("hello a0 and start main");
+        if (postid.length > 0) {
+            var res = await Promise.all(postid.map(async function (item) {
+                var id = item;
+                console.log("start: id = " + id)
+                return await main(id, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid).then(
+                    console.log("end: id = " + id));
+            }));
+            console.log("l=" + res.length);
+            await end(res);
+
+            function end(result) {
+                res_comments = result[0][0];
+                reactionusers = result[0][1];
+                res_reactions = result[0][2];
+                console.log("-------- res done --------");
+                //console.log(res_comments)
+                //console.log(reactionusers)
+                //console.log(res_reactions)
+                next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+            }
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+async function main(id, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+    try {
+        console.log("---------- main loop ----------")
+        var result = await Promise.all([get_recursive_comments(id, res_comments), get_recursive_reactions(id, reactionusers), get_reaction_counts(id, res_reactions)]);
+        //console.log(res);
+        console.log("hello end main");
+        return result;
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+function get_recursive_comments(id, res_comments) {
+    console.log("get_recursive_comments")
+    return new Promise((resolve, reject) => {
+        serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, function (err, res) {
+            // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
+            console.log(res.data.length)
+            if (res.data.length === 0) {
+                //console.log(res)
+                res_comments.push(res);
+            }
+            if (err || !res) {
+                if (!res) {
+                    console.log("Err res.comments===null: ");
+                    console.dir(res);
+                    //callback({"error": {"message": "No reaction."}}, res_reactions);
+                }
+                console.dir(err);
+                reject(new Error('error!'))
+            } else {
+                // console.log(data_query.data[i].comments)
+                var data_query = {
+                    "data": []
+                };
+                data_query.data = res.data; //data_query.data.concat(res.data);
+                data_query.postid = id;
+                // console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
+                console.log(data_query.postid)
+                // console.log(data_query.data)
+                var l = res.data.length;
+                console.log("rl=" + l)
+                var pc = 0;
+                console.log("resolve comments");
+                resolve(each_comment(res, id, l, pc, res_comments, data_query));
+            }
+        })
+    }).catch(function (err) {
+        console.log(err.message)
+    });
+}
+
+function each_comment(res, id, l, pc, res_comments, data_query) {
+    console.log("---------- each subcomments loops ----------")
+    return new Promise(function (resolve, reject) {
+        if (l === 0) {
+            console.log("resolve subcomments");
+            resolve(res_comments);
+        } else {
+            res.data.forEach(function (item, index) {
+                if (item.comments) {
+                    var reply = item.comments,
+                        tar = data_query.data[index].comments;
+                    paging(reply, tar, 1, 100, function (err, res) {
+                        console.log("reply: " + index)
+                        console.log("rl=" + l)
+                        pc++;
+                        if (pc >= l) {
+                            res_comments.push(data_query);
+                            console.log("push: " + id);
+                            console.log("resolve subcomments");
+                            resolve(res_comments);
+                        }
+                    })
+                } else {
+                    pc++;
+                    if (pc >= l) {
+                        res_comments.push(data_query);
+                        console.log("push: " + id);
+                        console.log("resolve subcomments");
+                        resolve(res_comments);
+                    }
+                }
+            });
+        }
+    }).catch(function (err) {
+        console.log(err.message)
+    });
+};
+
+function get_recursive_reactions(id, reactionusers) {
+    console.log("get_recursive_reactions")
+    return new Promise((resolve, reject) => { // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
+        serverUtilities.get_recursive(id, "reactions", "?limit=100", 500, function (err, res) {
+            // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
+            if (err || !res) {
+                if (!res) {
+                    console.log("Err res.comments===null: ");
+                    console.dir(res);
+                    //callback({"error": {"message": "No reaction."}}, res_reactions);
+                }
+                console.dir(err);
+                reject(new Error('error!'))
+            } else {
+                // console.log("id=" + id)
+                reactionusers.push(res);
+                //console.log("err");
+                console.log("resolve reactionusers");
+                resolve(reactionusers);
+            }
+        });
+    }).catch(function (err) {
+        console.log(err)
+    })
+}
+
+function get_reaction_counts(id, res_reactions) {
+    console.log("get_reaction_counts")
+    return new Promise((resolve, reject) => {
+        var params = "?fields=reactions.type(LIKE).limit(0).summary(true).as(like),reactions.type(LOVE).limit(0).summary(true).as(love),reactions.type(WOW).limit(0).summary(true).as(wow),reactions.type(HAHA).limit(0).summary(true).as(haha),reactions.type(SAD).limit(0).summary(true).as(sad),reactions.type(ANGRY).limit(0).summary(true).as(angry), reactions.type(THANKFUL).limit(0).summary(true).as(thankful)";
+        graph.get(id + params, function (err, res) {
+            if (err || !res) {
+                if (!res) {
+                    console.log("Err res.reactions===null: ");
+                    console.dir(res);
+                    //callback({"error": {"message": "No reaction."}}, res_reactions);
+                }
+                console.dir(err);
+                reject(new Error('error!'))
+                //res.send({ "error": { "message": JSON.stringify(err) } });
+            } else {
+                // console.log("id=" + id)
+                res_reactions.push(res);
+                //console.log("err");
+                console.log("resolve reactions");
+                resolve(res_reactions);
+            }
+        });
+    }).catch(function (err) {
+        console.log(err)
+    })
+}
+
+var next = function next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+    console.log("---------- next ----------")
+    var save_posts = [];
+    serverUtilities.savejson("comments_" + sincedate + "_" + untildate + "_" + userid, res_comments); //*
+    serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions); //*
+    serverUtilities.savejson("reactionusers_" + sincedate + "_" + untildate + "_" + userid, reactionusers); //*
+    save_posts = fill_reactions(res_posts, res_reactions);
+    save_posts = fill_comments(save_posts, res_comments);
+    // serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+    save_posts = serverUtilities.format_json(res_posts, save_posts);
+    save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
+    serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+    //console.log(res_posts);
+    console.log("done");
+    //}
+}
+
+var paging = function paging(res, tar, depth, MAX_DEPTH, callback) {
+    // console.log("depth=" + depth)
+    if (depth >= MAX_DEPTH) {
+        console.log("resursive paging: " + MAX_DEPTH);
+        callback(null, tar);
+        return;
+    }
+    if (res.data && res.paging && res.paging.next) {
+        graph.get(res.paging.next, function (err, res) {
+            if (err) {
+                callback(err, res);
+            }
+            depth++;
+            Array.prototype.push.apply(tar.data, res.data);
+            setTimeout(function () {
+                paging(res, tar, depth, MAX_DEPTH, callback);
+            }, 1);
+        });
+    } else {
+        callback(null, tar);
+        return;
+    }
+}
+
+var fill_reactions = function fill_reactions(res_posts, res_reactions) {
+    for (var i = 0; i < res_posts.data.length; i++) {
+        for (var j = 0; j < res_reactions.length; j++) {
+            if (!(res_posts.data[i].reaction_detail)) {
+                if (res_posts.data[i].id === res_reactions[j].id) {
+                    res_posts.data[i].reaction_detail = {
+                        "LIKE": res_reactions[j].like.summary.total_count,
+                        "LOVE": res_reactions[j].love.summary.total_count,
+                        "WOW": res_reactions[j].wow.summary.total_count,
+                        "HAHA": res_reactions[j].haha.summary.total_count,
+                        "SAD": res_reactions[j].sad.summary.total_count,
+                        "ANGRY": res_reactions[j].angry.summary.total_count,
+                        "THANKFUL": res_reactions[j].thankful.summary.total_count,
+                    };
+                }
+            }
+        }
+    }
+    //console.log(res_posts);
+    return res_posts;
+};
+
+var fill_comments = function fill_comments(res_posts, res_comments) {
+    for (var i = 0; i < res_posts.data.length; i++) {
+        for (var j = 0; j < res_comments.length; j++) {
+            if (res_posts.data[i].id === res_comments[j].postid) {
+                res_posts.data[i].comments.data = res_comments[j].data;
+            }
+        }
+    }
+    //console.log(res_posts);
+    return res_posts;
 };
 
 var exports = module.exports = {};
