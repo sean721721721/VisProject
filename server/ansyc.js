@@ -289,7 +289,7 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
     save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
     serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
     //console.log(res_posts);
-    console.log("done");
+    console.log("saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
     //}
 }
 

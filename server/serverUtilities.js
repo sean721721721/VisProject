@@ -37,8 +37,8 @@ var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
 
 var savejson = function savejson(name, jsondata) {
 	//fs.writeFile(name +".json", JSON.stringify(jsondata));
-	fs.writeFile(dirpath + name + getdateformat() + ".json", JSON.stringify(jsondata));
-	fs.writeFile(dirpathAfter20141202 + name + getdateformat() + ".json", JSON.stringify(jsondata));
+	fs.writeFileSync(dirpath + name + getdateformat() + ".json", JSON.stringify(jsondata));
+	fs.writeFileSync(dirpathAfter20141202 + name + getdateformat() + ".json", JSON.stringify(jsondata));
 };
 
 var savejson_offline = function savejson(name, jsondata) {
