@@ -51,13 +51,23 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   '157215971120682', //Taipei 2017 Universiade - 世大運
 ];
 
-var sincedate = "2017-08-01",
-  finaldate = "2017-08-20",
-  range = 1;
+var sincedate = "2017-08-17",
+  finaldate = "2017-08-25",
+  range = 1,
+  timeout = 1000;
 
 untildate = nextdays(sincedate, finaldate, range);
 const initsincedate = sincedate,
   inituntildate = untildate;
+
+var step = [];
+while (sincedate !== finaldate) {
+  for (var i = 0; i < fanpageId.length; i++) {
+    step.push([fanpageId[i], sincedate, untildate]);
+  }
+  sincedate = nextdays(sincedate, finaldate, range);
+  untildate = nextdays(untildate, finaldate, range);
+}
 
 function nextmonth(date) {
   var dateArray = date.split("-"),
@@ -200,18 +210,13 @@ function crawlingData(longlive_token) {
   //query setting
   graph.setAccessToken(longlive_token)
     .setOptions(options);
-  var pindex = 0;
+
   var job = new CronJob({
-    cronTime: '*/1 * * * * *',
+    cronTime: '* * * * * *',
     onTick: function () {
-      crawler(pindex, longlive_token);
-      if (untildate !== finaldate) {
-        sincedate = nextdays(sincedate, finaldate, range);
-        untildate = nextdays(untildate, finaldate, range);
-      } else {
-        console.log("stop!");
-        this.stop();
-      }
+      console.log('---------------------job at: ' + Date(Date.now()) + '---------------------');
+      crawler(step, longlive_token);
+      job.stop(); //stop cronjob after fire
     },
     start: true,
     onComplete: function () {
@@ -219,14 +224,24 @@ function crawlingData(longlive_token) {
     },
   });
   console.log('job status', job.running);
+
 }
 
-function crawler(pindex, longlive_token) {
-  //var userid = fanpageId.pop();
-  while (pindex < fanpageId.length) {
-    //console.log("The fanpageId index is : " + pindex);
-    var userid = fanpageId[pindex];
+async function crawler(step, longlive_token) {
+  for (var i = 0; i < step.length; i++) {
+    await getData(i, step);
+  }
+  /*for(const item of step) {}*/
+  /*step.forEach(async(item) => {})*/
+}
 
+function getData(i, step) {
+  return new Promise((resolve, reject) => {
+    var item = step[i];
+    var userid = item[0];
+    var sincedate = item[1];
+    var untildate = item[2];
+    //console.log(userid)
     graph.get(userid, {
       fields: ""
     }, function (err, res0) {
@@ -255,7 +270,8 @@ function crawler(pindex, longlive_token) {
           //var queryfield = "?fields=id,object_id,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since="+sincedate+"&until="+untildate+"&limit=100";
           var queryfield = "?fields=id,object_id,created_time,type,message,story,picture,from,shares,attachments,sharedposts,reactions.limit(0).summary(true),comments.limit(0).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
           //var queryfield = "?fields=id,object_id,created_time,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
-          serverUtilities.get_recursive(userid, "posts", queryfield, 50, function (err, res_posts) {
+          var ptimeout = timeout * 2 * 10 * 100;
+          serverUtilities.get_recursive(userid, "posts", queryfield, 50, ptimeout, function (err, res_posts) {
             if (err || !res_posts) {
               if (!res_posts) {
                 console.log("Err res_posts === null: ");
@@ -281,24 +297,19 @@ function crawler(pindex, longlive_token) {
                 postid[i] = res_posts.data[i].id;
               }
               //console.log(res_posts);
-              asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+              resolve(asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid));
 
             } else {
               console.log("---no post in the time range!---");
+              resolve(true);
               //console.dir(res_posts);
             }
           }); //create direction
         }; //graph.get(userid, {fields: ""}, function(err, res0) {
       };
     }); // end of graph.get()
-    console.log("sincedate: " + sincedate + " untildate: " + untildate + " crawling page: " + userid)
-    pindex++;
-  }
-  if (pindex == fanpageId.length) {
-    pindex = 0;
-    console.log('next run')
-    //console.log('job status', this.running);
-  }
+    console.log("sincedate: " + sincedate + " untildate: " + untildate + " crawling page: " + userid + " fire");
+  });
 }
 
 async function asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
@@ -322,7 +333,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
         //console.log(res_comments)
         //console.log(reactionusers)
         //console.log(res_reactions)
-        next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+        return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
       }
     }
   } catch (err) {
@@ -345,7 +356,8 @@ async function main(id, res_posts, res_comments, res_reactions, reactionusers, s
 function get_recursive_comments(id, res_comments) {
   //console.log("get_recursive_comments")
   return new Promise((resolve, reject) => {
-    serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, function (err, res) {
+    var ctimeout = timeout * 2 * 10;
+    serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, ctimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       //console.log(res.data.length)
       if (res.data.length === 0) {
@@ -385,6 +397,7 @@ function get_recursive_comments(id, res_comments) {
 function each_comment(res, id, l, pc, res_comments, data_query) {
   //console.log("---------- each subcomments loops ----------")
   return new Promise(function (resolve, reject) {
+    var stimeout = timeout * 2;
     if (l === 0) {
       console.log("resolve subcomments: " + id);
       resolve(res_comments);
@@ -393,7 +406,7 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
         if (item.comments) {
           var reply = item.comments,
             tar = data_query.data[index].comments;
-          paging(reply, tar, 1, 100, function (err, res) {
+          paging(reply, tar, 1, 100, stimeout, function (err, res) {
             //console.log("reply: " + index)
             //console.log("rl=" + l)
             pc++;
@@ -422,8 +435,10 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
 
 function get_recursive_reactions(id, reactionusers) {
   //console.log("get_recursive_reactions")
-  return new Promise((resolve, reject) => { // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
-    serverUtilities.get_recursive(id, "reactions", "?limit=100", 500, function (err, res) {
+  return new Promise((resolve, reject) => {
+    // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
+    var rtimeout = timeout * 2;
+    serverUtilities.get_recursive(id, "reactions", "?limit=100", 500, rtimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
@@ -487,10 +502,11 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
   serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
   //console.log(res_posts);
   console.log("saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
+  return true;
   //}
 }
 
-var paging = function paging(res, tar, depth, MAX_DEPTH, callback) {
+var paging = function paging(res, tar, depth, MAX_DEPTH, timeout, callback) {
   // console.log("depth=" + depth)
   if (depth >= MAX_DEPTH) {
     //console.log("resursive paging: " + MAX_DEPTH);
@@ -505,8 +521,8 @@ var paging = function paging(res, tar, depth, MAX_DEPTH, callback) {
       depth++;
       Array.prototype.push.apply(tar.data, res.data);
       setTimeout(function () {
-        paging(res, tar, depth, MAX_DEPTH, callback);
-      }, 1);
+        paging(res, tar, depth, MAX_DEPTH, timeout, callback);
+      }, timeout);
     });
   } else {
     callback(null, tar);

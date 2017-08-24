@@ -7,6 +7,8 @@ var graph = require('fbgraph'), // npm install fbgraph
 
 graph.setVersion("2.9");
 
+var timeout = 1;
+
 var callback = function callback(req, res) {
     // CSP headers
     res.set("Access-Control-Allow-Origin", "*");
@@ -64,7 +66,7 @@ var callback = function callback(req, res) {
                 //var queryfield = "?fields=id,object_id,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since="+sincedate+"&until="+untildate+"&limit=100";
                 var queryfield = "?fields=id,object_id,created_time,type,message,story,picture,from,shares,attachments,sharedposts,reactions.limit(0).summary(true),comments.limit(0).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
                 //var queryfield = "?fields=id,object_id,created_time,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
-                serverUtilities.get_recursive(userid, "posts", queryfield, 50, function (err, res_posts) {
+                serverUtilities.get_recursive(userid, "posts", queryfield, 50, timeout, function (err, res_posts) {
                     // console.log("OUTSIDE: ");
                     // console.dir(res);
                     if (err || !res_posts) {
@@ -148,7 +150,7 @@ async function main(id, res_posts, res_comments, res_reactions, reactionusers, s
 function get_recursive_comments(id, res_comments) {
     console.log("get_recursive_comments")
     return new Promise((resolve, reject) => {
-        serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, function (err, res) {
+        serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, timeout, function (err, res) {
             // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
             console.log(res.data.length)
             if (res.data.length === 0) {
@@ -226,7 +228,7 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
 function get_recursive_reactions(id, reactionusers) {
     console.log("get_recursive_reactions")
     return new Promise((resolve, reject) => { // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
-        serverUtilities.get_recursive(id, "reactions", "?limit=100", 500, function (err, res) {
+        serverUtilities.get_recursive(id, "reactions", "?limit=100", 500, timeout, function (err, res) {
             // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
             if (err || !res) {
                 if (!res) {
@@ -293,7 +295,7 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
     //}
 }
 
-var paging = function paging(res, tar, depth, MAX_DEPTH, callback) {
+var paging = function paging(res, tar, depth, MAX_DEPTH, timeout, callback) {
     // console.log("depth=" + depth)
     if (depth >= MAX_DEPTH) {
         console.log("resursive paging: " + MAX_DEPTH);
@@ -308,8 +310,8 @@ var paging = function paging(res, tar, depth, MAX_DEPTH, callback) {
             depth++;
             Array.prototype.push.apply(tar.data, res.data);
             setTimeout(function () {
-                paging(res, tar, depth, MAX_DEPTH, callback);
-            }, 1);
+                paging(res, tar, depth, MAX_DEPTH, timeout, callback);
+            }, timeout);
         });
     } else {
         callback(null, tar);

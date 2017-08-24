@@ -246,7 +246,7 @@ var saveinformation = function saveinformation(results, res_data) {
 //postid, field_query, subfield_query, MAX_DEPTH, callback
 //postid, "sharedposts", "?fields=via,from,likes.limit(1000)&limit=100"
 //postid, "likes", "?limit=1000"
-var get_recursive = function get_recursive(postid, field_query, subfield_query, MAX_DEPTH, callback) {
+var get_recursive = function get_recursive(postid, field_query, subfield_query, MAX_DEPTH, timeout, callback) {
 	graph.get(postid + '/' + field_query + '/' + subfield_query, function (err, res) {
 		if (err || !res) {
 			if (!res) {
@@ -288,7 +288,7 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 
 					setTimeout(function () {
 						recurpaging(res, depth, MAX_DEPTH, callback);
-					}, 1);
+					}, timeout);
 				});
 			} else {
 				//console.log("[resursive paging: end --------------]");
