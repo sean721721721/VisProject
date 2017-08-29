@@ -29,6 +29,7 @@ var getdateformat = function getdateformat() {
 		curr_year = d.getFullYear();
 
 	return "_" + curr_month + "-" + curr_date + "-(" + curr_hour + ")-" + curr_year;
+	//return "_" + curr_month + "-" + curr_date + "-" + curr_year;
 };
 
 var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
@@ -268,6 +269,7 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 				//console.log(field_query + ".length: " + data_query.data.length);
 				//savejson("data_query", data_query);
 				callback(null, data_query);
+				return;
 			}
 
 			if (res.data && res.paging && res.paging.next) {
@@ -295,6 +297,7 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 				//console.log(field_query + ".length: " + data_query.data.length);
 				//savejson("data_query", data_query);
 				callback(null, data_query);
+				return;
 			}
 		};
 

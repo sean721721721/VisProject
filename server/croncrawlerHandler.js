@@ -3,7 +3,7 @@ var graph = require('fbgraph'), // npm install fbgraph
   async = require('async'), // npm install async
   fs = require('fs'),
   CronJob = require('cron').CronJob,
-
+  winston = require('winston'),
   serverUtilities = require('./serverUtilities.js');
 
 graph.setVersion("2.9");
@@ -52,9 +52,11 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
 ];
 
 var sincedate = "2017-08-17",
-  finaldate = "2017-08-25",
-  range = 1,
-  timeout = 1000;
+  finaldate = "2017-08-31",
+  range = 1;
+
+const dtimeout = 1000;
+var timeout = 1000;
 
 untildate = nextdays(sincedate, finaldate, range);
 const initsincedate = sincedate,
@@ -68,6 +70,28 @@ while (sincedate !== finaldate) {
   sincedate = nextdays(sincedate, finaldate, range);
   untildate = nextdays(untildate, finaldate, range);
 }
+
+var logger = new(winston.Logger)({
+  transports: [
+    new(winston.transports.Console)(),
+    new(winston.transports.File)({
+      name: 'info-file',
+      filename: '/windows/D/pagedata after 20141202/crawler-info.log',
+      level: 'info'
+    }),
+    new(winston.transports.File)({
+      name: 'error-file',
+      filename: '/windows/D/pagedata after 20141202/crawler-error.log',
+      level: 'error'
+    })
+  ],
+  exceptionHandlers: [
+    new(winston.transports.File)({
+      filename: '/windows/D/pagedata after 20141202/exceptions.log'
+    })
+  ],
+  exitOnError: false
+})
 
 function nextmonth(date) {
   var dateArray = date.split("-"),
@@ -176,8 +200,8 @@ function requestLongLiveToken(token, callback) {
 
   // callback of graph.extendAccessToken
   function facebookResponse(err, res) {
-    console.log("Facebook response the longlivetoken requst.");
-    console.log("The longlivetoken is: " + res.access_token);
+    logger.log('info', "Facebook response the longlivetoken requst.");
+    logger.log('info', "The longlivetoken is: " + res.access_token);
     // same as setCrawlingSchedule(res.access_token)
     callback(res.access_token); // this token expiry time is 60 days
   }
@@ -189,9 +213,9 @@ function setCrawlingSchedule(longLiveToken) {
     //cronTime: '* * * * * *',
     onTick: function () {
       crawlingData(longLiveToken);
-      console.log('---------------------initjob at: ' + Date(Date.now()) + '---------------------');
+      logger.log('info', '---------------------initjob at: ' + Date(Date.now()) + '---------------------');
       if (untildate === finaldate) {
-        console.log("reset sincedate and untildate");
+        logger.log('info', "reset sincedate and untildate");
         sincedate = initsincedate;
         untildate = inituntildate;
         this.stop();
@@ -199,11 +223,11 @@ function setCrawlingSchedule(longLiveToken) {
     },
     start: true,
     onComplete: function () {
-      console.log('!--------------------comlete initjob fire--------------------!')
+      logger.log('info', '!--------------------comlete initjob fire--------------------!')
     },
     //runOnInit: true,
   });
-  console.log('jobinit status', jobinit.running);
+  logger.log('info', 'jobinit status', jobinit.running);
 }
 
 function crawlingData(longlive_token) {
@@ -214,16 +238,16 @@ function crawlingData(longlive_token) {
   var job = new CronJob({
     cronTime: '* * * * * *',
     onTick: function () {
-      console.log('---------------------job at: ' + Date(Date.now()) + '---------------------');
+      logger.log('info', '---------------------job at: ' + Date(Date.now()) + '---------------------');
       crawler(step, longlive_token);
       job.stop(); //stop cronjob after fire
     },
     start: true,
     onComplete: function () {
-      console.log('---------------------comlete job fire---------------------')
+      logger.log('info', '---------------------comlete job fire---------------------')
     },
   });
-  console.log('job status', job.running);
+  logger.log('info', 'job status', job.running);
 
 }
 
@@ -248,7 +272,7 @@ function getData(i, step) {
       if (err && !res0) {
         console.log("res0 === null ");
         console.dir(err);
-        console.log({
+        logger.log('error', {
           "error": {
             "message": JSON.stringify(err)
           }
@@ -270,11 +294,11 @@ function getData(i, step) {
           //var queryfield = "?fields=id,object_id,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since="+sincedate+"&until="+untildate+"&limit=100";
           var queryfield = "?fields=id,object_id,created_time,type,message,story,picture,from,shares,attachments,sharedposts,reactions.limit(0).summary(true),comments.limit(0).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
           //var queryfield = "?fields=id,object_id,created_time,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
-          var ptimeout = timeout * 2 * 10 * 100;
+          var ptimeout = dtimeout * 2 * 10 * 100;
           serverUtilities.get_recursive(userid, "posts", queryfield, 50, ptimeout, function (err, res_posts) {
             if (err || !res_posts) {
               if (!res_posts) {
-                console.log("Err res_posts === null: ");
+                logger.log('error', "Err res_posts === null: ");
                 console.dir(res_posts);
                 //callback({"error": {"message": "No feed."}}, res_posts);
               }
@@ -300,7 +324,7 @@ function getData(i, step) {
               resolve(asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid));
 
             } else {
-              console.log("---no post in the time range!---");
+              logger.log('info', "---no post in the time range!---");
               resolve(true);
               //console.dir(res_posts);
             }
@@ -308,7 +332,7 @@ function getData(i, step) {
         }; //graph.get(userid, {fields: ""}, function(err, res0) {
       };
     }); // end of graph.get()
-    console.log("sincedate: " + sincedate + " untildate: " + untildate + " crawling page: " + userid + " fire");
+    logger.log('info', "sincedate: " + sincedate + " untildate: " + untildate + " crawling page: " + userid + " fire");
   });
 }
 
@@ -329,7 +353,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
         res_comments = result[0][0];
         reactionusers = result[0][1];
         res_reactions = result[0][2];
-        console.log("-------- res done: " + userid + " --------");
+        logger.log('info', "-------- res done: " + userid + " --------");
         //console.log(res_comments)
         //console.log(reactionusers)
         //console.log(res_reactions)
@@ -337,19 +361,20 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
       }
     }
   } catch (err) {
-    console.log(err);
+    logger.log('error', err);
   }
 }
 
 async function main(id, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   try {
-    console.log("---------- main loop: " + id + " ----------")
+    logger.log('info', "---------- main loop: " + id + " ----------")
+    var timeout = dtimeout * res_posts.length;
     var result = await Promise.all([get_recursive_comments(id, res_comments), get_recursive_reactions(id, reactionusers), get_reaction_counts(id, res_reactions)]);
     //console.log(res);
     //console.log("hello end main");
     return result;
   } catch (err) {
-    console.log(err);
+    logger.log('error', err);
   }
 }
 
@@ -366,7 +391,7 @@ function get_recursive_comments(id, res_comments) {
       }
       if (err || !res) {
         if (!res) {
-          console.log("Err res.comments===null: ");
+          logger.log('error', "Err res.comments===null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -385,12 +410,12 @@ function get_recursive_comments(id, res_comments) {
         var l = res.data.length;
         //console.log("rl=" + l)
         var pc = 0;
-        console.log("resolve comments: " + id);
+        logger.log('info', "resolve comments: " + id);
         resolve(each_comment(res, id, l, pc, res_comments, data_query));
       }
     })
   }).catch(function (err) {
-    console.log(err.message)
+    logger.log('error', err.message)
   });
 }
 
@@ -399,21 +424,21 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
   return new Promise(function (resolve, reject) {
     var stimeout = timeout * 2;
     if (l === 0) {
-      console.log("resolve subcomments: " + id);
+      logger.log('info', "no comments: " + id);
       resolve(res_comments);
     } else {
       res.data.forEach(function (item, index) {
         if (item.comments) {
           var reply = item.comments,
             tar = data_query.data[index].comments;
-          paging(reply, tar, 1, 100, stimeout, function (err, res) {
+          paging(reply, tar, 1, 1000, stimeout, function (err, res) {
             //console.log("reply: " + index)
             //console.log("rl=" + l)
             pc++;
             if (pc >= l) {
               res_comments.push(data_query);
               //console.log("push: " + id);
-              //console.log("resolve subcomments: "+id);
+              logger.log('info', "resolve subcomments: " + id);
               resolve(res_comments);
             }
           })
@@ -422,14 +447,14 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
           if (pc >= l) {
             res_comments.push(data_query);
             //console.log("push: " + id);
-            console.log("resolve subcomments: " + id);
+            logger.log('info', "no subcomments: " + id);
             resolve(res_comments);
           }
         }
       });
     }
   }).catch(function (err) {
-    console.log(err.message)
+    logger.log('error', err.message)
   });
 };
 
@@ -438,11 +463,11 @@ function get_recursive_reactions(id, reactionusers) {
   return new Promise((resolve, reject) => {
     // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
     var rtimeout = timeout * 2;
-    serverUtilities.get_recursive(id, "reactions", "?limit=100", 500, rtimeout, function (err, res) {
+    serverUtilities.get_recursive(id, "reactions", "?limit=100", 5, rtimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
-          console.log("Err res.comments===null: ");
+          logger.log('error', "Err res.comments===null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -452,12 +477,12 @@ function get_recursive_reactions(id, reactionusers) {
         // console.log("id=" + id)
         reactionusers.push(res);
         //console.log("err");
-        console.log("resolve reactionusers: " + id);
+        logger.log('info', "resolve reactionusers: " + id);
         resolve(reactionusers);
       }
     });
   }).catch(function (err) {
-    console.log(err)
+    logger.log('error', err)
   })
 }
 
@@ -468,7 +493,7 @@ function get_reaction_counts(id, res_reactions) {
     graph.get(id + params, function (err, res) {
       if (err || !res) {
         if (!res) {
-          console.log("Err res.reactions===null: ");
+          logger.log('error', "Err res.reactions===null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -479,17 +504,17 @@ function get_reaction_counts(id, res_reactions) {
         // console.log("id=" + id)
         res_reactions.push(res);
         //console.log("err");
-        console.log("resolve reactions: " + id);
+        logger.log('info', "resolve reactions: " + id);
         resolve(res_reactions);
       }
     });
   }).catch(function (err) {
-    console.log(err)
+    logger.log('error', err)
   })
 }
 
 var next = function next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
-  console.log("---------- next: " + userid + " ----------")
+  logger.log('info', "---------- next: " + userid + " ----------")
   var save_posts = [];
   //serverUtilities.savejson("comments_" + sincedate + "_" + untildate + "_" + userid, res_comments); //*
   //serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions); //*
@@ -501,7 +526,7 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
   save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
   serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
   //console.log(res_posts);
-  console.log("saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
+  logger.log('info', "saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
   return true;
   //}
 }
