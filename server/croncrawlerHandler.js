@@ -55,9 +55,6 @@ var sincedate = "2017-08-17",
   finaldate = "2017-08-31",
   range = 1;
 
-const dtimeout = 1000;
-var timeout = 1000;
-
 untildate = nextdays(sincedate, finaldate, range);
 const initsincedate = sincedate,
   inituntildate = untildate;
@@ -294,8 +291,7 @@ function getData(i, step) {
           //var queryfield = "?fields=id,object_id,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since="+sincedate+"&until="+untildate+"&limit=100";
           var queryfield = "?fields=id,object_id,created_time,type,message,story,picture,from,shares,attachments,sharedposts,reactions.limit(0).summary(true),comments.limit(0).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
           //var queryfield = "?fields=id,object_id,created_time,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
-          var ptimeout = dtimeout;
-          serverUtilities.get_recursive(userid, "posts", queryfield, 50, ptimeout, function (err, res_posts) {
+          serverUtilities.get_recursive(userid, "posts", queryfield, 50, 1000, function (err, res_posts) {
             if (err || !res_posts) {
               if (!res_posts) {
                 logger.log('error', "Err res_posts === null: ");
@@ -340,10 +336,11 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
   try {
     //console.log("hello a0 and start main");
     if (postid.length > 0) {
+      var length=postid.length;
       var res = await Promise.all(postid.map(async function (item) {
         var id = item;
         //console.log("start: id = " + id)
-        return await main(id, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+        return await main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
         //.then(console.log("end: id = " + id));
       }));
       //console.log("l=" + res.length);
@@ -357,7 +354,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
         //console.log(res_comments)
         //console.log(reactionusers)
         //console.log(res_reactions)
-        return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+        return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate);
       }
     }
   } catch (err) {
@@ -365,11 +362,12 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
   }
 }
 
-async function main(id, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+async function main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   try {
     logger.log('info', "---------- main loop: " + id + " ----------")
-    timeout = dtimeout * res_posts.length;
-    var result = await Promise.all([get_recursive_comments(id, res_comments), get_recursive_reactions(id, reactionusers), get_reaction_counts(id, res_reactions)]);
+    var mtimeout = 1000 * length;
+    logger.log('info', "mtimeout = " + mtimeout + " ------------")
+    var result = await Promise.all([get_recursive_comments(id, res_comments, mtimeout), get_recursive_reactions(id, reactionusers, mtimeout), get_reaction_counts(id, res_reactions)]);
     //console.log(res);
     //console.log("hello end main");
     return result;
@@ -378,7 +376,7 @@ async function main(id, res_posts, res_comments, res_reactions, reactionusers, s
   }
 }
 
-function get_recursive_comments(id, res_comments) {
+function get_recursive_comments(id, res_comments, timeout) {
   //console.log("get_recursive_comments")
   return new Promise((resolve, reject) => {
     var ctimeout = timeout * 2;
@@ -407,7 +405,7 @@ function get_recursive_comments(id, res_comments) {
         //console.log("rl=" + l)
         var pc = 0;
         logger.log('info', "resolve comments: " + id);
-        resolve(each_comment(res, id, l, pc, res_comments, data_query));
+        resolve(each_comment(res, id, l, pc, res_comments, data_query, timeout));
       } else {
         res_comments.push(res);
       }
@@ -417,7 +415,7 @@ function get_recursive_comments(id, res_comments) {
   });
 }
 
-function each_comment(res, id, l, pc, res_comments, data_query) {
+function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
   //console.log("---------- each subcomments loops ----------")
   return new Promise(function (resolve, reject) {
     var stimeout = timeout * 2;
@@ -460,7 +458,7 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
   });
 };
 
-function get_recursive_reactions(id, reactionusers) {
+function get_recursive_reactions(id, reactionusers, timeout) {
   //console.log("get_recursive_reactions")
   return new Promise((resolve, reject) => {
     // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
