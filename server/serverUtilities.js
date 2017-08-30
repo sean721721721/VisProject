@@ -280,7 +280,7 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 					// page depth
 					depth++;
 					//console.log(res);
-					// console.log("page " + depth + " " + field_query + ".length: " + res.data.length);
+					console.log("page " + depth + " " + field_query + ".length: " + res.data.length);
 
 					//data_query.data = data_query.data.concat(res.data);
 					Array.prototype.push.apply(data_query.data, res.data);

@@ -6,7 +6,6 @@ var express = require('express'), // npm install express
   app = express(),
   //pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
   ansyc = require('./server/ansyc.js'),
-  croncrawlerHandler = require('./server/croncrawlerHandler.js'),
   // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
   tableHandler = require('./server/tableHandler.js'),
   query = require('./routes/rofl.js');
@@ -31,7 +30,6 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.use(express.static(path.join(__dirname, 'html')));
 //app.get('/pagevis', pagevisExpressHandler.callback);
 app.get('/pagevis', ansyc.callback);
-app.get('/crawler', croncrawlerHandler.callback);
 //app.get('/db', mongodbExpressHandler.callback);
 app.get('/table', tableHandler.callback);
 //app.get('/pagedata', pagedataExpressHandler.callback);

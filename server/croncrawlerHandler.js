@@ -248,7 +248,6 @@ function crawlingData(longlive_token) {
     },
   });
   logger.log('info', 'job status', job.running);
-
 }
 
 async function crawler(step, longlive_token) {
@@ -272,6 +271,7 @@ function getData(i, step) {
       if (err && !res0) {
         console.log("res0 === null ");
         console.dir(err);
+        reject(new Error('error!'));
         logger.log('error', {
           "error": {
             "message": JSON.stringify(err)
@@ -294,7 +294,7 @@ function getData(i, step) {
           //var queryfield = "?fields=id,object_id,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since="+sincedate+"&until="+untildate+"&limit=100";
           var queryfield = "?fields=id,object_id,created_time,type,message,story,picture,from,shares,attachments,sharedposts,reactions.limit(0).summary(true),comments.limit(0).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
           //var queryfield = "?fields=id,object_id,created_time,type,message,story,from,shares,likes.limit(1).summary(true),comments.limit(1).summary(true)&since=" + sincedate + "&until=" + untildate + "&limit=100";
-          var ptimeout = dtimeout * 2 * 10 * 100;
+          var ptimeout = dtimeout;
           serverUtilities.get_recursive(userid, "posts", queryfield, 50, ptimeout, function (err, res_posts) {
             if (err || !res_posts) {
               if (!res_posts) {
@@ -368,7 +368,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
 async function main(id, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   try {
     logger.log('info', "---------- main loop: " + id + " ----------")
-    var timeout = dtimeout * res_posts.length;
+    timeout = dtimeout * res_posts.length;
     var result = await Promise.all([get_recursive_comments(id, res_comments), get_recursive_reactions(id, reactionusers), get_reaction_counts(id, res_reactions)]);
     //console.log(res);
     //console.log("hello end main");
@@ -381,23 +381,19 @@ async function main(id, res_posts, res_comments, res_reactions, reactionusers, s
 function get_recursive_comments(id, res_comments) {
   //console.log("get_recursive_comments")
   return new Promise((resolve, reject) => {
-    var ctimeout = timeout * 2 * 10;
-    serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 100, ctimeout, function (err, res) {
+    var ctimeout = timeout * 2;
+    serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 1000, ctimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       //console.log(res.data.length)
-      if (res.data.length === 0) {
-        //console.log(res)
-        res_comments.push(res);
-      }
       if (err || !res) {
         if (!res) {
-          logger.log('error', "Err res.comments===null: ");
+          logger.log('error', "Err res_comments === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
         console.dir(err);
         reject(new Error('error!'))
-      } else {
+      } else if (res.data.length != 0) {
         // console.log(data_query.data[i].comments)
         var data_query = {
           "data": []
@@ -412,6 +408,8 @@ function get_recursive_comments(id, res_comments) {
         var pc = 0;
         logger.log('info', "resolve comments: " + id);
         resolve(each_comment(res, id, l, pc, res_comments, data_query));
+      } else {
+        res_comments.push(res);
       }
     })
   }).catch(function (err) {
@@ -423,7 +421,11 @@ function each_comment(res, id, l, pc, res_comments, data_query) {
   //console.log("---------- each subcomments loops ----------")
   return new Promise(function (resolve, reject) {
     var stimeout = timeout * 2;
-    if (l === 0) {
+    if (!res) {
+      logger.log('error', "Err res_subcomments === null: ");
+      console.dir(res);
+      reject(new Error('error!'))
+    } else if (l === 0) {
       logger.log('info', "no comments: " + id);
       resolve(res_comments);
     } else {
@@ -463,11 +465,11 @@ function get_recursive_reactions(id, reactionusers) {
   return new Promise((resolve, reject) => {
     // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
     var rtimeout = timeout * 2;
-    serverUtilities.get_recursive(id, "reactions", "?limit=100", 5, rtimeout, function (err, res) {
+    serverUtilities.get_recursive(id, "reactions", "?limit=100", 10000, rtimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
-          logger.log('error', "Err res.comments===null: ");
+          logger.log('error', "Err res_reactionusers === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -493,7 +495,7 @@ function get_reaction_counts(id, res_reactions) {
     graph.get(id + params, function (err, res) {
       if (err || !res) {
         if (!res) {
-          logger.log('error', "Err res.reactions===null: ");
+          logger.log('error', "Err res_reactions === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -544,6 +546,7 @@ var paging = function paging(res, tar, depth, MAX_DEPTH, timeout, callback) {
         callback(err, res);
       }
       depth++;
+      console.log("page " + depth + " " + ".length: " + res.data.length);
       Array.prototype.push.apply(tar.data, res.data);
       setTimeout(function () {
         paging(res, tar, depth, MAX_DEPTH, timeout, callback);
