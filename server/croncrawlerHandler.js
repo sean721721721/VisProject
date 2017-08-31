@@ -73,18 +73,18 @@ var logger = new(winston.Logger)({
     new(winston.transports.Console)(),
     new(winston.transports.File)({
       name: 'info-file',
-      filename: '/windows/D/pagedata after 20141202/crawler-info.log',
+      filename: './logs/crawler-info.log',
       level: 'info'
     }),
     new(winston.transports.File)({
       name: 'error-file',
-      filename: '/windows/D/pagedata after 20141202/crawler-error.log',
+      filename: './logs/crawler-error.log',
       level: 'error'
     })
   ],
   exceptionHandlers: [
     new(winston.transports.File)({
-      filename: '/windows/D/pagedata after 20141202/exceptions.log'
+      filename: './logs/exceptions.log'
     })
   ],
   exitOnError: false
@@ -294,7 +294,7 @@ function getData(i, step) {
           serverUtilities.get_recursive(userid, "posts", queryfield, 50, 1000, function (err, res_posts) {
             if (err || !res_posts) {
               if (!res_posts) {
-                logger.log('error', "Err res_posts === null: ");
+                logger.log('error', userid + "Err res_posts === null: ");
                 console.dir(res_posts);
                 //callback({"error": {"message": "No feed."}}, res_posts);
               }
@@ -336,7 +336,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
   try {
     //console.log("hello a0 and start main");
     if (postid.length > 0) {
-      var length=postid.length;
+      var length = postid.length;
       var res = await Promise.all(postid.map(async function (item) {
         var id = item;
         //console.log("start: id = " + id)
@@ -354,7 +354,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
         //console.log(res_comments)
         //console.log(reactionusers)
         //console.log(res_reactions)
-        return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate);
+        return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
       }
     }
   } catch (err) {
@@ -385,7 +385,7 @@ function get_recursive_comments(id, res_comments, timeout) {
       //console.log(res.data.length)
       if (err || !res) {
         if (!res) {
-          logger.log('error', "Err res_comments === null: ");
+          logger.log('error', id + "Err res_comments === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -420,7 +420,7 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
   return new Promise(function (resolve, reject) {
     var stimeout = timeout * 2;
     if (!res) {
-      logger.log('error', "Err res_subcomments === null: ");
+      logger.log('error', id + "Err res_subcomments === null: ");
       console.dir(res);
       reject(new Error('error!'))
     } else if (l === 0) {
@@ -467,7 +467,7 @@ function get_recursive_reactions(id, reactionusers, timeout) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
-          logger.log('error', "Err res_reactionusers === null: ");
+          logger.log('error', id + "Err res_reactionusers === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
@@ -493,7 +493,7 @@ function get_reaction_counts(id, res_reactions) {
     graph.get(id + params, function (err, res) {
       if (err || !res) {
         if (!res) {
-          logger.log('error', "Err res_reactions === null: ");
+          logger.log('error', id + " Err res_reactions === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }

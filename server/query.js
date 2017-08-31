@@ -4,6 +4,8 @@ var readFiles = require('./readfile.js');
 /*var MongoClient = require('mongodb').MongoClient,*/
 var assert = require('assert');
 var mongoose = require('mongoose');
+var ul = require('./userlist.js');
+var winston = require('winston');
 require('./postSchema.js')();
 
 // Use native promises
@@ -14,6 +16,29 @@ var pagepost = mongoose.model('Page');
 var options = {
     useMongoClient: true
 }
+
+//var dir="/windows/D/Projects/PageVis";
+var logger = new(winston.Logger)({
+    transports: [
+        new(winston.transports.Console)(),
+        new(winston.transports.File)({
+            name: 'info-file',
+            filename: './logs/query-info.log',
+            level: 'info'
+        }),
+        new(winston.transports.File)({
+            name: 'error-file',
+            filename: './logs/query-error.log',
+            level: 'error'
+        })
+    ],
+    exceptionHandlers: [
+        new(winston.transports.File)({
+            filename: './logs/exceptions.log'
+        })
+    ],
+    exitOnError: false
+})
 
 // Using `mongoose.connect`...
 var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/test?authSource=admin', options);
@@ -137,21 +162,30 @@ var query = function query(req, res) {
         $lt: time2
     };
     */
-    console.log(queryobj['type']);
+    //console.log(queryobj['type']);
     pagepost.find(queryobj, function (err, pagepost) {
         //console.log(pagepost)
-        return res.send(pagepost);
+        return pagepost;
         //console.log("year: "+pagepost['created_time'].getFullYear())
         //console.log("month: "+pagepost['created_time'].getMonth())
         //console.log("date: "+pagepost['created_time'].getDate())
         //console.log("hour: "+pagepost['created_time'].getHours())
         //console.log("minute: "+pagepost['created_time'].getMinutes())
+    }).then(result => {
+        userlist = ul.ualist(result);
+        logger.log('info', userlist);
+        res.send(userlist);
+    }).catch(function (err) {
+        logger.log('error', err);
     });
 }
 
 var callback = function callback(req, res) {
     console.log("go db")
-    query(req, res);
+    var files = query(req, res);
+    //res.send(files);
+    //console.log(files.length);
+
 }
 
 var exports = module.exports = {};
