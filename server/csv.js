@@ -158,11 +158,11 @@ var clearString = function clearString(s) {
     var pattern2 = new RegExp("[\r\n]")
     var rs1 = "";
     var rs2 = "";
-    var l1=s.length;
+    var l1 = s.length;
     for (var i = 0; i < l1; i++) {
         rs1 = rs1 + s.substr(i, 1).replace(pattern1, '，');
     }
-    var l2=rs1.length;
+    var l2 = rs1.length;
     for (var i = 0; i < l2; i++) {
         rs2 = rs2 + rs1.substr(i, 1).replace(pattern2, ' ');
     }

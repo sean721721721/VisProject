@@ -51,7 +51,7 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   '157215971120682', //Taipei 2017 Universiade - 世大運
 ];
 
-var sincedate = "2017-08-17",
+var sincedate = "2017-08-22",
   finaldate = "2017-08-31",
   range = 1;
 
@@ -337,12 +337,23 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
     //console.log("hello a0 and start main");
     if (postid.length > 0) {
       var length = postid.length;
+      /*Paralle
       var res = await Promise.all(postid.map(async function (item) {
         var id = item;
         //console.log("start: id = " + id)
         return await main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
         //.then(console.log("end: id = " + id));
-      }));
+      }));*/
+      var res = [];
+      await push();
+      async function push() {
+        for (var i = 0; i < length; i++) {
+          var id = postid[i];
+          var result = await main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+          //console.log(result);
+        }
+        res.push(result);
+      }
       //console.log("l=" + res.length);
       await end(res);
 
@@ -365,12 +376,27 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
 async function main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   try {
     logger.log('info', "---------- main loop: " + id + " ----------")
-    var mtimeout = 1000 * length;
+    //var mtimeout = 1000 * length;
+    var mtimeout = 1000;
     logger.log('info', "mtimeout = " + mtimeout + " ------------")
-    var result = await Promise.all([get_recursive_comments(id, res_comments, mtimeout), get_recursive_reactions(id, reactionusers, mtimeout), get_reaction_counts(id, res_reactions)]);
+    /*Paralle
+    //var result = await Promise.all([get_recursive_comments(id, res_comments, mtimeout), get_recursive_reactions(id, reactionusers, mtimeout), get_reaction_counts(id, res_reactions)]);
     //console.log(res);
     //console.log("hello end main");
+    return result;*/
+    var result = [];
+    await get_recursive_comments(id, res_comments, mtimeout);
+    await get_recursive_reactions(id, reactionusers, mtimeout);
+    await get_reaction_counts(id, res_reactions);
+    await push();
     return result;
+
+    function push() {
+      result.push(res_comments);
+      result.push(reactionusers);
+      result.push(res_reactions);
+      //console.log(result);
+    };
   } catch (err) {
     logger.log('error', err);
   }
@@ -379,7 +405,8 @@ async function main(id, length, res_comments, res_reactions, reactionusers, sinc
 function get_recursive_comments(id, res_comments, timeout) {
   //console.log("get_recursive_comments")
   return new Promise((resolve, reject) => {
-    var ctimeout = timeout * 2;
+    var ctimeout = timeout;
+    //var ctimeout = 1;
     serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 1000, ctimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       //console.log(res.data.length)
@@ -418,7 +445,8 @@ function get_recursive_comments(id, res_comments, timeout) {
 function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
   //console.log("---------- each subcomments loops ----------")
   return new Promise(function (resolve, reject) {
-    var stimeout = timeout * 2;
+    var stimeout = timeout;
+    //var stimeout = 1;
     if (!res) {
       logger.log('error', id + "Err res_subcomments === null: ");
       console.dir(res);
@@ -462,7 +490,8 @@ function get_recursive_reactions(id, reactionusers, timeout) {
   //console.log("get_recursive_reactions")
   return new Promise((resolve, reject) => {
     // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
-    var rtimeout = timeout * 2;
+    var rtimeout = timeout;
+    //var rtimeout = 1;
     serverUtilities.get_recursive(id, "reactions", "?limit=100", 10000, rtimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
@@ -521,7 +550,7 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
   //serverUtilities.savejson("reactionusers_" + sincedate + "_" + untildate + "_" + userid, reactionusers); //*
   save_posts = fill_reactions(res_posts, res_reactions);
   save_posts = fill_comments(save_posts, res_comments);
-  // serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+  //serverUtilities.savejson("preposts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
   save_posts = serverUtilities.format_json(res_posts, save_posts);
   save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
   serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);

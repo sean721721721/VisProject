@@ -135,7 +135,7 @@ var query = function query(req, res, time1, time2) {
             };
         }
     }
-    
+
     return pagepost.find(queryobj, function (err, pagepost) {
         //logger.log('info',pagepost);
         return pagepost;
@@ -148,24 +148,23 @@ var callback = function callback(req, res) {
     var time2 = req.params.time2;
     var time3 = req.params.time3;
     var time4 = req.params.time4;
-    Promise.all([query(req, res, time1, time2),query(req, res, time3, time4)])
-    .then(result => {
-        console.log(result[0].length)
-        console.log(result[1].length)
-        var response =[];
-        var ul1 = ul.ualist(result[0]);
-        var ul2 = ul.ualist(result[1]);
-        response.push(ul1);
-        response.push(ul2);
-        //logger.log('info', response);
-        res.send(response);
-    })
-    .catch (function(err) {
-        logger.log('error', err);
-    });
+    Promise.all([query(req, res, time1, time2), query(req, res, time3, time4)])
+        .then(result => {
+            console.log(result[0].length)
+            console.log(result[1].length)
+            var response = [];
+            var ul1 = ul.ualist(result[0]);
+            var ul2 = ul.ualist(result[1]);
+            response.push(ul1);
+            response.push(ul2);
+            //logger.log('info', response);
+            res.send(response);
+        })
+        .catch(function (err) {
+            logger.log('error', err);
+        });
     //res.send(files);
     //console.log(files.length);
-    
 }
 
 var exports = module.exports = {};

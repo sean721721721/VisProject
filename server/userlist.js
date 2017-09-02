@@ -100,7 +100,6 @@ var ualist = function ualist(files) {
                 }
             }
         }
-
     }
     console.log(userlist.length)
     comment_countdb(files, userlist);

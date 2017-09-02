@@ -10,4 +10,3 @@ var text = data.data[0].message;
 console.log(text)
 var result = nodejieba.cut(text);
 console.log(result);
-

@@ -51,12 +51,12 @@ app.post('/query', urlencodedParser, function (req, res) {
     "maxlike": body.maxlike,
     "mincomment": body.mincomment,
     "maxcomment": body.maxcomment,
-    "posttype":body.posttype,
-    "time1":body.date[0],
-    "time2":body.date[1],
-    "time3":body.date[2],
-    "time4":body.date[3],
-    });
+    "posttype": body.posttype,
+    "time1": body.date[0],
+    "time2": body.date[1],
+    "time3": body.date[2],
+    "time4": body.date[3],
+  });
   console.log(query)
   res.redirect('/query?' + query);
 })

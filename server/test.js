@@ -70,4 +70,3 @@ promise.then(function (db) {
 // Or, if you already have a connection
 connection.openUri('mongodb://localhost/myapp', { /* options */
 });
-
