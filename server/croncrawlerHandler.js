@@ -33,7 +33,7 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '691777560844943', // 不要服貿，不要被國民黨強暴！
   //   '275500169241166', // 台南反服貿／全台反服貿大串聯,  last post is 2014/09/29
   //   '652438848137404', // 連勝文
-  '136845026417486', // 柯文哲
+  //'136845026417486', // 柯文哲
   //   '100006562054294', // 徐世榮
   //   '198554613504293', // 戴立忍
   //   '263964720407395', // 讓愛與和平佔領中環 Occupy Central with Love and Peace
@@ -42,16 +42,16 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '935262873170231', // 青年居住論壇
   //   '565274156891915', // 台灣居住正義協會
   //   '431824973661134', // 焦點事件
-  //   '148475335184300', //greenpeace
+  '148475335184300', //greenpeace
   //   '103640919705348'  //綠盟
   //   '559756970792038', //出境事務所
   //   '1729604514029664' //勞動之王
   //   '100010574583275' // 梁振英personal
-  '46251501064', //蔡英文 Tsai Ing-wen
-  '157215971120682', //Taipei 2017 Universiade - 世大運
+  //'46251501064', //蔡英文 Tsai Ing-wen
+  //'157215971120682', //Taipei 2017 Universiade - 世大運
 ];
 
-var sincedate = "2017-08-22",
+var sincedate = "2017-01-02",
   finaldate = "2017-08-31",
   range = 1;
 
@@ -388,14 +388,14 @@ async function main(id, length, res_comments, res_reactions, reactionusers, sinc
     await get_recursive_comments(id, res_comments, mtimeout);
     await get_recursive_reactions(id, reactionusers, mtimeout);
     await get_reaction_counts(id, res_reactions);
-    await push();
-    return result;
+    return await push();
 
     function push() {
       result.push(res_comments);
       result.push(reactionusers);
       result.push(res_reactions);
-      //console.log(result);
+      //console.log('push result');
+      return result;
     };
   } catch (err) {
     logger.log('error', err);
@@ -435,6 +435,7 @@ function get_recursive_comments(id, res_comments, timeout) {
         resolve(each_comment(res, id, l, pc, res_comments, data_query, timeout));
       } else {
         res_comments.push(res);
+        resolve(res_comments);
       }
     })
   }).catch(function (err) {
