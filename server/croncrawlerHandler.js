@@ -51,7 +51,7 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //'157215971120682', //Taipei 2017 Universiade - 世大運
 ];
 
-var sincedate = "2017-01-02",
+var sincedate = "2017-01-01",
   finaldate = "2017-08-31",
   range = 1;
 
@@ -66,7 +66,7 @@ while (sincedate !== finaldate) {
   }
   sincedate = nextdays(sincedate, finaldate, range);
   untildate = nextdays(untildate, finaldate, range);
-}
+};
 
 var logger = new(winston.Logger)({
   transports: [
@@ -80,15 +80,15 @@ var logger = new(winston.Logger)({
       name: 'error-file',
       filename: './logs/crawler-error.log',
       level: 'error'
-    })
+    }),
   ],
   exceptionHandlers: [
     new(winston.transports.File)({
       filename: './logs/exceptions.log'
-    })
+    }),
   ],
   exitOnError: false
-})
+});
 
 function nextmonth(date) {
   var dateArray = date.split("-"),
@@ -113,7 +113,7 @@ function nextmonth(date) {
   date = year + "-" + month + "-" + day;
   // console.log("date:" + date);
   return date;
-}
+};
 
 function nextday(date) {
   var dateArray = date.split("-"),
@@ -166,7 +166,7 @@ function nextday(date) {
   date = year + "-" + month + "-" + day;
   // console.log("date:" + date);
   return date;
-}
+};
 
 function nextdays(date, finaldate, range) {
   for (var i = 0; i < range; i++) {
@@ -177,7 +177,7 @@ function nextdays(date, finaldate, range) {
     }
   }
   return date;
-}
+};
 
 // You can request a Facebook longlivetoken by this function, and use the callback function to catch the response,
 function requestLongLiveToken(token, callback) {
@@ -201,8 +201,8 @@ function requestLongLiveToken(token, callback) {
     logger.log('info', "The longlivetoken is: " + res.access_token);
     // same as setCrawlingSchedule(res.access_token)
     callback(res.access_token); // this token expiry time is 60 days
-  }
-}
+  };
+};
 
 function setCrawlingSchedule(longLiveToken) {
   var jobinit = new CronJob({
@@ -225,7 +225,7 @@ function setCrawlingSchedule(longLiveToken) {
     //runOnInit: true,
   });
   logger.log('info', 'jobinit status', jobinit.running);
-}
+};
 
 function crawlingData(longlive_token) {
   //query setting
@@ -245,7 +245,7 @@ function crawlingData(longlive_token) {
     },
   });
   logger.log('info', 'job status', job.running);
-}
+};
 
 async function crawler(step, longlive_token) {
   for (var i = 0; i < step.length; i++) {
@@ -253,7 +253,7 @@ async function crawler(step, longlive_token) {
   }
   /*for(const item of step) {}*/
   /*step.forEach(async(item) => {})*/
-}
+};
 
 function getData(i, step) {
   return new Promise((resolve, reject) => {
@@ -325,12 +325,12 @@ function getData(i, step) {
               //console.dir(res_posts);
             }
           }); //create direction
-        }; //graph.get(userid, {fields: ""}, function(err, res0) {
-      };
+        } //graph.get(userid, {fields: ""}, function(err, res0) {
+      }
     }); // end of graph.get()
     logger.log('info', "sincedate: " + sincedate + " untildate: " + untildate + " crawling page: " + userid + " fire");
   });
-}
+};
 
 async function asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   try {
@@ -366,12 +366,12 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
         //console.log(reactionusers)
         //console.log(res_reactions)
         return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
-      }
+      };
     }
   } catch (err) {
     logger.log('error', err);
   }
-}
+};
 
 async function main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   try {
@@ -400,7 +400,7 @@ async function main(id, length, res_comments, res_reactions, reactionusers, sinc
   } catch (err) {
     logger.log('error', err);
   }
-}
+};
 
 function get_recursive_comments(id, res_comments, timeout) {
   //console.log("get_recursive_comments")
@@ -437,11 +437,11 @@ function get_recursive_comments(id, res_comments, timeout) {
         res_comments.push(res);
         resolve(res_comments);
       }
-    })
+    });
   }).catch(function (err) {
     logger.log('error', err.message)
   });
-}
+};
 
 function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
   //console.log("---------- each subcomments loops ----------")
@@ -456,6 +456,41 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
       logger.log('info', "no comments: " + id);
       resolve(res_comments);
     } else {
+      resolve(sub());
+      async function sub() {
+        for (var index = 0; index < l; index++) {
+          var item = res.data[index];
+          if (item.comments) {
+            var reply = item.comments,
+              tar = data_query.data[index].comments;
+            await page();
+
+            function page() {
+              return new Promise((resolve) => {
+                paging(reply, tar, 1, 1000, stimeout, function (err, res) {
+                  pc++;
+                  if (pc >= l) {
+                    res_comments.push(data_query);
+                    logger.log('info', "resolve subcomments: " + id);
+                  }
+                  resolve('true');
+                });
+              }).catch(function (err) {
+                logger.log('error', err.message)
+              });
+            }
+          } else {
+            pc++;
+            if (pc >= l) {
+              res_comments.push(data_query);
+              //console.log("push: " + id);
+              logger.log('info', "no subcomments: " + id);
+            }
+          }
+        }
+        return res_comments;
+      };
+      /*Paralle
       res.data.forEach(function (item, index) {
         if (item.comments) {
           var reply = item.comments,
@@ -470,7 +505,7 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
               logger.log('info', "resolve subcomments: " + id);
               resolve(res_comments);
             }
-          })
+          });
         } else {
           pc++;
           if (pc >= l) {
@@ -480,7 +515,7 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
             resolve(res_comments);
           }
         }
-      });
+      });*/
     }
   }).catch(function (err) {
     logger.log('error', err.message)
@@ -513,8 +548,8 @@ function get_recursive_reactions(id, reactionusers, timeout) {
     });
   }).catch(function (err) {
     logger.log('error', err)
-  })
-}
+  });
+};
 
 function get_reaction_counts(id, res_reactions) {
   //console.log("get_reaction_counts")
@@ -540,8 +575,8 @@ function get_reaction_counts(id, res_reactions) {
     });
   }).catch(function (err) {
     logger.log('error', err)
-  })
-}
+  });
+};
 
 var next = function next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
   logger.log('info', "---------- next: " + userid + " ----------")
@@ -559,7 +594,7 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
   logger.log('info', "saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
   return true;
   //}
-}
+};
 
 var paging = function paging(res, tar, depth, MAX_DEPTH, timeout, callback) {
   // console.log("depth=" + depth)
@@ -584,7 +619,7 @@ var paging = function paging(res, tar, depth, MAX_DEPTH, timeout, callback) {
     callback(null, tar);
     return;
   }
-}
+};
 
 var fill_reactions = function fill_reactions(res_posts, res_reactions) {
   for (var i = 0; i < res_posts.data.length; i++) {
@@ -599,7 +634,7 @@ var fill_reactions = function fill_reactions(res_posts, res_reactions) {
             "SAD": res_reactions[j].sad.summary.total_count,
             "ANGRY": res_reactions[j].angry.summary.total_count,
             "THANKFUL": res_reactions[j].thankful.summary.total_count,
-          };
+          }
         }
       }
     }
@@ -632,7 +667,7 @@ var callback = function callback(req, res) {
   var limit = 100;
 
   requestLongLiveToken(req.query.token, setCrawlingSchedule);
-}
+};
 
 var exports = module.exports = {};
 exports.callback = callback;

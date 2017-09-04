@@ -28,8 +28,8 @@ var getdateformat = function getdateformat() {
 		curr_month = d.getMonth() + 1, //Months are zero based
 		curr_year = d.getFullYear();
 
-	return "_" + curr_month + "-" + curr_date + "-(" + curr_hour + ")-" + curr_year;
-	//return "_" + curr_month + "-" + curr_date + "-" + curr_year;
+	//return "_" + curr_month + "-" + curr_date + "-(" + curr_hour + ")-" + curr_year;
+	return "_" + curr_month + "-" + curr_date + "-" + curr_year;
 };
 
 var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
@@ -39,12 +39,7 @@ var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
 var savejson = function savejson(name, jsondata) {
 	//fs.writeFile(name +".json", JSON.stringify(jsondata));
 	fs.writeFileSync(dirpath + name + getdateformat() + ".json", JSON.stringify(jsondata));
-	fs.writeFileSync(dirpathAfter20141202 + name + getdateformat() + ".json", JSON.stringify(jsondata));
-};
-
-var savejson_offline = function savejson(name, jsondata) {
-	//fs.writeFile(name +".json", JSON.stringify(jsondata));
-	fs.writeFile("./vaidata/" + name + getdateformat() + ".json", JSON.stringify(jsondata));
+	//fs.writeFileSync(dirpathAfter20141202 + name + getdateformat() + ".json", JSON.stringify(jsondata));
 };
 
 var updatejson = function updatejson(name, jsondata) {
@@ -85,43 +80,14 @@ var createfolder = function createfolder(id) {
 		console.log("Not find folder '" + id + getdateformat() + "', create new folder.");
 	}
 
-	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
-	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/")) {
-		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
+	if (fs.existsSync("/windows/D/Crawler_data/" + id + getdateformat() + "/")) {
+		dirpath = "/windows/D/Crawler_data/" + id + getdateformat() + "/";
 	} else {
-		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
-		fs.mkdirSync(dirpathAfter20141202);
-		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
-	}
-};
-
-var createfolder_sharevis = function createfolder_sharevis(id) {
-	if (fs.existsSync("pagedata/")) {
-		if (fs.existsSync("pagedata/" + id + getdateformat() + "/")) {
-			dirpath = "pagedata/" + id + getdateformat() + "/";
-		} else {
-			dirpath = "pagedata/" + id + getdateformat() + "/";
-			fs.mkdirSync(dirpath);
-			console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
-		}
-
-		if (fs.existsSync("pagedata/" + id + getdateformat() + "/" + "post/")) {
-
-		} else {
-			fs.mkdirSync(dirpath + "post/");
-			console.log("Not find folder'" + id + getdateformat() + "post/" + "', create new folder.");
-		}
-	} else {
-		fs.mkdirSync("pagedata/");
-		console.log("Not find folder 'pagedata', create new folder.");
-
-		dirpath = "pagedata/" + id + getdateformat() + "/";
+		dirpath = "/windows/D/Crawler_data/" + id + getdateformat() + "/";
 		fs.mkdirSync(dirpath);
-		console.log("Not find folder '" + id + getdateformat() + "', create new folder.");
-
-		fs.mkdirSync(dirpath + "post/");
+		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
 	}
-
+	/*
 	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
 	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/")) {
 		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
@@ -129,14 +95,7 @@ var createfolder_sharevis = function createfolder_sharevis(id) {
 		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/" + id + getdateformat() + "/";
 		fs.mkdirSync(dirpathAfter20141202);
 		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
-	}
-
-	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/" + "post/")) {
-
-	} else {
-		fs.mkdirSync(dirpathAfter20141202 + "post/");
-		console.log("Not find folder'" + id + getdateformat() + "post/" + "', create new folder.");
-	}
+	}*/
 };
 
 var save_photo_id = function save_photo_id(id) {
@@ -378,7 +337,6 @@ var format_json = function format_json(inputdata, outputjson) {
 			}
 		}
 
-
 		var comments = {
 			"context": context,
 			"summary": sub[i].comments.summary.total_count
@@ -529,7 +487,6 @@ exports.savejson = savejson;
 exports.updatejson = updatejson;
 exports.openjson = openjson;
 exports.createfolder = createfolder;
-exports.createfolder_sharevis = createfolder_sharevis;
 exports.save_photo_id = save_photo_id;
 exports.fill_zero_field = fill_zero_field;
 exports.getpicture = getpicture;
