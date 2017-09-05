@@ -15,7 +15,7 @@ var pagepost = mongoose.model('Page');
 
 var options = {
     useMongoClient: true
-}
+};
 
 //var dir="/windows/D/Projects/PageVis";
 var logger = new(winston.Logger)({
@@ -38,7 +38,7 @@ var logger = new(winston.Logger)({
         })
     ],
     exitOnError: false
-})
+});
 
 // Using `mongoose.connect`...
 var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/test?authSource=admin', options);
@@ -49,13 +49,14 @@ db.once('open', function () {
 
 });
 
-var query = function query(req, res, time1, time2) {
+var queryobj = function queryobj(req, res, time1, time2) {
     //console.log(req.params);
     //var url = req.params.url;
+    /*
     var res = [];
     var postid = "";
-    //var time1 = '2010-11-17T04:54:56+0000';
-    //var time2 = '2010-11-28T04:54:56+0000';
+    var time1 = '2010-11-17T04:54:56+0000';
+    var time2 = '2010-11-28T04:54:56+0000';
     var posttype = 'status'; //'status','video','link','photo'
     var fromname = "Greenpeace 綠色和平 (台灣網站)";
     var minshare = 5;
@@ -64,6 +65,7 @@ var query = function query(req, res, time1, time2) {
     var maxlike = 300;
     var mincomment = 10;
     var maxcomment = 100;
+    */
     //var queryobj = queryobj(req, req.params.time1, req.params.time2);
     var queryobj = {};
     if (req.params.postid) {
@@ -135,12 +137,88 @@ var query = function query(req, res, time1, time2) {
             };
         }
     }
+    return queryobj;
+};
 
+var findquery = function findquery(queryobj) {
     return pagepost.find(queryobj, function (err, pagepost) {
         //logger.log('info',pagepost);
         return pagepost;
     });
-}
+};
+
+var mapreduce = function mapreduce(queryobj) {
+    var o = {};
+    self = this;
+
+    o.mapFunction = function () {
+        //var key = this.reactions;
+        var key = this.likes;
+        var value = {
+            likes: this.likes,
+            /*like: this.like,
+            love: this.love,
+            haha: this.haha,
+            wow: this.wow,
+            angry: this.angry,
+            sad: this.sad*/
+        };
+        emit(key, value);
+    };
+    /*
+    var emit = function(key, value) {
+        console.log("emit");
+        console.log("key: " + key + "  value: " + value);
+    }
+    */
+    o.reduceFunction = function (key, values) {
+        var reducedObject = {
+            likes: 0,
+            /*like: 0,
+            love: 0,
+            haha: 0,
+            wow: 0,
+            angry: 0,
+            sad: 0*/
+        };
+
+        values.forEach(function (value) {
+            reducedObject.likes += value.likes;
+            /*reducedObject.like += value.like;
+            reducedObject.love += value.love;
+            reducedObject.haha += value.haha;
+            reducedObject.wow += value.wow;
+            reducedObject.angry += value.angry;
+            reducedObject.sad += value.sad;*/
+        });
+        return reducedObject;
+    };
+    /*
+    o.finalizeFunction = function (key, reducedValue) {
+    
+        if (reducedValue.count > 0)
+            reducedValue.avg_time = reducedValue.total_time / reducedValue.count;
+    
+        return reducedValue;
+    };
+    */
+    o.query = queryobj;
+
+    o.out = {
+        reduce: "session_stat"
+    };
+    /*{
+        query: queryobj,
+        out: {
+            reduce: "session_stat"
+        },
+    }*/
+    var result = pagepost.mapReduce(o, function (err, res) {
+        if (err) console.log(err);
+        console.log(res);
+        return res;
+    });
+};
 
 var callback = function callback(req, res) {
     console.log("go db")
@@ -148,7 +226,12 @@ var callback = function callback(req, res) {
     var time2 = req.params.time2;
     var time3 = req.params.time3;
     var time4 = req.params.time4;
-    Promise.all([query(req, res, time1, time2), query(req, res, time3, time4)])
+    var queryobj1 = queryobj(req, res, time1, time2);
+    var queryobj2 = queryobj(req, res, time3, time4);
+    //console.log(doc)
+    //mapFunction.apply(doc);
+    /*
+    Promise.all([findquery(queryobj1), findquery(queryobj2)])
         .then(result => {
             console.log(result[0].length)
             console.log(result[1].length)
@@ -162,10 +245,11 @@ var callback = function callback(req, res) {
         })
         .catch(function (err) {
             logger.log('error', err);
-        });
+        });*/
+    mapreduce(queryobj1);
     //res.send(files);
     //console.log(files.length);
-}
+};
 
 var exports = module.exports = {};
 exports.callback = callback;

@@ -10,7 +10,7 @@ router.param('postid', function (req, res, next, postid) {
 })
 
 router.get('/', function (req, res, next) {
-  console.log(req.query);
+  //console.log(req.query);
   //var postid = req.params.postid;
   if (req.query['postid']) {
     req.params.postid = req.query['postid'];
@@ -57,7 +57,7 @@ router.get('/', function (req, res, next) {
   var minreaction = req.params.minreaction;
   var maxreaction = req.params.maxreaction;
   */
-  console.log(req.params);
+  //console.log(req.params);
   next();
 },queryHandler.callback);
 
