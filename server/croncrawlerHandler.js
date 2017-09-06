@@ -51,8 +51,8 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //'157215971120682', //Taipei 2017 Universiade - 世大運
 ];
 
-var sincedate = "2017-01-01",
-  finaldate = "2017-08-31",
+var sincedate = "2013-01-01",
+  finaldate = "2014-01-01",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -267,13 +267,12 @@ function getData(i, step) {
     }, function (err, res0) {
       if (err && !res0) {
         console.log("res0 === null ");
-        console.dir(err);
-        reject(new Error('error!'));
         logger.log('error', {
           "error": {
             "message": JSON.stringify(err)
           }
         });
+        reject([i, step]);
       } else {
         //console.log("res0.id: " + res0.id);
         userid = res0.id;
@@ -294,11 +293,11 @@ function getData(i, step) {
           serverUtilities.get_recursive(userid, "posts", queryfield, 50, 1000, function (err, res_posts) {
             if (err || !res_posts) {
               if (!res_posts) {
-                logger.log('error', userid + "Err res_posts === null: ");
+                logger.log('error', userid + " Err res_posts === null: ");
                 console.dir(res_posts);
                 //callback({"error": {"message": "No feed."}}, res_posts);
               }
-              console.dir(err);
+              reject([i, step]);
             } else if (res_posts.data.length != 0) {
               res_posts = serverUtilities.fill_zero_field(res_posts);
               var picture = serverUtilities.getpicture(userid, res_posts);
@@ -329,6 +328,9 @@ function getData(i, step) {
       }
     }); // end of graph.get()
     logger.log('info', "sincedate: " + sincedate + " untildate: " + untildate + " crawling page: " + userid + " fire");
+  }).catch(function (err) {
+    logger.log('info', 'try getData : '+ err +' again');
+    getData(err[0], err[1]);
   });
 };
 
@@ -412,12 +414,12 @@ function get_recursive_comments(id, res_comments, timeout) {
       //console.log(res.data.length)
       if (err || !res) {
         if (!res) {
-          logger.log('error', id + "Err res_comments === null: ");
+          logger.log('error', id + " Err res_comments === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        console.dir(err);
-        reject(new Error('error!'))
+        res_comments = [];
+        reject([id, res_comments, timeout])
       } else if (res.data.length != 0) {
         // console.log(data_query.data[i].comments)
         var data_query = {
@@ -439,7 +441,8 @@ function get_recursive_comments(id, res_comments, timeout) {
       }
     });
   }).catch(function (err) {
-    logger.log('error', err.message)
+    logger.log('info', 'try get_recursive_comments: '+ err +' again');
+    get_recursive_comments(err[0], err[1], err[2]);
   });
 };
 
@@ -449,9 +452,8 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
     var stimeout = timeout;
     //var stimeout = 1;
     if (!res) {
-      logger.log('error', id + "Err res_subcomments === null: ");
-      console.dir(res);
-      reject(new Error('error!'))
+      logger.log('error', id + " Err res_subcomments === null: ");
+      reject([res, id, l, pc, res_comments, data_query, timeout])
     } else if (l === 0) {
       logger.log('info', "no comments: " + id);
       resolve(res_comments);
@@ -468,6 +470,9 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
             function page() {
               return new Promise((resolve) => {
                 paging(reply, tar, 1, 1000, stimeout, function (err, res) {
+                  if(err){
+                    reject(err);
+                  }
                   pc++;
                   if (pc >= l) {
                     res_comments.push(data_query);
@@ -476,7 +481,10 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
                   resolve('true');
                 });
               }).catch(function (err) {
-                logger.log('error', err.message)
+                logger.log('info', 'try page() again');
+                reply = item.comments;
+                tar = data_query.data[index].comments;
+                page();
               });
             }
           } else {
@@ -518,7 +526,8 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
       });*/
     }
   }).catch(function (err) {
-    logger.log('error', err.message)
+    logger.log('info', 'try each_comment: '+ err +' again');
+    each_comment(err[0], err[1], err[2], err[3], err[4], err[5], err[6]);
   });
 };
 
@@ -532,12 +541,12 @@ function get_recursive_reactions(id, reactionusers, timeout) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
-          logger.log('error', id + "Err res_reactionusers === null: ");
+          logger.log('error', id + " Err res_reactionusers === null: ");
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        console.dir(err);
-        reject(new Error('error!'))
+        reactionusers = [];
+        reject([id,reactionusers,timeout])
       } else {
         // console.log("id=" + id)
         reactionusers.push(res);
@@ -547,13 +556,14 @@ function get_recursive_reactions(id, reactionusers, timeout) {
       }
     });
   }).catch(function (err) {
-    logger.log('error', err)
+    logger.log('info', 'try get_recursive_reactions: '+ err +' again');
+    get_recursive_reactions(err[0], err[1], err[2]);
   });
 };
 
 function get_reaction_counts(id, res_reactions) {
   //console.log("get_reaction_counts")
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve/*, reject*/) => {
     var params = "?fields=reactions.type(LIKE).limit(0).summary(true).as(like),reactions.type(LOVE).limit(0).summary(true).as(love),reactions.type(WOW).limit(0).summary(true).as(wow),reactions.type(HAHA).limit(0).summary(true).as(haha),reactions.type(SAD).limit(0).summary(true).as(sad),reactions.type(ANGRY).limit(0).summary(true).as(angry), reactions.type(THANKFUL).limit(0).summary(true).as(thankful)";
     graph.get(id + params, function (err, res) {
       if (err || !res) {
@@ -562,8 +572,8 @@ function get_reaction_counts(id, res_reactions) {
           console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        console.dir(err);
-        reject(new Error('error!'))
+        res_reactions = [];
+        reject([id, res_reactions])
         //res.send({ "error": { "message": JSON.stringify(err) } });
       } else {
         // console.log("id=" + id)
@@ -574,7 +584,8 @@ function get_reaction_counts(id, res_reactions) {
       }
     });
   }).catch(function (err) {
-    logger.log('error', err)
+    logger.log('info', 'try get_reaction_counts: '+ err +' again');
+    get_reaction_counts(err[0], err[1]);
   });
 };
 

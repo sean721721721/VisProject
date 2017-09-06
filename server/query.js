@@ -220,6 +220,92 @@ var mapreduce = function mapreduce(queryobj) {
     });
 };
 
+var overlap = function overlap(userlist1, userlist2, type) {
+    if (type === "like") {
+        type = 1;
+    }
+    if (type === "love") {
+        type = 2;
+    }
+    if (type === "haha") {
+        type = 3;
+    }
+    if (type === "wow") {
+        type = 4;
+    }
+    if (type === "sad") {
+        type = 5;
+    }
+    if (type === "angry") {
+        type = 6;
+    }
+    if (type === "other") {
+        type = 7;
+    }
+    var user = [];
+    var l1 = userlist1.length;
+    for (var i = 0; i < l1; i++) {
+        var id = userlist1[i].id;
+        user["id_" + id] = {
+            "ul1": false,
+            "ul2": false,
+        }
+    }
+    var l2 = userlist2.length;
+    for (var i = 0; i < l2; i++) {
+        var id = userlist2[i].id;
+        user["id_" + id] = {
+            "ul1": false,
+            "ul2": false,
+        }
+    }
+    for (var i = 0; i < l1; i++) {
+        var pl = userlist1[i].posts.length;
+        for (var j = 0; j < pl; j++) {
+            var id = userlist1[i].id;
+            if (type === "comment") {
+                if (userlist1[i].posts[j].commentcount != 0) {
+                    user["id_" + id]["ul1"] = true;
+                    j = pl;
+                }
+            } else {
+                if (userlist1[i].posts[j].like === type) {
+                    user["id_" + id]["ul1"] = true;
+                    j = pl;
+                }
+            }
+        }
+    }
+    for (var i = 0; i < l2; i++) {
+        var pl = userlist2[i].posts.length;
+        for (var j = 0; j < pl; j++) {
+            var id = userlist2[i].id;
+            if (type === "comment") {
+                if (userlist2[i].posts[j].commentcount != 0) {
+                    user["id_" + id]["ul2"] = true;
+                    j = pl;
+                }
+            } else {
+                if (userlist2[i].posts[j].like === type) {
+                    user["id_" + id]["ul2"] = true;
+                    j = pl;
+                }
+            }
+        }
+    }
+    //console.log(user['id_10208408675328579'].ul1);
+    var overlap = [];
+    for (var u in user) {
+        //console.log(user[u]['ul1'])
+        if (user[u]['ul1'] && user[u]['ul2']) {
+            //console.log('g')
+            overlap.push(u);
+        }
+    }
+    console.log(overlap);
+    return overlap;
+};
+
 var callback = function callback(req, res) {
     console.log("go db")
     var time1 = req.params.time1;
@@ -228,9 +314,8 @@ var callback = function callback(req, res) {
     var time4 = req.params.time4;
     var queryobj1 = queryobj(req, res, time1, time2);
     var queryobj2 = queryobj(req, res, time3, time4);
-    //console.log(doc)
-    //mapFunction.apply(doc);
-    /*
+    console.log(queryobj1);
+    console.log(queryobj2);
     Promise.all([findquery(queryobj1), findquery(queryobj2)])
         .then(result => {
             console.log(result[0].length)
@@ -238,15 +323,19 @@ var callback = function callback(req, res) {
             var response = [];
             var ul1 = ul.ualist(result[0]);
             var ul2 = ul.ualist(result[1]);
-            response.push(ul1);
-            response.push(ul2);
+            var olcomment = overlap(ul1, ul2, 'comment');
+            var ollike = overlap(ul1, ul2, 'like');
+            response.push(olcomment);
+            response.push(ollike);
             //logger.log('info', response);
             res.send(response);
         })
         .catch(function (err) {
             logger.log('error', err);
-        });*/
+        });
+    /*mapreduce
     mapreduce(queryobj1);
+    */
     //res.send(files);
     //console.log(files.length);
 };

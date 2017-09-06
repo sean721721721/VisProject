@@ -29,7 +29,7 @@ awesome_instance.save(function (err, doc, numAffected) {
     if (err) return handleError(err);
     // saved!
 });
-*/
+
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 
@@ -68,5 +68,16 @@ promise.then(function (db) {
     /* Use `db`, for instance `db.model()`
 });
 // Or, if you already have a connection
-connection.openUri('mongodb://localhost/myapp', { /* options */
+connection.openUri('mongodb://localhost/myapp', { options
 });
+*/
+// Throwing an error will call the catch method most of the time
+var id=0;
+var count = 5;
+var p1 = new Promise(function(resolve, reject) {
+    reject([id,count]);
+  });
+  
+  p1.catch(function(e) {
+    console.log(e); // "Uh-oh!"
+  });

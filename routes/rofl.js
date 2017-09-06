@@ -23,6 +23,14 @@ router.get('/', function (req, res, next) {
   if (req.query['time2']) {
     req.params.time2 = req.query['time2'];
   }
+  //var time3 = req.params.time3;
+  if (req.query['time3']) {
+    req.params.time3 = req.query['time3'];
+  }
+  //var time4 = req.params.time4;
+  if (req.query['time4']) {
+    req.params.time4 = req.query['time4'];
+  }
   if (req.query['posttype']) {
     req.params.posttype = req.query['posttype'];
   }
