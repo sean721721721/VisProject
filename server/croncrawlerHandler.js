@@ -274,9 +274,8 @@ function getData(i, step) {
         });
         logger.log('info', 'try getData : ' + i + ' ' + step + ' again');
         setTimeout(function () {
-          
+          resolve(getData(i, step));
         }, 10000);
-        resolve(getData(i, step));
       } else {
         //console.log("res0.id: " + res0.id);
         userid = res0.id;
@@ -302,7 +301,9 @@ function getData(i, step) {
                 //callback({"error": {"message": "No feed."}}, res_posts);
               }
               logger.log('info', 'try getData : ' + i + ' ' + step + ' again');
-              resolve(getData(i, step));
+              setTimeout(function () {
+                resolve(getData(i, step));
+              }, 10000);
             } else if (res_posts.data.length != 0) {
               res_posts = serverUtilities.fill_zero_field(res_posts);
               var picture = serverUtilities.getpicture(userid, res_posts);
@@ -425,7 +426,9 @@ function get_recursive_comments(id, res_comments, timeout) {
         }
         logger.log('info', 'try get_recursive_comments: ' + id + ' again');
         res_comments = [];
-        resolve(get_recursive_comments(id, res_comments, timeout));
+        setTimeout(function () {
+          resolve(get_recursive_comments(id, res_comments, timeout));
+        }, 10000);
       } else if (res.data.length != 0) {
         // console.log(data_query.data[i].comments)
         var data_query = {
@@ -460,7 +463,9 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
     if (!res) {
       logger.log('error', id + " Err res_subcomments === null: ");
       logger.log('info', 'try each_comment: ' + id + ' again');
-      resolve(each_comment(res, id, l, pc, res_comments, data_query, timeout));
+      setTimeout(function () {
+        resolve(each_comment(res, id, l, pc, res_comments, data_query, timeout));
+      }, 10000);
     } else if (l === 0) {
       logger.log('info', "no comments: " + id);
       resolve(res_comments);
@@ -481,7 +486,9 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
                     logger.log('info', 'try page() again');
                     reply = item.comments;
                     tar = data_query.data[index].comments;
-                    resolve(page());
+                    setTimeout(function () {
+                      resolve(page());
+                    }, 10000);
                   }
                   pc++;
                   if (pc >= l) {
@@ -554,7 +561,9 @@ function get_recursive_reactions(id, reactionusers, timeout) {
         }
         logger.log('info', 'try get_recursive_reactions: ' + id + ' again');
         reactionusers = [];
-        resolve(get_recursive_reactions(id, reactionusers, timeout));
+        setTimeout(function () {
+          resolve(get_recursive_reactions(id, reactionusers, timeout));
+        }, 10000);
       } else {
         // console.log("id=" + id)
         reactionusers.push(res);
@@ -582,7 +591,9 @@ function get_reaction_counts(id, res_reactions) {
         }
         logger.log('info', 'try get_reaction_counts: ' + id + ' again');
         res_reactions = [];
-        resolve(get_reaction_counts(id, res_reactions));
+        setTimeout(function () {
+          resolve(get_reaction_counts(id, res_reactions));
+        }, 10000);
         //res.send({ "error": { "message": JSON.stringify(err) } });
       } else {
         // console.log("id=" + id)
