@@ -1,14 +1,14 @@
 /* eslint-disable */
 // import modules
-var express = require('express'), // npm install express
-  path = require('path'),
-  bodyParser = require('body-parser'),
-  app = express(),
-  //pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
-  ansyc = require('./server/ansyc.js'),
-  // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
-  tableHandler = require('./server/tableHandler.js'),
-  query = require('./routes/rofl.js');
+var express = require('express'); // npm install express
+var path = require('path');
+var bodyParser = require('body-parser');
+var app = express();
+//pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
+var ansyc = require('./server/ansyc.js');
+// mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
+var tableHandler = require('./server/tableHandler.js');
+var query = require('./routes/rofl.js');
 const querystring = require('querystring');
 // sharevisExpressHandler			    = require('./server/sharevisExpressHandler.js'),
 // pagedataExpressHandler			    = require('./server/pagedataExpressHandler.js'),
@@ -31,6 +31,7 @@ var jsonParser = bodyParser.json()
 var urlencodedParser = bodyParser.urlencoded({
   extended: false
 })
+
 //var conf = require("./config").facebook;
 app.use(express.static(path.join(__dirname, 'html')));
 //app.get('/pagevis', pagevisExpressHandler.callback);

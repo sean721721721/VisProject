@@ -58,7 +58,7 @@ var ualist = function ualist(files) {
     var userlist = [];
     var data, reaction, user, post, reactionlength;
     var filelength = files.length;
-    console.log(filelength)
+    console.log("file length: "+filelength)
     var find = false;
     for (var i = 0; i < filelength; i++) {
         //console.log(userlist.length)
@@ -101,7 +101,7 @@ var ualist = function ualist(files) {
             }
         }
     }
-    console.log(userlist.length)
+    console.log("userlist length: "+userlist.length)
     comment_countdb(files, userlist);
     //console.log("people "+people)
     return userlist;

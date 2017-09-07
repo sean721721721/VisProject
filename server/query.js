@@ -220,7 +220,40 @@ var mapreduce = function mapreduce(queryobj) {
     });
 };
 
-var overlap = function overlap(userlist1, userlist2, type) {
+var combine = function combine(userlist1, userlist2) {
+    var user = userlist1;
+    var tuser = userlist2;
+    var l1 = userlist1.length;
+    var l2 = userlist2.length;
+
+    for (var i = 0; i < l1; i++) {
+        user[i].posts = {
+            "A": userlist1[i].posts,
+            "B": []
+        }
+    }
+    for (var i = 0; i < l2; i++) {
+        var find = false;
+        for (var j = 0; j < l1; j++) {
+            if (tuser[i].id === user[j].id) {
+                find = true;
+                user[i].posts.B = tuser[i].posts;
+                j = l1;
+            }
+        }
+        if (!find) {
+            tuser[i].posts = {
+                "A": [],
+                "B": userlist2[i].posts
+            }
+            user.push(tuser[i]);
+        }
+    }
+    //console.log(user);
+    return user;
+}
+
+var overlap = function overlap(userlist, type) {
     if (type === "like") {
         type = 1;
     }
@@ -242,68 +275,72 @@ var overlap = function overlap(userlist1, userlist2, type) {
     if (type === "other") {
         type = 7;
     }
-    var user = [];
-    var l1 = userlist1.length;
-    for (var i = 0; i < l1; i++) {
-        var id = userlist1[i].id;
-        user["id_" + id] = {
-            "ul1": false,
-            "ul2": false,
-        }
-    }
-    var l2 = userlist2.length;
-    for (var i = 0; i < l2; i++) {
-        var id = userlist2[i].id;
-        user["id_" + id] = {
-            "ul1": false,
-            "ul2": false,
-        }
-    }
-    for (var i = 0; i < l1; i++) {
-        var pl = userlist1[i].posts.length;
-        for (var j = 0; j < pl; j++) {
-            var id = userlist1[i].id;
+
+    var len = userlist.length;
+    for (var i = 0; i < len; i++) {
+        var pal = userlist[i].posts.A.length;
+        for (var j = 0; j < pal; j++) {
             if (type === "comment") {
-                if (userlist1[i].posts[j].commentcount != 0) {
-                    user["id_" + id]["ul1"] = true;
-                    j = pl;
+                if (userlist[i].posts.A[j].commentcount != 0) {
+                    //user["id_" + id]["ul1"] = true;
+                    userlist[i]["activity"] = {
+                        "A": true,
+                        "B": false
+                    }
+                    j = pal;
                 }
             } else {
-                if (userlist1[i].posts[j].like === type) {
-                    user["id_" + id]["ul1"] = true;
-                    j = pl;
+                if (userlist[i].posts.A[j].like === type) {
+                    //user["id_" + id]["ul1"] = true;
+                    userlist[i]["activity"] = {
+                        "A": true,
+                        "B": false
+                    }
+                    j = pal;
+                }
+            }
+        }
+        var pbl = userlist[i].posts.B.length;
+        for (var j = 0; j < pbl; j++) {
+            if (userlist[i].activity) {
+                if (type === "comment") {
+                    if (userlist[i].posts.B[j].commentcount != 0) {
+                        //user["id_" + id]["ul1"] = true;
+                        userlist[i]["activity"].B = true;
+                        j = pbl;
+                    }
+                } else {
+                    if (userlist[i].posts.B[j].like === type) {
+                        //user["id_" + id]["ul1"] = true;
+                        userlist[i]["activity"].B = true;
+                        j = pbl;
+                    }
+                }
+            } else {
+                if (type === "comment") {
+                    if (userlist[i].posts.B[j].commentcount != 0) {
+                        //user["id_" + id]["ul1"] = true;
+                        userlist[i]["activity"] = {
+                            "A": true,
+                            "B": false
+                        }
+                        j = pbl;
+                    }
+                } else {
+                    if (userlist[i].posts.B[j].like === type) {
+                        //user["id_" + id]["ul1"] = true;
+                        userlist[i]["activity"] = {
+                            "A": true,
+                            "B": false
+                        }
+                        j = pbl;
+                    }
                 }
             }
         }
     }
-    for (var i = 0; i < l2; i++) {
-        var pl = userlist2[i].posts.length;
-        for (var j = 0; j < pl; j++) {
-            var id = userlist2[i].id;
-            if (type === "comment") {
-                if (userlist2[i].posts[j].commentcount != 0) {
-                    user["id_" + id]["ul2"] = true;
-                    j = pl;
-                }
-            } else {
-                if (userlist2[i].posts[j].like === type) {
-                    user["id_" + id]["ul2"] = true;
-                    j = pl;
-                }
-            }
-        }
-    }
-    //console.log(user['id_10208408675328579'].ul1);
-    var overlap = [];
-    for (var u in user) {
-        //console.log(user[u]['ul1'])
-        if (user[u]['ul1'] && user[u]['ul2']) {
-            //console.log('g')
-            overlap.push(u);
-        }
-    }
-    console.log(overlap);
-    return overlap;
+    console.log("final length: " + len);
+    return userlist;
 };
 
 var callback = function callback(req, res) {
@@ -318,17 +355,18 @@ var callback = function callback(req, res) {
     console.log(queryobj2);
     Promise.all([findquery(queryobj1), findquery(queryobj2)])
         .then(result => {
-            console.log(result[0].length)
-            console.log(result[1].length)
+            console.log("q1 lenght: " + result[0].length);
+            console.log("q2 lenght: " + result[1].length);
             var response = [];
             var ul1 = ul.ualist(result[0]);
             var ul2 = ul.ualist(result[1]);
-            var olcomment = overlap(ul1, ul2, 'comment');
-            var ollike = overlap(ul1, ul2, 'like');
-            response.push(olcomment);
-            response.push(ollike);
+            var list = combine(ul1, ul2);
+            var olcomment = overlap(list, 'comment');
+            var ollike = overlap(list, 'like');
+            //response.push(ul1);
+            //response.push(ul2);
             //logger.log('info', response);
-            res.send(response);
+            res.send(ollike);
         })
         .catch(function (err) {
             logger.log('error', err);
