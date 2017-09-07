@@ -72,12 +72,73 @@ connection.openUri('mongodb://localhost/myapp', { options
 });
 */
 // Throwing an error will call the catch method most of the time
-var id=0;
-var count = 5;
-var p1 = new Promise(function(resolve, reject) {
-    reject([id,count]);
-  });
-  
-  p1.catch(function(e) {
-    console.log(e); // "Uh-oh!"
-  });
+var id1 = 0;
+var count1 = 5;
+var id2 = 10;
+var count2 = 50;
+var id3 = 20;
+var count3 = 25;
+var p1 = function p1() {
+    return new Promise(function (resolve, reject) {
+        if (id1 < 5) {
+            id1++;
+            console.log("id1= "+id1)
+            resolve(p1());
+        } else {
+            resolve([id1, count1]);
+        }
+    })
+}
+/*.catch(function (e) {
+    console.log(e);
+});*/
+
+var p2 = new Promise(function (resolve, reject) {
+    resolve([id2, count2]);
+})
+/*.catch(function (e) {
+    console.log(e);
+});*/
+
+var p3 = new Promise(function (resolve, reject) {
+    resolve([id3, count3]);
+})
+/*.catch(function (e) {
+    console.log(e);
+});*/
+var retry = 0;
+
+async function a1(retry) {
+    try {
+        console.log("in a1")
+        await Promise.all([p1(), p2])
+            .then(function (e) {
+                console.log("a1= " + e);
+                //a2();
+            })
+    } catch (e) {
+        console.log("a1= " + e);
+        if (retry < 5) {
+            retry++;
+            console.log(retry)
+            a1(retry);
+        }
+    };
+}
+
+async function a2() {
+    try {
+        console.log("in a2")
+        await Promise.all([p2, p3])
+            .then(function (e) {
+                console.log("a2= " + e);
+            })
+    } catch (e) {
+        console.log("a2= " + e);
+    };
+}
+
+(async function () {
+    await a1(retry);
+    await a2();
+})()
