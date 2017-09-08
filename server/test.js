@@ -79,9 +79,9 @@ var count2 = 50;
 var id3 = 20;
 var count3 = 25;
 var p1 = function p1() {
+    id1++;
     return new Promise(function (resolve, reject) {
         if (id1 < 5) {
-            id1++;
             console.log("id1= "+id1)
             resolve(p1());
         } else {

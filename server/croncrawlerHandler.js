@@ -51,8 +51,8 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //'157215971120682', //Taipei 2017 Universiade - 世大運
 ];
 
-var sincedate = "2014-01-01",
-  finaldate = "2015-01-01",
+var sincedate = "2015-01-01",
+  finaldate = "2015-01-10",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -297,7 +297,6 @@ function getData(i, step) {
             if (err || !res_posts) {
               if (!res_posts) {
                 logger.log('error', userid + " Err res_posts === null: ");
-                console.dir(res_posts);
                 //callback({"error": {"message": "No feed."}}, res_posts);
               }
               logger.log('info', 'try getData : ' + i + ' ' + step + ' again');
@@ -327,7 +326,6 @@ function getData(i, step) {
             } else {
               logger.log('info', "---no post in the time range!---");
               resolve(true);
-              //console.dir(res_posts);
             }
           }); //create direction
         } //graph.get(userid, {fields: ""}, function(err, res0) {
@@ -421,29 +419,15 @@ function get_recursive_comments(id, res_comments, timeout) {
       if (err || !res) {
         if (!res) {
           logger.log('error', id + " Err res_comments === null: ");
-          console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
         logger.log('info', 'try get_recursive_comments: ' + id + ' again');
-        res_comments = [];
         setTimeout(function () {
           resolve(get_recursive_comments(id, res_comments, timeout));
         }, 10000);
       } else if (res.data.length != 0) {
-        // console.log(data_query.data[i].comments)
-        var data_query = {
-          "data": []
-        };
-        data_query.data = res.data; //data_query.data.concat(res.data);
-        data_query.postid = id;
-        // console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
-        console.log(data_query.postid)
-        // console.log(data_query.data)
-        var l = res.data.length;
-        //console.log("rl=" + l)
-        var pc = 0;
         logger.log('info', "resolve comments: " + id);
-        resolve(each_comment(res, id, l, pc, res_comments, data_query, timeout));
+        resolve(each_comment(res, id, res_comments, timeout));
       } else {
         res_comments.push(res);
         resolve(res_comments);
@@ -455,18 +439,23 @@ function get_recursive_comments(id, res_comments, timeout) {
   });
 };
 
-function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
+function each_comment(res, id, res_comments, timeout) {
   //console.log("---------- each subcomments loops ----------")
+  var data_query = {
+    "data": []
+  };
+  data_query.data = res.data; //data_query.data.concat(res.data);
+  data_query.postid = id;
+  // console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
+  console.log(data_query.postid)
+  // console.log(data_query.data)
+  var l = res.data.length;
+  var pc = 0;
+  //console.log("rl=" + l)
   return new Promise(function (resolve, reject) {
     var stimeout = timeout;
     //var stimeout = 1;
-    if (!res) {
-      logger.log('error', id + " Err res_subcomments === null: ");
-      logger.log('info', 'try each_comment: ' + id + ' again');
-      setTimeout(function () {
-        resolve(each_comment(res, id, l, pc, res_comments, data_query, timeout));
-      }, 10000);
-    } else if (l === 0) {
+    if (l === 0) {
       logger.log('info', "no comments: " + id);
       resolve(res_comments);
     } else {
@@ -475,17 +464,15 @@ function each_comment(res, id, l, pc, res_comments, data_query, timeout) {
         for (var index = 0; index < l; index++) {
           var item = res.data[index];
           if (item.comments) {
-            var reply = item.comments,
-              tar = data_query.data[index].comments;
             await page();
 
             function page() {
+              var reply = item.comments,
+                tar = data_query.data[index].comments;
               return new Promise((resolve) => {
                 paging(reply, tar, 1, 1000, stimeout, function (err, res) {
-                  if (err) {
+                  if (err || !res) {
                     logger.log('info', 'try page() again');
-                    reply = item.comments;
-                    tar = data_query.data[index].comments;
                     setTimeout(function () {
                       resolve(page());
                     }, 10000);
@@ -556,11 +543,9 @@ function get_recursive_reactions(id, reactionusers, timeout) {
       if (err || !res) {
         if (!res) {
           logger.log('error', id + " Err res_reactionusers === null: ");
-          console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
         logger.log('info', 'try get_recursive_reactions: ' + id + ' again');
-        reactionusers = [];
         setTimeout(function () {
           resolve(get_recursive_reactions(id, reactionusers, timeout));
         }, 10000);
@@ -586,11 +571,9 @@ function get_reaction_counts(id, res_reactions) {
       if (err || !res) {
         if (!res) {
           logger.log('error', id + " Err res_reactions === null: ");
-          console.dir(res);
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
         logger.log('info', 'try get_reaction_counts: ' + id + ' again');
-        res_reactions = [];
         setTimeout(function () {
           resolve(get_reaction_counts(id, res_reactions));
         }, 10000);
