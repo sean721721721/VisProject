@@ -42,17 +42,18 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '935262873170231', // 青年居住論壇
   //   '565274156891915', // 台灣居住正義協會
   //   '431824973661134', // 焦點事件
-  '148475335184300', //greenpeace
+  //'148475335184300', //greenpeace
   //   '103640919705348'  //綠盟
   //   '559756970792038', //出境事務所
   //   '1729604514029664' //勞動之王
   //   '100010574583275' // 梁振英personal
   //'46251501064', //蔡英文 Tsai Ing-wen
   //'157215971120682', //Taipei 2017 Universiade - 世大運
+  //   '188535634604417', //for testing
 ];
 
-var sincedate = "2015-01-01",
-  finaldate = "2015-01-10",
+var sincedate = "2017-09-08",
+  finaldate = "2017-09-09",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -275,7 +276,7 @@ function getData(i, step) {
         logger.log('info', 'try getData : ' + i + ' ' + step + ' again');
         setTimeout(function () {
           resolve(getData(i, step));
-        }, 10000);
+        }, 1000);
       } else {
         //console.log("res0.id: " + res0.id);
         userid = res0.id;
@@ -302,7 +303,7 @@ function getData(i, step) {
               logger.log('info', 'try getData : ' + i + ' ' + step + ' again');
               setTimeout(function () {
                 resolve(getData(i, step));
-              }, 10000);
+              }, 1000);
             } else if (res_posts.data.length != 0) {
               res_posts = serverUtilities.fill_zero_field(res_posts);
               var picture = serverUtilities.getpicture(userid, res_posts);
@@ -424,7 +425,7 @@ function get_recursive_comments(id, res_comments, timeout) {
         logger.log('info', 'try get_recursive_comments: ' + id + ' again');
         setTimeout(function () {
           resolve(get_recursive_comments(id, res_comments, timeout));
-        }, 10000);
+        }, 1000);
       } else if (res.data.length != 0) {
         logger.log('info', "resolve comments: " + id);
         resolve(each_comment(res, id, res_comments, timeout));
@@ -451,9 +452,11 @@ function each_comment(res, id, res_comments, timeout) {
   // console.log(data_query.data)
   var l = res.data.length;
   var pc = 0;
+  var cc = 0;
   //console.log("rl=" + l)
   return new Promise(function (resolve, reject) {
     var stimeout = timeout;
+    console.log("l= " + l);
     //var stimeout = 1;
     if (l === 0) {
       logger.log('info', "no comments: " + id);
@@ -475,12 +478,16 @@ function each_comment(res, id, res_comments, timeout) {
                     logger.log('info', 'try page() again');
                     setTimeout(function () {
                       resolve(page());
-                    }, 10000);
+                    }, 1000);
                   }
                   pc++;
+                  cc++;
                   if (pc >= l) {
+                    console.log("pc= " + pc);
+                    logger.log('info', "resolve " + cc + " subcomments: " + id);
+                    pc = 0;
+                    cc = 0;
                     res_comments.push(data_query);
-                    logger.log('info', "resolve subcomments: " + id);
                   }
                   resolve('true');
                 });
@@ -491,9 +498,12 @@ function each_comment(res, id, res_comments, timeout) {
           } else {
             pc++;
             if (pc >= l) {
+              console.log("pc= " + pc);
+              logger.log('info', "resolve " + cc + " subcomments: " + id);
+              pc = 0;
+              cc = 0;
               res_comments.push(data_query);
               //console.log("push: " + id);
-              logger.log('info', "no subcomments: " + id);
             }
           }
         }
@@ -548,7 +558,7 @@ function get_recursive_reactions(id, reactionusers, timeout) {
         logger.log('info', 'try get_recursive_reactions: ' + id + ' again');
         setTimeout(function () {
           resolve(get_recursive_reactions(id, reactionusers, timeout));
-        }, 10000);
+        }, 1000);
       } else {
         // console.log("id=" + id)
         reactionusers.push(res);
@@ -576,7 +586,7 @@ function get_reaction_counts(id, res_reactions) {
         logger.log('info', 'try get_reaction_counts: ' + id + ' again');
         setTimeout(function () {
           resolve(get_reaction_counts(id, res_reactions));
-        }, 10000);
+        }, 1000);
         //res.send({ "error": { "message": JSON.stringify(err) } });
       } else {
         // console.log("id=" + id)
