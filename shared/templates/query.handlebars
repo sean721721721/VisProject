@@ -1,0 +1,38 @@
+<pre>query parameters: {{message}}</pre>
+<table class=“cooltable”>
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Activity in query1</th>
+            <th>Activity in query2</th>
+        </tr>
+    </thead>
+    {{#each data}}
+    <tbody>
+        <tr>
+            <td>
+                <ul>userid: {{id}}</ul>
+                <ul>username: {{name}}</ul>
+            </td>
+            <td>
+                <ul>
+                    {{#each posts.A}}
+                    <li>postid: {{id}}, like: {{like}}, commentcount: {{commentcount}}</li>
+                    {{/each}}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    {{#each posts.B}}
+                    <li>postid: {{id}}, like: {{like}}, commentcount: {{commentcount}}</li>
+                    {{/each}}
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+    {{/each}}
+</table>
+<script>
+    var user = {{{toJSON data}}};
+    console.log(user);
+</script>

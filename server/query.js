@@ -46,7 +46,6 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("we're connected!")
     // we're connected!
-
 });
 
 var queryobj = function queryobj(req, res, time1, time2) {
@@ -366,7 +365,12 @@ var callback = function callback(req, res) {
             //response.push(ul1);
             //response.push(ul2);
             //logger.log('info', response);
-            res.send(ollike);
+            res.render('query', {
+                title: 'query',
+                message: JSON.stringify(req.params),
+                data: ollike
+            });
+            //res.send(ollike);
         })
         .catch(function (err) {
             logger.log('error', err);

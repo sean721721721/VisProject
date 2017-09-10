@@ -1,3 +1,4 @@
+/* eslint-disable */
 /* global Handlebars, prompt */
 'use strict';
 
@@ -9,9 +10,11 @@
 
     button.addEventListener('click', function (e) {
         var message = prompt('Say Something:', 'Yo yo'),
-            echo    = document.createElement('div');
+            echo = document.createElement('div');
 
-        echo.innerHTML = Handlebars.templates.echo({message: message});
+        echo.innerHTML = Handlebars.templates.echo({
+            message: message
+        });
         document.body.appendChild(echo);
     }, false);
 }());

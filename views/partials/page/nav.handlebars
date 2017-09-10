@@ -1,6 +1,48 @@
 <ul>
     <li><a href="/">Home</a></li>
-    <li><a href="/yell">Yell</a></li>
-    <li><a href="/exclaim">Exclaim</a></li>
-    <li><a href="/echo/Hello">Echo: Hello</a></li>
+    <!--li><a href="/echo/Hello">Echo: Hello</a></li-->
 </ul>
+<div "overflow-x:auto;">
+    <form action="/query" method="post">
+        <fieldset>
+            <legend>Set query Parameters</legend>
+            <label for="x">minlike:</label>
+            <input name="minlike" id="minlike" type="number" min="0" placeholder="minlike" value="0"></input>
+            <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
+            <label for="x">maxlike:</label>
+            <input name="maxlike" id="maxlike" type="number" min="0"></input>
+            <label for="x">mincomment:</label>
+            <input name="mincomment" id="mincomment" type="number" min="0" placeholder="mincomment" value="0"></input>
+            <label for="x">maxcomment:</label>
+            <input name="maxcomment" id="maxcomment" type="number" min="0"></input><label for="x">posttype:</label>
+            <input name="posttype" id="posttype" type="text" list="posttypelist"></input>
+            <datalist id="posttypelist">
+                <select multiple id="posttype" name="posttype">
+                    <option>status</option>
+                    <option>video</option>
+                    <option>link</option>
+                    <option>photo</option>
+                </select>
+            </datalist>
+        </fieldset>
+        <fieldset>
+            <legend>Query date1</legend>
+            <label for="x">since:</label>
+            <input type="date" name="date" id="date" placeholder="date" value="2010-10-01"></input>
+            <label for="x">until:</label>
+            <input type="date" name="date" id="date" placeholder="date" value="2010-11-01"></input>
+        </fieldset>
+        <fieldset>
+            <legend>Query date2</legend>
+            <label for="x">since:</label>
+            <input type="date" name="date" id="date" placeholder="date" value="2010-11-01"></input>
+            <label for="x">until:</label>
+            <input type="date" name="date" id="date" placeholder="date" value="2010-12-01"></input>
+        </fieldset>
+        <fieldset>
+            <legend>Submit</legend>
+            <input name="submit" id="submit" type="submit" value="Submit"></input>
+        </fieldset>
+    </form>
+</div>
+<script src="/nav.js"></script>

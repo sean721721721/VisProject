@@ -88,29 +88,6 @@ app.get('/', function (req, res) {
   });
 });
 
-app.get('/yell', function (req, res) {
-  res.render('yell', {
-    title: 'Yell',
-
-    // This `message` will be transformed by our `yell()` helper.
-    message: 'hello world'
-  });
-});
-
-app.get('/exclaim', function (req, res) {
-  res.render('yell', {
-    title: 'Exclaim',
-    message: 'hello world',
-
-    // This overrides _only_ the default `yell()` helper.
-    helpers: {
-      yell: function (msg) {
-        return (msg + '!!!');
-      }
-    }
-  });
-});
-
 app.get('/echo/:message?', exposeTemplates, function (req, res) {
   res.render('echo', {
     title: 'Echo',
@@ -136,7 +113,7 @@ app.get('/table', tableHandler.callback);
 //app.get('/crawlervis', crawlervisExpressHandler.callback);
 //app.get('/mongodbTextSearch', mongodbTextSearchExpressHandler.callback);
 //app.get('/qq', urlencodedParser, queryHandler.callback);
-
+*/
 app.use('/query', query);
 app.post('/query', urlencodedParser, function (req, res) {
   var body = req.body;
@@ -155,7 +132,7 @@ app.post('/query', urlencodedParser, function (req, res) {
   console.log(query)
   res.redirect('/query?' + query);
 })
-*/
+
 var port = process.env.PORT || 3000,
   ip = process.env.IP || '140.119.164.22';
 
