@@ -239,7 +239,7 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 					// page depth
 					depth++;
 					//console.log(res);
-					console.log("page " + depth + " " + field_query/* + ".length: " + res.data.length*/);
+					console.log("page " + depth + " " + field_query /* + ".length: " + res.data.length*/ );
 
 					//data_query.data = data_query.data.concat(res.data);
 					Array.prototype.push.apply(data_query.data, res.data);
@@ -311,6 +311,9 @@ var format_json = function format_json(inputdata, outputjson) {
 							"like_count": sub2[k].like_count,
 							"id": sub2[k].id
 						});
+						if (sub2[k]['message_tags']) {
+							reply[k]['message_tags'] = sub2[k]['message_tags'];
+						}
 					}
 					// console.log(reply)
 					context.push({
@@ -332,6 +335,9 @@ var format_json = function format_json(inputdata, outputjson) {
 						"created_time": sub1[j].created_time,
 						"id": sub1[j].id
 					})
+				}
+				if (sub1[j]['message_tags']) {
+					context[j]['message_tags'] = sub1[j]['message_tags'];
 				}
 				// console.log("sub0")
 			}

@@ -42,18 +42,18 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '935262873170231', // 青年居住論壇
   //   '565274156891915', // 台灣居住正義協會
   //   '431824973661134', // 焦點事件
-  '148475335184300', //greenpeace
+  //'148475335184300', //greenpeace
   //   '103640919705348'  //綠盟
   //   '559756970792038', //出境事務所
   //   '1729604514029664' //勞動之王
   //   '100010574583275' // 梁振英personal
   //'46251501064', //蔡英文 Tsai Ing-wen
   //'157215971120682', //Taipei 2017 Universiade - 世大運
-  //   '188535634604417', //for testing
+     '188535634604417', //for testing
 ];
 
-var sincedate = "2016-01-01",
-  finaldate = "2017-01-01",
+var sincedate = "2017-09-08",
+  finaldate = "2017-09-09",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -414,7 +414,7 @@ function get_recursive_comments(id, res_comments, timeout) {
   return new Promise((resolve, reject) => {
     var ctimeout = timeout;
     //var ctimeout = 1;
-    serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,comments{from,like_count,message,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 1000, ctimeout, function (err, res) {
+    serverUtilities.get_recursive(id, "comments", "?fields=from,like_count,message,message_tags,comments{from,like_count,message,message_tags,comment_count,user_likes,created_time},comment_count,user_likes,created_time&limit=100", 1000, ctimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       //console.log(res.data.length)
       if (err || !res) {
@@ -548,7 +548,7 @@ function get_recursive_reactions(id, reactionusers, timeout) {
     // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
     var rtimeout = timeout;
     //var rtimeout = 1;
-    serverUtilities.get_recursive(id, "reactions", "?limit=100", 10000, rtimeout, function (err, res) {
+    serverUtilities.get_recursive(id, "reactions", "?limit=100", 10, rtimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
