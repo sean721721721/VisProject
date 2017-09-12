@@ -338,9 +338,23 @@ var overlap = function overlap(userlist, type) {
             }
         }
     }
-    console.log("final length: " + len);
+    console.log("ol length: " + len);
     return userlist;
 };
+
+var olresult = function olresult(ollist) {
+    var result = [];
+    var len = ollist.length;
+    for (var i = 0; i < len; i++) {
+        if (ollist[i].activity) {
+            if ((ollist[i].activity.A === true) && (ollist[i].activity.B === true)) {
+                result.push(ollist[i]);
+            }
+        }
+    }
+    console.log("fol length: " + result.length);
+    return result;
+}
 
 var callback = function callback(req, res) {
     console.log("go db")
@@ -360,15 +374,22 @@ var callback = function callback(req, res) {
             var ul1 = ul.ualist(result[0]);
             var ul2 = ul.ualist(result[1]);
             var list = combine(ul1, ul2);
-            var olcomment = overlap(list, 'comment');
-            var ollike = overlap(list, 'like');
+            var oldata = list;
+            if (req.params.co === 'Co reaction') {
+                oldata = overlap(list, 'like');
+            }
+            if (req.params.co === 'Co comment') {
+                oldata = overlap(list, 'comment');
+            }
+            console.log(req.params.co)
+            oldata = olresult(oldata);
             //response.push(ul1);
             //response.push(ul2);
             //logger.log('info', response);
             res.render('query', {
                 title: 'query',
                 message: JSON.stringify(req.params),
-                data: ollike
+                data: oldata,
             });
             //res.send(ollike);
         })

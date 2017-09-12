@@ -54,6 +54,9 @@ router.get('/', function (req, res, next) {
   if (req.query['maxcomment']) {
     req.params.maxcomment = req.query['maxcomment'];
   }
+  if (req.query['co']) {
+    req.params.co = req.query['co'];
+  }
 
   /*
   var posttype = req.params.posttype; //'status','video','link','photo'

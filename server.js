@@ -128,6 +128,7 @@ app.post('/query', urlencodedParser, function (req, res) {
     "time2": body.date[1],
     "time3": body.date[2],
     "time4": body.date[3],
+    "co": body.co,
   });
   console.log(query)
   res.redirect('/query?' + query);
