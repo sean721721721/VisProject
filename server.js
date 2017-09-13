@@ -2,7 +2,6 @@
 // import modules
 var express = require('express'); // npm install express
 var exphbs = require('express-handlebars');
-
 var path = require('path');
 var bodyParser = require('body-parser');
 var app = express();
@@ -11,7 +10,7 @@ var helpers = require('./lib/helpers');
 var ansyc = require('./server/ansyc.js');
 // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
 var tableHandler = require('./server/tableHandler.js');
-var query = require('./routes/rofl.js');
+var query = require('./routes/handle.js');
 const querystring = require('querystring');
 // sharevisExpressHandler			    = require('./server/sharevisExpressHandler.js'),
 // pagedataExpressHandler			    = require('./server/pagedataExpressHandler.js'),
@@ -32,7 +31,7 @@ var options = {
 var jsonParser = bodyParser.json()
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParser.urlencoded({
-  extended: false
+  extended: false,
 })
 
 // Create `ExpressHandlebars` instance with a default layout.
@@ -58,7 +57,7 @@ function exposeTemplates(req, res, next) {
   // templates which will be shared with the client-side of the app.
   hbs.getTemplates('shared/templates/', {
       cache: app.enabled('view cache'),
-      precompiled: true
+      precompiled: true,
     }).then(function (templates) {
       // RegExp to remove the ".handlebars" extension from the template names.
       var extRegex = new RegExp(hbs.extname + '$');
@@ -68,7 +67,7 @@ function exposeTemplates(req, res, next) {
       templates = Object.keys(templates).map(function (name) {
         return {
           name: name.replace(extRegex, ''),
-          template: templates[name]
+          template: templates[name],
         };
       });
 
@@ -84,7 +83,7 @@ function exposeTemplates(req, res, next) {
 
 app.get('/', function (req, res) {
   res.render('home', {
-    title: 'Home'
+    title: 'Home',
   });
 });
 
@@ -97,7 +96,7 @@ app.get('/echo/:message?', exposeTemplates, function (req, res) {
     layout: 'shared-templates',
 
     partials: Promise.resolve({
-      echo: hbs.handlebars.compile('<p>ECHO: {{message}}</p>')
+      echo: hbs.handlebars.compile('<p>ECHO: {{message}}</p>'),
     })
   });
 });
@@ -117,7 +116,7 @@ app.get('/table', tableHandler.callback);
 app.use('/query', query);
 app.post('/query', urlencodedParser, function (req, res) {
   var body = req.body;
-  console.log(body)
+  console.log(body);
   const query = querystring.stringify({
     "minlike": body.minlike,
     "maxlike": body.maxlike,
@@ -130,7 +129,7 @@ app.post('/query', urlencodedParser, function (req, res) {
     "time4": body.date[3],
     "co": body.co,
   });
-  console.log(query)
+  console.log(query);
   res.redirect('/query?' + query);
 })
 
