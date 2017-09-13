@@ -60,5 +60,9 @@ typings/
 # dotenv environment variables file
 .env
 
-#vscode
+# vscode
 .vscode
+
+# others
+res.json
+test.js

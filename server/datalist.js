@@ -252,7 +252,7 @@ function comment_countdb(files, userlist) {
 
     }
 }
-
+//slow code, need to improve
 var bindpostlist = function bindpostlist(qobj1, qobj2) {
     function postobj(obj) {
         var posts = {};
