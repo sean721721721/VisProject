@@ -4,7 +4,7 @@ var readFiles = require('./readfile.js');
 /*var MongoClient = require('mongodb').MongoClient,*/
 var assert = require('assert');
 var mongoose = require('mongoose');
-var ul = require('./userlist.js');
+var dl = require('./datalist.js');
 var winston = require('winston');
 require('./postSchema.js')();
 
@@ -24,28 +24,20 @@ var logger = new(winston.Logger)({
         new(winston.transports.File)({
             name: 'info-file',
             filename: './logs/query-info.log',
-            level: 'info'
+            level: 'info',
         }),
         new(winston.transports.File)({
             name: 'error-file',
             filename: './logs/query-error.log',
-            level: 'error'
+            level: 'error',
         })
     ],
     exceptionHandlers: [
         new(winston.transports.File)({
-            filename: './logs/exceptions.log'
+            filename: './logs/exceptions.log',
         })
     ],
     exitOnError: false
-});
-
-// Using `mongoose.connect`...
-var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/test?authSource=admin', options);
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-    console.log("we're connected!")
-    // we're connected!
 });
 
 var queryobj = function queryobj(req, res, time1, time2) {
@@ -77,11 +69,11 @@ var queryobj = function queryobj(req, res, time1, time2) {
             }
             queryobj['created_time'] = {
                 $gte: time1,
-                $lt: time2
+                $lt: time2,
             };
         } else {
             queryobj['created_time'] = {
-                $lt: time2
+                $lt: time2,
             }
         }
     }
@@ -98,11 +90,11 @@ var queryobj = function queryobj(req, res, time1, time2) {
             }
             queryobj['shares'] = {
                 $gte: Number(req.params.minshare),
-                $lt: Number(req.params.maxshare)
+                $lt: Number(req.params.maxshare),
             };
         } else {
             queryobj['shares'] = {
-                $gte: Number(req.params.minshare)
+                $gte: Number(req.params.minshare),
             };
         }
     }
@@ -113,11 +105,11 @@ var queryobj = function queryobj(req, res, time1, time2) {
             }
             queryobj['reactions.like'] = {
                 $gte: Number(req.params.minlike),
-                $lt: Number(req.params.maxlike)
+                $lt: Number(req.params.maxlike),
             };
         } else {
             queryobj['reactions.like'] = {
-                $gte: Number(req.params.minlike)
+                $gte: Number(req.params.minlike),
             };
         }
     }
@@ -128,11 +120,11 @@ var queryobj = function queryobj(req, res, time1, time2) {
             }
             queryobj['comments.summary'] = {
                 $gte: Number(req.params.mincomment),
-                $lt: Number(req.params.maxcomment)
+                $lt: Number(req.params.maxcomment),
             };
         } else {
             queryobj['comments.summary'] = {
-                $gte: Number(req.params.mincomment)
+                $gte: Number(req.params.mincomment),
             };
         }
     }
@@ -204,7 +196,7 @@ var mapreduce = function mapreduce(queryobj) {
     o.query = queryobj;
 
     o.out = {
-        reduce: "session_stat"
+        reduce: "session_stat",
     };
     /*{
         query: queryobj,
@@ -219,142 +211,13 @@ var mapreduce = function mapreduce(queryobj) {
     });
 };
 
-var combine = function combine(userlist1, userlist2) {
-    var user = userlist1;
-    var tuser = userlist2;
-    var l1 = userlist1.length;
-    var l2 = userlist2.length;
-
-    for (var i = 0; i < l1; i++) {
-        user[i].posts = {
-            "A": userlist1[i].posts,
-            "B": []
-        }
-    }
-    for (var i = 0; i < l2; i++) {
-        var find = false;
-        for (var j = 0; j < l1; j++) {
-            if (tuser[i].id === user[j].id) {
-                find = true;
-                user[i].posts.B = tuser[i].posts;
-                j = l1;
-            }
-        }
-        if (!find) {
-            tuser[i].posts = {
-                "A": [],
-                "B": userlist2[i].posts
-            }
-            user.push(tuser[i]);
-        }
-    }
-    //console.log(user);
-    return user;
-}
-
-var overlap = function overlap(userlist, type) {
-    if (type === "like") {
-        type = 1;
-    }
-    if (type === "love") {
-        type = 2;
-    }
-    if (type === "haha") {
-        type = 3;
-    }
-    if (type === "wow") {
-        type = 4;
-    }
-    if (type === "sad") {
-        type = 5;
-    }
-    if (type === "angry") {
-        type = 6;
-    }
-    if (type === "other") {
-        type = 7;
-    }
-
-    var len = userlist.length;
-    for (var i = 0; i < len; i++) {
-        var pal = userlist[i].posts.A.length;
-        for (var j = 0; j < pal; j++) {
-            if (type === "comment") {
-                if (userlist[i].posts.A[j].commentcount != 0) {
-                    //user["id_" + id]["ul1"] = true;
-                    userlist[i]["activity"] = {
-                        "A": true,
-                        "B": false
-                    }
-                    j = pal;
-                }
-            } else {
-                if (userlist[i].posts.A[j].like === type) {
-                    //user["id_" + id]["ul1"] = true;
-                    userlist[i]["activity"] = {
-                        "A": true,
-                        "B": false
-                    }
-                    j = pal;
-                }
-            }
-        }
-        var pbl = userlist[i].posts.B.length;
-        for (var j = 0; j < pbl; j++) {
-            if (userlist[i].activity) {
-                if (type === "comment") {
-                    if (userlist[i].posts.B[j].commentcount != 0) {
-                        //user["id_" + id]["ul1"] = true;
-                        userlist[i]["activity"].B = true;
-                        j = pbl;
-                    }
-                } else {
-                    if (userlist[i].posts.B[j].like === type) {
-                        //user["id_" + id]["ul1"] = true;
-                        userlist[i]["activity"].B = true;
-                        j = pbl;
-                    }
-                }
-            } else {
-                if (type === "comment") {
-                    if (userlist[i].posts.B[j].commentcount != 0) {
-                        //user["id_" + id]["ul1"] = true;
-                        userlist[i]["activity"] = {
-                            "A": true,
-                            "B": false
-                        }
-                        j = pbl;
-                    }
-                } else {
-                    if (userlist[i].posts.B[j].like === type) {
-                        //user["id_" + id]["ul1"] = true;
-                        userlist[i]["activity"] = {
-                            "A": true,
-                            "B": false
-                        }
-                        j = pbl;
-                    }
-                }
-            }
-        }
-    }
-    console.log("ol length: " + len);
-    return userlist;
-};
-
-var olresult = function olresult(ollist) {
-    var result = [];
-    var len = ollist.length;
-    for (var i = 0; i < len; i++) {
-        if (ollist[i].activity) {
-            if ((ollist[i].activity.A === true) && (ollist[i].activity.B === true)) {
-                result.push(ollist[i]);
-            }
-        }
-    }
-    console.log("fol length: " + result.length);
-    return result;
-}
+// Using `mongoose.connect`...
+var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/test?authSource=admin', options);
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function () {
+    console.log("we're connected!")
+    // we're connected!
+});
 
 var callback = function callback(req, res) {
     console.log("go db")
@@ -370,28 +233,29 @@ var callback = function callback(req, res) {
         .then(result => {
             console.log("q1 lenght: " + result[0].length);
             console.log("q2 lenght: " + result[1].length);
+            var postlist = dl.bindpostlist(result[0], result[1]);
             var response = [];
-            var ul1 = ul.ualist(result[0]);
-            var ul2 = ul.ualist(result[1]);
-            var list = combine(ul1, ul2);
-            var oldata = list;
+            var ul1 = dl.ualist(result[0]);
+            var ul2 = dl.ualist(result[1]);
+            var userlist = dl.binduserlist(ul1, ul2);
+            var oldata = userlist;
             if (req.params.co === 'Co reaction') {
-                oldata = overlap(list, 'like');
+                oldata = dl.overlap(userlist, 'like');
             }
             if (req.params.co === 'Co comment') {
-                oldata = overlap(list, 'comment');
+                oldata = dl.overlap(userlist, 'comment');
             }
-            console.log(req.params.co)
-            oldata = olresult(oldata);
+            console.log(req.params.co);
+            oldata = dl.olresult(oldata);
             //response.push(ul1);
             //response.push(ul2);
             //logger.log('info', response);
             res.render('query', {
                 title: 'query',
                 message: JSON.stringify(req.params),
-                data: oldata,
+                data: [postlist, oldata],
             });
-            //res.send(ollike);
+            //res.send(result);
         })
         .catch(function (err) {
             logger.log('error', err);
