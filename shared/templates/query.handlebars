@@ -1,4 +1,6 @@
-<pre>query parameters: {{message}}</pre>
+<h1>結果：</h1>
+<p>{{{query}}}</p>
+<p>{{{summary}}}</p>
 <table class=“cooltable”>
     <thead>
         <tr>
@@ -11,20 +13,22 @@
     <tbody>
         <tr>
             <td>
-                <ul>userid: {{id}}</ul>
+                <ul>{{{toURL id}}}</ul>
                 <ul>username: {{name}}</ul>
             </td>
             <td>
                 <ul>
+                    <li>count: {{{count posts.A}}}</li>
                     {{#each posts.A}}
-                    <li>postid: {{id}}, like: {{like}}, commentcount: {{commentcount}}</li>
+                    <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}</li>
                     {{/each}}
                 </ul>
             </td>
             <td>
                 <ul>
+                    <li>count: {{{count posts.B}}}</li>
                     {{#each posts.B}}
-                    <li>postid: {{id}}, like: {{like}}, commentcount: {{commentcount}}</li>
+                    <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}</li>
                     {{/each}}
                 </ul>
             </td>
@@ -33,6 +37,6 @@
     {{/each}}
 </table>
 <script>
-    var user = {{{toJSON data}}};
-    console.log(user);
+    var data = {{{toJSON data}}};
+    console.log(data);
 </script>
