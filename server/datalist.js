@@ -249,7 +249,6 @@ function comment_countdb(files, userlist) {
                 }
             }
         }
-
     }
 }
 //slow code, need to improve
@@ -305,14 +304,23 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
     for (var i = 0; i < l1; i++) {
         var post = postobj(qobj1[i]);
         list.push(post);
-        for (var j = 0; j < l2; j++) {
-            if (qobj1[i].id != qobj2[j].id) {
-                var post = postobj(qobj2[j]);
+    }
+    for (var i = 0; i < l2; i++) {
+        var find = false;
+        for (var j = 0; j < l1;) {
+            if (qobj1[j].id !== qobj2[i].id) {
+                j++;
+            } else {
+                find = true;
+                j = l1;
+            }
+            if (j === l1 && !find) {
+                var post = postobj(qobj2[i]);
                 list.push(post);
             }
         }
     }
-    //console.log(qobj1[0]);
+    console.log("postlen: " + list.length);
     return list;
 }
 

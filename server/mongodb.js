@@ -4,7 +4,7 @@ var readFiles = require('./readfile.js');
 /*var MongoClient = require('mongodb').MongoClient,*/
 var assert = require('assert');
 var mongoose = require('mongoose');
-require('./postSchema.js')();
+var schema = require('./postSchema.js');
 
 // Use native promises
 mongoose.Promise = global.Promise;
@@ -22,23 +22,23 @@ MongoClient.connect(url, function(err, db) {
 });
 */
 
-var pagepost = mongoose.model('Page');
-
 var options = {
     useMongoClient: true
 }
 
 // Using `mongoose.connect`...
-var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/test?authSource=admin', options);
+var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/haka?authSource=admin', options);
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("we're connected!")
     // we're connected!
 });
 
-var folders = ['2010']; //, '2011', '2012'];
+var folders = ['勞動之王', '古斌', '安唯綾', '張靜之', '客台']; //, '2011', '2012'];
 folders.forEach(folder => {
-    var root = "/windows/D/Crawler_data/greenpeace";
+    var root = "/windows/D/Crawler_data/haka";
+    mongoose.model(folder, schema.postSchema)
+    var pagepost = mongoose.model(folder);
     //console.log(typeof(root + '/' + folder))
     readFiles.readFiles(root + '/' + folder)
         .then(function (files) {

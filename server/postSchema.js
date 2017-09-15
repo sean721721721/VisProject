@@ -4,7 +4,8 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 // create an export function to encapsulate the model creation
-module.exports = function () {
+
+(function () {
     // define schema
     // NOTE : This object must conform *precisely* to the geoJSON specification
     // you cannot embed a geoJSON doc inside a model or anything like that- IT
@@ -75,5 +76,6 @@ module.exports = function () {
         autoIndex: false
     });
 
-    mongoose.model('Page', postSchema)
-};
+    var exports = module.exports = {}
+    exports.postSchema = postSchema;
+})();

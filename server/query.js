@@ -6,17 +6,13 @@ var assert = require('assert');
 var mongoose = require('mongoose');
 var dl = require('./datalist.js');
 var winston = require('winston');
-require('./postSchema.js')();
+var schema = require('./postSchema.js');
 
 // Use native promises
 mongoose.Promise = global.Promise;
-
-var pagepost = mongoose.model('Page');
-
 var options = {
     useMongoClient: true
 };
-
 //var dir="/windows/D/Projects/PageVis";
 var logger = new(winston.Logger)({
     transports: [
@@ -131,7 +127,14 @@ var queryobj = function queryobj(req, res, time1, time2) {
     return queryobj;
 };
 
-var findquery = function findquery(queryobj) {
+var findquery = function findquery(page, queryobj) {
+    if (!page) {
+        var page = '客台';
+    }
+    //console.log(options)
+    mongoose.model(page, schema.postSchema)
+    var pagepost = mongoose.model(page);
+    //return Query(queryobj, options, pagepost, page);
     return pagepost.find(queryobj, function (err, pagepost) {
         //logger.log('info',pagepost);
         return pagepost;
@@ -212,7 +215,7 @@ var mapreduce = function mapreduce(queryobj) {
 };
 
 // Using `mongoose.connect`...
-var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/test?authSource=admin', options);
+var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/haka?authSource=admin', options);
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("we're connected!")
@@ -220,51 +223,65 @@ db.once('open', function () {
 });
 
 var callback = function callback(req, res) {
-    console.log("go db")
-    var time1 = req.params.time1;
-    var time2 = req.params.time2;
-    var time3 = req.params.time3;
-    var time4 = req.params.time4;
-    var queryobj1 = queryobj(req, res, time1, time2);
-    var queryobj2 = queryobj(req, res, time3, time4);
-    console.log(queryobj1);
-    console.log(queryobj2);
-    Promise.all([findquery(queryobj1), findquery(queryobj2)])
-        .then(result => {
-            console.log("q1 lenght: " + result[0].length);
-            console.log("q2 lenght: " + result[1].length);
-            var postlist = dl.bindpostlist(result[0], result[1]);
-            var response = [];
-            var ul1 = dl.ualist(result[0]);
-            var ul2 = dl.ualist(result[1]);
-            var userlist = dl.binduserlist(ul1, ul2);
-            var oldata = userlist;
-            if (req.params.co === 'Co reaction') {
-                oldata = dl.overlap(userlist, 'like');
-            }
-            if (req.params.co === 'Co comment') {
-                oldata = dl.overlap(userlist, 'comment');
-            }
-            console.log(req.params.co);
-            oldata = dl.olresult(oldata);
-            //response.push(ul1);
-            //response.push(ul2);
-            //logger.log('info', response);
-            res.render('query', {
-                title: 'query',
-                message: JSON.stringify(req.params),
-                data: [postlist, oldata],
-            });
-            //res.send(result);
-        })
-        .catch(function (err) {
-            logger.log('error', err);
+    if (req.query.hasquery === false) {
+        console.log("no query!")
+        res.render('query', {
+            title: 'query',
+            query: '沒有選取資料範圍',
+            summary: '',
+            data: [, ],
         });
-    /*mapreduce
-    mapreduce(queryobj1);
-    */
-    //res.send(files);
-    //console.log(files.length);
+    } else {
+        console.log("go db")
+        var page1 = req.params.page1;
+        var page2 = req.params.page2;
+        var time1 = req.params.time1;
+        var time2 = req.params.time2;
+        var time3 = req.params.time3;
+        var time4 = req.params.time4;
+        var queryobj1 = queryobj(req, res, time1, time2);
+        var queryobj2 = queryobj(req, res, time3, time4);
+        console.log(queryobj1);
+        console.log(queryobj2);
+        Promise.all([findquery(page1, queryobj1), findquery(page2, queryobj2)])
+            .then(result => {
+                console.log("q1 lenght: " + result[0].length);
+                console.log("q2 lenght: " + result[1].length);
+                var postlist = dl.bindpostlist(result[0], result[1]);
+                var response = [];
+                var ul1 = dl.ualist(result[0]);
+                var ul2 = dl.ualist(result[1]);
+                var userlist = dl.binduserlist(ul1, ul2);
+                var oldata = userlist;
+                if (req.params.co === 'Co reaction') {
+                    oldata = dl.overlap(userlist, 'like');
+                }
+                if (req.params.co === 'Co comment') {
+                    oldata = dl.overlap(userlist, 'comment');
+                }
+                console.log(req.params.co);
+                oldata = dl.olresult(oldata);
+                //response.push(ul1);
+                //response.push(ul2);
+                //logger.log('info', response);
+                res.render('query', {
+                    title: 'query',
+                    query: "query1: " + req.params.page1 + "　time:　" + req.params.time1 + "　to　" + req.params.time2 + "貼文數: " + result[0].length + "<br>" +
+                        "query2: " + req.params.page2 + "　time:　" + req.params.time3 + "　to　" + req.params.time4 + "貼文數: " + result[1].length,
+                    summary: "共同活動使用者數: " + oldata.length + "<br>" + "所有貼文數: " + postlist.length,
+                    data: [postlist, oldata],
+                });
+                //res.send(result);
+            })
+            .catch(function (err) {
+                logger.log('error', err);
+            });
+        /*mapreduce
+        mapreduce(queryobj1);
+        */
+        //res.send(files);
+        //console.log(files.length);
+    }
 };
 
 var exports = module.exports = {};

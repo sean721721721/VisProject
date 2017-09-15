@@ -116,20 +116,20 @@ app.get('/table', tableHandler.callback);
 app.use('/query', query);
 app.post('/query', urlencodedParser, function (req, res) {
   var body = req.body;
-  console.log(body);
   const query = querystring.stringify({
     "minlike": body.minlike,
     "maxlike": body.maxlike,
     "mincomment": body.mincomment,
     "maxcomment": body.maxcomment,
     "posttype": body.posttype,
+    "page1": body.pagename[0],
+    "page2": body.pagename[1],
     "time1": body.date[0],
     "time2": body.date[1],
     "time3": body.date[2],
     "time4": body.date[3],
     "co": body.co,
   });
-  console.log(query);
   res.redirect('/query?' + query);
 })
 
