@@ -43,24 +43,24 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '565274156891915', // 台灣居住正義協會
   //   '431824973661134', // 焦點事件
   //   '148475335184300', //greenpeace
-  //   '103640919705348'  //綠盟
-  //   '148513668543221', //CitizenoftheEarth
-  //   '282353111158', //TaiwanGreenParty
-  //   '100010574583275' // 梁振英personal
+  //'103640919705348', //綠盟
+  //'148513668543221', //CitizenoftheEarth
+  //'282353111158', //TaiwanGreenParty
+  //   '100010574583275', // 梁振英personal
   //'46251501064', //蔡英文 Tsai Ing-wen
   //'157215971120682', //Taipei 2017 Universiade - 世大運
   //'1535505930102034', //黃騰浩
   //   '559756970792038', //出境事務所
   '1729604514029664', //勞動之王
-  '112037075517141', //古斌
-  '119002761508899', //安唯綾
-  '253190465516', //張靜之
-  '305591146182964', //客台
+  //'112037075517141', //古斌
+  //'119002761508899', //安唯綾
+  //'253190465516', //張靜之
+  //'305591146182964', //客台
   //'188535634604417', //for testing
 ];
 
-var sincedate = "2016-01-01",
-  finaldate = "2017-09-01",
+var sincedate = "2017-09-08",
+  finaldate = "2017-09-09",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -319,6 +319,7 @@ function getData(i, step) {
               var res_reactions = [];
               var reactionusers = [];
               var reactioncounts = [];
+              var res_sharedposts = [];
 
               for (var c = 0; c < res_posts.data.length; c++) {
                 var counts = [0, 0, 0, 0, 0, 0, 0];
@@ -329,7 +330,7 @@ function getData(i, step) {
                 postid[i] = res_posts.data[i].id;
               }
               //console.log(res_posts);
-              resolve(asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid));
+              resolve(asy(postid, res_posts, res_comments, res_reactions, reactionusers, res_sharedposts, sincedate, untildate, userid));
 
             } else {
               logger.log('info', "---no post in the time range!---");
@@ -346,7 +347,7 @@ function getData(i, step) {
   });
 };
 
-async function asy(postid, res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+async function asy(postid, res_posts, res_comments, res_reactions, reactionusers, res_sharedposts, sincedate, untildate, userid) {
   try {
     //console.log("hello a0 and start main");
     if (postid.length > 0) {
@@ -363,7 +364,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
       async function push() {
         for (var i = 0; i < length; i++) {
           var id = postid[i];
-          var result = await main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+          var result = await main(id, length, res_comments, res_reactions, reactionusers, res_sharedposts, sincedate, untildate);
           //console.log(result);
         }
         res.push(result);
@@ -375,11 +376,12 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
         res_comments = result[0][0];
         reactionusers = result[0][1];
         res_reactions = result[0][2];
+        res_sharedposts = result[0][3];
         logger.log('info', "-------- res done: " + userid + " --------");
         //console.log(res_comments)
         //console.log(reactionusers)
         //console.log(res_reactions)
-        return next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+        return next(res_posts, res_comments, res_reactions, reactionusers, res_sharedposts, sincedate, untildate, userid);
       };
     }
   } catch (err) {
@@ -387,7 +389,7 @@ async function asy(postid, res_posts, res_comments, res_reactions, reactionusers
   }
 };
 
-async function main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+async function main(id, length, res_comments, res_reactions, reactionusers, res_sharedposts, sincedate, untildate) {
   try {
     logger.log('info', "---------- main loop: " + id + " ----------")
     //var mtimeout = 1000 * length;
@@ -402,12 +404,14 @@ async function main(id, length, res_comments, res_reactions, reactionusers, sinc
     await get_recursive_comments(id, res_comments, mtimeout);
     await get_recursive_reactions(id, reactionusers, mtimeout);
     await get_reaction_counts(id, res_reactions);
+    await get_recursive_sharedposts(id, res_sharedposts, mtimeout);
     return await push();
 
     function push() {
       result.push(res_comments);
       result.push(reactionusers);
       result.push(res_reactions);
+      result.push(res_sharedposts);
       //console.log('push result');
       return result;
     };
@@ -431,11 +435,11 @@ function get_recursive_comments(id, res_comments, timeout) {
         }
         logger.log('info', 'try get_recursive_comments: ' + id + ' again');
         setTimeout(function () {
-          resolve(get_recursive_comments(id, res_comments, timeout));
+          resolve(get_recursive_comments(id, res_comments, ctimeout));
         }, 1000);
       } else if (res.data.length != 0) {
         logger.log('info', "resolve comments: " + id);
-        resolve(each_comment(res, id, res_comments, timeout));
+        resolve(each_comment(res, id, res_comments, ctimeout));
       } else {
         res_comments.push(res);
         resolve(res_comments);
@@ -555,7 +559,7 @@ function get_recursive_reactions(id, reactionusers, timeout) {
     // var qur = ",reactions.type(LOVE).limit(10).summary(true).as(love),reactions.type(WOW).limit(10).summary(true).as(wow),reactions.type(HAHA).limit(10).summary(true).as(haha),reactions.type(SAD).limit(10).summary(true).as(sad),reactions.type(ANGRY).limit(10).summary(true).as(angry), reactions.type(THANKFUL).limit(10).summary(true).as(thankful)";
     var rtimeout = timeout;
     //var rtimeout = 1;
-    serverUtilities.get_recursive(id, "reactions", "?limit=100", 10, rtimeout, function (err, res) {
+    serverUtilities.get_recursive(id, "reactions", "?limit=100", 10000, rtimeout, function (err, res) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
@@ -564,7 +568,7 @@ function get_recursive_reactions(id, reactionusers, timeout) {
         }
         logger.log('info', 'try get_recursive_reactions: ' + id + ' again');
         setTimeout(function () {
-          resolve(get_recursive_reactions(id, reactionusers, timeout));
+          resolve(get_recursive_reactions(id, reactionusers, rtimeout));
         }, 1000);
       } else {
         // console.log("id=" + id)
@@ -609,18 +613,133 @@ function get_reaction_counts(id, res_reactions) {
   });
 };
 
-var next = function next(res_posts, res_comments, res_reactions, reactionusers, sincedate, untildate, userid) {
+function get_recursive_sharedposts(id, res_sharedposts, timeout) {
+  return new Promise((resolve, reject) => {
+    var sptimeout = timeout;
+    var queryfield = "?fields=id,object_id,created_time,type,message,story,picture,from,shares,attachments,sharedposts,reactions.limit(0).summary(true),comments.limit(0).summary(true)&limit=100"
+    //var options="comments.summary(true),reactions.type(LIKE).limit(0).summary(true).as(like)";
+    serverUtilities.get_recursive(id, "sharedposts", queryfield, 10, sptimeout, function (err, res) {
+      if (err || !res) {
+        if (!res) {
+          logger.log('error', id + " Err res_sharedposts === null: ");
+          //callback({"error": {"message": "No reaction."}}, res_reactions);
+        }
+        logger.log('info', 'try get_recursive_sharedposts: ' + id + ' again');
+        setTimeout(function () {
+          resolve(get_recursive_sharedposts(id, res_sharedposts, sptimeout));
+        }, 1000);
+      } else if (res.data.length != 0) {
+        var postid = [];
+        var res_comments = [];
+        var res_reactions = [];
+        var reactioncounts = [];
+        for (var i = 0; i < res.data.length; i++) {
+          postid[i] = res.data[i].id;
+        }
+        // console.log("id=" + id)
+        //console.log("err");
+        logger.log('info', "resolve res_sharedposts: " + id);
+        resolve(asyshare(postid, res, res_comments, res_reactions, res_sharedposts));
+      } else {
+        logger.log('info', "---no sharedposts!---");
+        resolve([])
+      };
+    });
+  }).catch(function (err) {
+    logger.log('error', err);
+  });
+};
+
+async function asyshare(postid, sharedposts, res_comments, res_reactions,res_sharedposts) {
+  try {
+    //console.log("hello a0 and start main");
+    if (postid.length > 0) {
+      var length = postid.length;
+      /*Paralle
+      var res = await Promise.all(postid.map(async function (item) {
+        var id = item;
+        //console.log("start: id = " + id)
+        return await main(id, length, res_comments, res_reactions, reactionusers, sincedate, untildate, userid);
+        //.then(console.log("end: id = " + id));
+      }));*/
+      var res = [];
+      await push();
+      async function push() {
+        for (var i = 0; i < length; i++) {
+          var id = postid[i];
+          var result = await mainshare(id, length, res_comments, res_reactions);
+          //console.log(result);
+        }
+        res.push(result);
+      }
+      //console.log("l=" + res.length);
+      await end(res);
+
+      function end(result) {
+        res_comments = result[0][0];
+        res_reactions = result[0][1];
+        logger.log('info', "-------- resshare done: " + " --------");
+        //console.log(res_comments)
+        //console.log(reactionusers)
+        //console.log(res_reactions)
+        return merge(sharedposts, res_comments, res_reactions,res_sharedposts);
+      };
+    }
+  } catch (err) {
+    logger.log('error', err);
+  }
+};
+
+async function mainshare(id, length, res_comments, res_reactions, reactionusers) {
+  try {
+    logger.log('info', "---------- mainshare loop: " + id + " ----------")
+    //var mtimeout = 1000 * length;
+    var mtimeout = 1000;
+    logger.log('info', "mtimeout = " + mtimeout + " ------------")
+    /*Paralle
+    //var result = await Promise.all([get_recursive_comments(id, res_comments, mtimeout), get_recursive_reactions(id, reactionusers, mtimeout), get_reaction_counts(id, res_reactions)]);
+    //console.log(res);
+    //console.log("hello end main");
+    return result;*/
+    var result = [];
+    await get_recursive_comments(id, res_comments, mtimeout);
+    //await get_recursive_reactions(id, reactionusers, mtimeout);
+    await get_reaction_counts(id, res_reactions);
+    return await push();
+
+    function push() {
+      result.push(res_comments);
+      //result.push(reactionusers);
+      result.push(res_reactions);
+      //console.log('push result');
+      return result;
+    };
+  } catch (err) {
+    logger.log('error', err);
+  }
+};
+
+var merge = function merge(sharedposts, res_comments, res_reactions,res_sharedposts) {
+  sharedposts = fill_reactions(sharedposts, res_reactions);
+  sharedposts = fill_comments(sharedposts, res_comments);
+  res_sharedposts.push(sharedposts);
+  return res_sharedposts;
+};
+
+var next = function next(res_posts, res_comments, res_reactions, reactionusers, res_sharedposts, sincedate, untildate, userid) {
   logger.log('info', "---------- next: " + userid + " ----------")
   var save_posts = [];
   //serverUtilities.savejson("comments_" + sincedate + "_" + untildate + "_" + userid, res_comments); //*
   //serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions); //*
   //serverUtilities.savejson("reactionusers_" + sincedate + "_" + untildate + "_" + userid, reactionusers); //*
+  serverUtilities.savejson("sharedposts_" + sincedate + "_" + untildate + "_" + userid, res_sharedposts); //*
   save_posts = fill_reactions(res_posts, res_reactions);
   save_posts = fill_comments(save_posts, res_comments);
-  //serverUtilities.savejson("preposts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
-  save_posts = serverUtilities.format_json(res_posts, save_posts);
-  save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
-  serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+  save_posts = fill_sharedposts(save_posts, res_sharedposts);
+  serverUtilities.savejson("preposts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+  //save_posts = serverUtilities.format_json(res_posts, save_posts);
+  //save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
+  //serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
   //console.log(res_posts);
   logger.log('info', "saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
   return true;
@@ -679,6 +798,18 @@ var fill_comments = function fill_comments(res_posts, res_comments) {
     for (var j = 0; j < res_comments.length; j++) {
       if (res_posts.data[i].id === res_comments[j].postid) {
         res_posts.data[i].comments.data = res_comments[j].data;
+      }
+    }
+  }
+  //console.log(res_posts);
+  return res_posts;
+};
+
+var fill_sharedposts = function fill_sharedposts(res_posts, res_sharedposts) {
+  for (var i = 0; i < res_posts.data.length; i++) {
+    for (var j = 0; j < res_sharedposts.length; j++) {
+      if (res_posts.data[i].id === res_sharedposts[j].postid) {
+        res_posts.data[i].sharedposts.data = res_sharedposts[j].data;
       }
     }
   }
