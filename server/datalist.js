@@ -1,4 +1,5 @@
 /* eslint-disable */
+//for csv
 var user_list = function user_list(files) {
     var userlist = [];
     var data, reaction, user, post, reactionlength;
@@ -54,6 +55,7 @@ var user_list = function user_list(files) {
     return userlist;
 }
 
+//for dbquery
 var ualist = function ualist(files) {
     var userlist = [];
     var data, reaction, user, post, reactionlength;
@@ -74,6 +76,7 @@ var ualist = function ualist(files) {
                     post["id"] = data.id
                     post["like"] = post_liketype(post, reaction);
                     post["commentcount"] = 0;
+                    post["share"] = false;
                     //console.log(post)
                     user = {};
                     user["id"] = reaction.id;
@@ -103,10 +106,12 @@ var ualist = function ualist(files) {
     }
     console.log("userlist length: " + userlist.length)
     comment_countdb(files, userlist);
+    share_db(files, userlist);
     //console.log("people "+people)
     return userlist;
 }
 
+//check like type
 function post_liketype(post, reaction) {
     if (reaction.type === "LIKE") {
         return 1;
@@ -125,6 +130,7 @@ function post_liketype(post, reaction) {
     }
 }
 
+//count comments for csv
 function comment_count(files, userlist) {
     var data, comment, user, post, commentlength;
     var filelength = files.length;
@@ -190,6 +196,7 @@ function comment_count(files, userlist) {
     }
 }
 
+//count comments for dbquery
 function comment_countdb(files, userlist) {
     var data, comment, user, post, commentlength;
     var filelength = files.length;
@@ -225,7 +232,8 @@ function comment_countdb(files, userlist) {
                                 post = {
                                     "id": data.id,
                                     "like": 0,
-                                    "commentcount": 1
+                                    "commentcount": 1,
+                                    "share": false,
                                 }
                                 userlist[a].posts.push(post);
                             }
@@ -236,7 +244,8 @@ function comment_countdb(files, userlist) {
                         post = {
                             "id": data.id,
                             "like": 0,
-                            "commentcount": 1
+                            "commentcount": 1,
+                            "share": false,
                         }
                         user = {
                             "id": comment.from.id,
@@ -251,13 +260,79 @@ function comment_countdb(files, userlist) {
         }
     }
 }
+
+//share check for dbquery
+function share_db(files, userlist) {
+    var data, sharedpost, user, post, sharelength;
+    var filelength = files.length;
+    var listlength = userlist.length;
+    var findid = false;
+    var findpost = false;
+    for (var i = 0; i < filelength; i++) {
+        data = files[i];
+        if (data.sharedposts.data !== undefined) {
+            sharelength = data.sharedposts.data.length;
+            if (sharelength !== 0) {
+                //console.log(userlist.length)
+                for (var k = 0; k < sharelength; k++) {
+                    sharedpost = data.sharedposts.data[k];
+                    findid = false;
+                    for (var a = 0; a < listlength; a++) {
+                        if (sharedposts.from.id == userlist[a].id) {
+                            findid = true;
+                            //console.log("find")
+                            var length = userlist[a].posts.length;
+                            //console.log(length)
+                            findpost = false;
+                            for (var b = 0; b < length; b++) {
+                                if (data.id == userlist[a].posts[b].id) {
+                                    findpost = true;
+                                    //console.log("find")
+                                    userlist[a].posts[b].share = true;
+                                    b = length;
+                                }
+                            }
+                            if (!findpost) {
+                                //console.log("no post!")
+                                post = {
+                                    "id": data.id,
+                                    "like": 0,
+                                    "commentcount": 0,
+                                    "share": true,
+                                }
+                                userlist[a].posts.push(post);
+                            }
+                        }
+                    }
+                    if (!findid) {
+                        //console.log("no user!")
+                        post = {
+                            "id": data.id,
+                            "like": 0,
+                            "commentcount": 0,
+                            "share": true,
+                        }
+                        user = {
+                            "id": sharedpost.from.id,
+                            "name": sharedpost.from.name,
+                            "posts": [],
+                        }
+                        user.posts.push(post)
+                        userlist.push(user)
+                    }
+                }
+            }
+        }
+    }
+}
+
 //slow code, need to improve
 var bindpostlist = function bindpostlist(qobj1, qobj2) {
     function postobj(obj) {
         var posts = {};
         for (prop in obj) {
             //posts[prop] = obj[prop];
-            if (prop.match(/^(id|created_time|type|message|from|shares|attachments)$/)) {
+            if (prop.match(/^(id|created_time|type|message|from|shares|attachments|sharedposts)$/)) {
                 posts[prop] = obj[prop];
             } else {
                 var reactions = {};
@@ -324,6 +399,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
     return list;
 }
 
+//bind two userlist
 var binduserlist = function binduserlist(userlist1, userlist2) {
     var user = userlist1;
     var tuser = userlist2;
@@ -356,6 +432,7 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
     return user;
 }
 
+//insert activity state
 var overlap = function overlap(userlist, type) {
     if (type === "like") {
         type = 1;
@@ -384,7 +461,14 @@ var overlap = function overlap(userlist, type) {
         for (var j = 0; j < pal; j++) {
             if (type === "comment") {
                 if (userlist[i].posts.A[j].commentcount != 0) {
-                    //user["id_" + id]["ul1"] = true;
+                    userlist[i]["activity"] = {
+                        "A": true,
+                        "B": false,
+                    }
+                    j = pal;
+                }
+            } else if (type === "share") {
+                if (userlist[i].post.A[j].share === true) {
                     userlist[i]["activity"] = {
                         "A": true,
                         "B": false,
@@ -393,7 +477,6 @@ var overlap = function overlap(userlist, type) {
                 }
             } else {
                 if (userlist[i].posts.A[j].like === type) {
-                    //user["id_" + id]["ul1"] = true;
                     userlist[i]["activity"] = {
                         "A": true,
                         "B": false,
@@ -407,13 +490,16 @@ var overlap = function overlap(userlist, type) {
             if (userlist[i].activity) {
                 if (type === "comment") {
                     if (userlist[i].posts.B[j].commentcount != 0) {
-                        //user["id_" + id]["ul1"] = true;
+                        userlist[i]["activity"].B = true;
+                        j = pbl;
+                    }
+                } else if (type === "share") {
+                    if (userlist[i].post.A[j].share === true) {
                         userlist[i]["activity"].B = true;
                         j = pbl;
                     }
                 } else {
                     if (userlist[i].posts.B[j].like === type) {
-                        //user["id_" + id]["ul1"] = true;
                         userlist[i]["activity"].B = true;
                         j = pbl;
                     }
@@ -421,19 +507,25 @@ var overlap = function overlap(userlist, type) {
             } else {
                 if (type === "comment") {
                     if (userlist[i].posts.B[j].commentcount != 0) {
-                        //user["id_" + id]["ul1"] = true;
                         userlist[i]["activity"] = {
-                            "A": true,
-                            "B": false,
+                            "A": false,
+                            "B": true,
+                        }
+                        j = pbl;
+                    }
+                } else if (type === "share") {
+                    if (userlist[i].post.B[j].share === true) {
+                        userlist[i]["activity"] = {
+                            "A": false,
+                            "B": true,
                         }
                         j = pbl;
                     }
                 } else {
                     if (userlist[i].posts.B[j].like === type) {
-                        //user["id_" + id]["ul1"] = true;
                         userlist[i]["activity"] = {
-                            "A": true,
-                            "B": false,
+                            "A": false,
+                            "B": true,
                         }
                         j = pbl;
                     }
@@ -445,6 +537,7 @@ var overlap = function overlap(userlist, type) {
     return userlist;
 };
 
+//collect overlap results
 var olresult = function olresult(ollist) {
     var result = [];
     var len = ollist.length;

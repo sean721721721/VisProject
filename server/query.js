@@ -259,6 +259,9 @@ var callback = function callback(req, res) {
                 if (req.params.co === 'Co comment') {
                     oldata = dl.overlap(userlist, 'comment');
                 }
+                if (req.params.co === 'Co share') {
+                    oldata = dl.overlap(userlist, 'share');
+                }
                 console.log(req.params.co);
                 oldata = dl.olresult(oldata);
                 //response.push(ul1);
