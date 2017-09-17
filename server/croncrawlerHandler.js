@@ -650,7 +650,7 @@ function get_recursive_sharedposts(id, res_sharedposts, timeout) {
   });
 };
 
-async function asyshare(postid, sharedposts, res_comments, res_reactions,res_sharedposts) {
+async function asyshare(postid, sharedposts, res_comments, res_reactions, res_sharedposts) {
   try {
     //console.log("hello a0 and start main");
     if (postid.length > 0) {
@@ -682,7 +682,7 @@ async function asyshare(postid, sharedposts, res_comments, res_reactions,res_sha
         //console.log(res_comments)
         //console.log(reactionusers)
         //console.log(res_reactions)
-        return merge(sharedposts, res_comments, res_reactions,res_sharedposts);
+        return merge(sharedposts, res_comments, res_reactions, res_sharedposts);
       };
     }
   } catch (err) {
@@ -719,10 +719,14 @@ async function mainshare(id, length, res_comments, res_reactions, reactionusers)
   }
 };
 
-var merge = function merge(sharedposts, res_comments, res_reactions,res_sharedposts) {
-  sharedposts = fill_reactions(sharedposts, res_reactions);
-  sharedposts = fill_comments(sharedposts, res_comments);
-  res_sharedposts.push(sharedposts);
+var merge = function merge(sharedposts, res_comments, res_reactions, res_sharedposts) {
+   var fmsharedposts = [];
+  fmsharedposts = fill_reactions(sharedposts, res_reactions);
+  fmsharedposts = fill_comments(fmsharedposts, res_comments);
+  //serverUtilities.savejson("sharedposts_", sharedposts);
+  fmsharedposts = serverUtilities.format_json(sharedposts, fmsharedposts);
+  //serverUtilities.savejson("fmsharedposts_", fmsharedposts);
+  res_sharedposts.push(fmsharedposts);
   return res_sharedposts;
 };
 
@@ -732,14 +736,14 @@ var next = function next(res_posts, res_comments, res_reactions, reactionusers, 
   //serverUtilities.savejson("comments_" + sincedate + "_" + untildate + "_" + userid, res_comments); //*
   //serverUtilities.savejson("reactions_" + sincedate + "_" + untildate + "_" + userid, res_reactions); //*
   //serverUtilities.savejson("reactionusers_" + sincedate + "_" + untildate + "_" + userid, reactionusers); //*
-  serverUtilities.savejson("sharedposts_" + sincedate + "_" + untildate + "_" + userid, res_sharedposts); //*
+  //serverUtilities.savejson("sharedposts_" + sincedate + "_" + untildate + "_" + userid, res_sharedposts); //*
   save_posts = fill_reactions(res_posts, res_reactions);
   save_posts = fill_comments(save_posts, res_comments);
   save_posts = fill_sharedposts(save_posts, res_sharedposts);
-  serverUtilities.savejson("preposts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
-  //save_posts = serverUtilities.format_json(res_posts, save_posts);
-  //save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
-  //serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+  //serverUtilities.savejson("preposts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
+  save_posts = serverUtilities.format_json(res_posts, save_posts);
+  save_posts = serverUtilities.add_reactionuser(save_posts, reactionusers);
+  serverUtilities.savejson("posts_" + sincedate + "_" + untildate + "_" + userid, save_posts);
   //console.log(res_posts);
   logger.log('info', "saving data: " + sincedate + "_" + untildate + "_" + userid + " done");
   return true;

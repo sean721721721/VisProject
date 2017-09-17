@@ -114,29 +114,29 @@ var save_photo_id = function save_photo_id(id) {
 var fill_zero_field = function fill_zero_field(res_posts) {
 	if (!res_posts.version) {
 		res_posts.version = {
-			"api version": 2.6
+			"api version": 2.9,
 		};
 	}
 	for (var i = 0; i < res_posts.data.length; i++) {
 		if (!(res_posts.data[i].shares)) {
 			res_posts.data[i].shares = {
-				"count": 0
+				"count": 0,
 			};
 		}
 
 		if (!(res_posts.data[i].likes)) {
 			res_posts.data[i].likes = {
 				"summary": {
-					"total_count": 0
-				}
+					"total_count": 0,
+				},
 			};
 		}
 
 		if (!(res_posts.data[i].comments)) {
 			res_posts.data[i].comments = {
 				"summary": {
-					"total_count": 0
-				}
+					"total_count": 0,
+				},
 			};
 		}
 	}
@@ -146,7 +146,7 @@ var fill_zero_field = function fill_zero_field(res_posts) {
 var getpicture = function getpicture(userid, res_posts) {
 	var pictureurl;
 	graph.get(userid, {
-		fields: "picture.height(140).width(140)"
+		fields: "picture.height(140).width(140)",
 	}, function (err, res) {
 		if (err && !res.picture.data.url) {
 			console.log("picture.data.url === null ");
@@ -171,7 +171,7 @@ var saveinformation = function saveinformation(results, res_data) {
 			"created_time": results.created_time,
 			"sharedpostsnum": results.sharedposts.data.length,
 			"commentsnum": results.comments.data.length,
-			"likesnum": results.likes.data.length
+			"likesnum": results.likes.data.length,
 		};
 	} else if (!(results.sharedposts)) {
 		res_data = {
@@ -184,7 +184,7 @@ var saveinformation = function saveinformation(results, res_data) {
 			"created_time": results.created_time,
 			"sharedpostsnum": 0,
 			"commentsnum": results.comments.data.length,
-			"likesnum": results.likes.data.length
+			"likesnum": results.likes.data.length,
 		};
 	} else if (results.sharedposts) {
 		res_data = {
@@ -197,7 +197,7 @@ var saveinformation = function saveinformation(results, res_data) {
 			"created_time": results.created_time,
 			"sharedpostsnum": results.sharedposts.count,
 			"commentsnum": results.comments.data.length,
-			"likesnum": results.likes.data.length
+			"likesnum": results.likes.data.length,
 		};
 	}
 	return res_data;
@@ -214,7 +214,7 @@ var get_recursive = function get_recursive(postid, field_query, subfield_query, 
 				console.dir(res);
 				callback({
 					"error": {
-						"message": "No sharedpost."
+						"message": "No sharedpost.",
 					}
 				}, res);
 			}
@@ -289,7 +289,7 @@ var format_json = function format_json(inputdata, outputjson) {
 			"wow": sub[i].reaction_detail.WOW,
 			"angry": sub[i].reaction_detail.ANGRY,
 			"sad": sub[i].reaction_detail.SAD,
-			"thankful": sub[i].reaction_detail.TNANKFUL
+			"thankful": sub[i].reaction_detail.TNANKFUL,
 		};
 		var context = [];
 		if (sub[i].comments) {
@@ -309,7 +309,7 @@ var format_json = function format_json(inputdata, outputjson) {
 							"from": sub2[k].from,
 							"message": sub2[k].message,
 							"like_count": sub2[k].like_count,
-							"id": sub2[k].id
+							"id": sub2[k].id,
 						});
 						if (sub2[k]['message_tags']) {
 							reply[k]['message_tags'] = sub2[k]['message_tags'];
@@ -323,7 +323,7 @@ var format_json = function format_json(inputdata, outputjson) {
 						"comments": reply,
 						"comment_count": sub1[j].comment_count,
 						"created_time": sub1[j].created_time,
-						"id": sub1[j].id
+						"id": sub1[j].id,
 					})
 					// console.log(context)
 				} else {
@@ -333,7 +333,7 @@ var format_json = function format_json(inputdata, outputjson) {
 						"message": sub1[j].message,
 						"comment_count": sub1[j].comment_count,
 						"created_time": sub1[j].created_time,
-						"id": sub1[j].id
+						"id": sub1[j].id,
 					})
 				}
 				if (sub1[j]['message_tags']) {
@@ -345,34 +345,50 @@ var format_json = function format_json(inputdata, outputjson) {
 
 		var comments = {
 			"context": context,
-			"summary": sub[i].comments.summary.total_count
+			"summary": sub[i].comments.summary.total_count,
 		};
 		if (sub[i].attachments) {
 			var attachments = {
 				"description": sub[i].attachments.data[0].description,
 				"url": sub[i].attachments.data[0].url,
 				"title": sub[i].attachments.data[0].title,
-				"type": sub[i].attachments.data[0].type
+				"type": sub[i].attachments.data[0].type,
 			}
 		} else {
 			var attachments = null;
 		}
-		data.push({
+
+		var posts = {
 			"id": sub[i].id,
 			"created_time": sub[i].created_time,
 			"type": sub[i].type,
 			"message": sub[i].message,
 			"from": sub[i].from,
-			"shares": sub[i].shares.count,
 			"likes": reactions.like,
 			"reactions": reactions,
 			"comments": comments,
-			"attachments": attachments
-		});
+			"attachments": attachments,
+		}
+		if (sub[i].shares) {
+			posts.shares = sub[i].shares.count;
+		} else {
+			posts.shares = 0;
+		}
+		if (sub[i].sharedposts) {
+			var sharedposts = {
+				"data": sub[i].sharedposts.data,
+			};
+			posts.sharedposts = sharedposts;
+		} else {
+			posts.sharedposts = {
+				"data": [],
+			};
+		}
+		data.push(posts);
 	}
 	inputdata.data = data;
 	outputjson = {
-		"data": data
+		"data": data,
 	};
 	return inputdata;
 }
@@ -400,7 +416,7 @@ var add_reactionuser = function add_reactionuser(data, userlist) {
 									console.dir(res);
 									callback({
 										"error": {
-											"message": "No sharedpost."
+											"message": "No sharedpost.",
 										}
 									}, res);
 								}
@@ -443,7 +459,7 @@ var add_reactionuser = function add_reactionuser(data, userlist) {
 							//console.log(res.data);
 							//console.log("res.data.length: " + res.data.length );
 							var data_query = {
-								"data": []
+								"data": [],
 							};
 							data_query.data = res.data; //data_query.data.concat(res.data);
 							console.log("page " + 1 + " " + field_query + ".length: " + data_query.data.length);
