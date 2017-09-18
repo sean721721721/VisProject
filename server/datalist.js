@@ -270,7 +270,7 @@ function share_db(files, userlist) {
     var findpost = false;
     for (var i = 0; i < filelength; i++) {
         data = files[i];
-        if (data.sharedposts.data !== undefined) {
+        if (data.sharedposts) {
             sharelength = data.sharedposts.data.length;
             if (sharelength !== 0) {
                 //console.log(userlist.length)
@@ -278,7 +278,7 @@ function share_db(files, userlist) {
                     sharedpost = data.sharedposts.data[k];
                     findid = false;
                     for (var a = 0; a < listlength; a++) {
-                        if (sharedposts.from.id == userlist[a].id) {
+                        if (sharedpost.from.id == userlist[a].id) {
                             findid = true;
                             //console.log("find")
                             var length = userlist[a].posts.length;
@@ -468,7 +468,7 @@ var overlap = function overlap(userlist, type) {
                     j = pal;
                 }
             } else if (type === "share") {
-                if (userlist[i].post.A[j].share === true) {
+                if (userlist[i].posts.A[j].share === true) {
                     userlist[i]["activity"] = {
                         "A": true,
                         "B": false,
@@ -494,7 +494,7 @@ var overlap = function overlap(userlist, type) {
                         j = pbl;
                     }
                 } else if (type === "share") {
-                    if (userlist[i].post.A[j].share === true) {
+                    if (userlist[i].posts.A[j].share === true) {
                         userlist[i]["activity"].B = true;
                         j = pbl;
                     }
@@ -514,7 +514,7 @@ var overlap = function overlap(userlist, type) {
                         j = pbl;
                     }
                 } else if (type === "share") {
-                    if (userlist[i].post.B[j].share === true) {
+                    if (userlist[i].posts.B[j].share === true) {
                         userlist[i]["activity"] = {
                             "A": false,
                             "B": true,

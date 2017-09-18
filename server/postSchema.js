@@ -12,13 +12,13 @@ var Schema = mongoose.Schema;
     // MUST BE VANILLA
     var fromSchema = new Schema({
         name: String,
-        id: String
+        id: String,
     });
 
     var reactionlist = new Schema({
         id: String,
         name: String,
-        type: String
+        type: String,
     });
 
     var subcomment = new Schema({
@@ -26,7 +26,7 @@ var Schema = mongoose.Schema;
         from: fromSchema,
         message: String,
         like_count: Number,
-        id: String
+        id: String,
     });
 
     var contextSchema = new Schema({
@@ -36,7 +36,7 @@ var Schema = mongoose.Schema;
         comments: [subcomment],
         comment_count: Number,
         created_time: Date,
-        id: String
+        id: String,
     });
 
     var reactionSchema = new Schema({
@@ -46,19 +46,36 @@ var Schema = mongoose.Schema;
         wow: Number,
         angry: Number,
         sad: Number,
-        list: [reactionlist]
+        list: [reactionlist],
     });
 
     var commentSchema = new Schema({
         context: [contextSchema],
-        summary: Number
+        summary: Number,
     });
 
     var attachmentSchema = new Schema({
         description: String,
         url: String,
         title: String,
-        type: String
+        type: String,
+    });
+
+    var subsharedposts = new Schema({
+        id: String,
+        created_time: Date,
+        type: String,
+        message: String,
+        from: fromSchema,
+        shares: Number,
+        likes: Number,
+        reactions: reactionSchema,
+        comments: commentSchema,
+        attachments: attachmentSchema,
+    });
+
+    var sharedpostSchema = new Schema({
+        data: [subsharedposts],
     });
 
     var postSchema = new Schema({
@@ -71,7 +88,8 @@ var Schema = mongoose.Schema;
         likes: Number,
         reactions: reactionSchema,
         comments: commentSchema,
-        attachments: attachmentSchema
+        attachments: attachmentSchema,
+        sharedposts: sharedpostSchema,
     }, {
         autoIndex: false
     });

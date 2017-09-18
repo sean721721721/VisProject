@@ -34,7 +34,7 @@ db.once('open', function () {
     // we're connected!
 });
 
-var folders = ['勞動之王', '古斌', '安唯綾', '張靜之', '客台']; //, '2011', '2012'];
+var folders = ['勞動之王', '古斌', '安唯綾', '張靜之', '客台', '黃騰浩']; //, '2011', '2012'];
 folders.forEach(folder => {
     var root = "/windows/D/Crawler_data/haka";
     mongoose.model(folder, schema.postSchema)
