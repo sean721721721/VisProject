@@ -49,18 +49,18 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '100010574583275', // 梁振英personal
   //'46251501064', //蔡英文 Tsai Ing-wen
   //'157215971120682', //Taipei 2017 Universiade - 世大運
-  //'1535505930102034', //黃騰浩
   //   '559756970792038', //出境事務所
-  '1729604514029664', //勞動之王
+  //'1729604514029664', //勞動之王
+  //'1535505930102034', //黃騰浩
   //'112037075517141', //古斌
   //'119002761508899', //安唯綾
   //'253190465516', //張靜之
-  //'305591146182964', //客台
+  '305591146182964', //客台
   //'188535634604417', //for testing
 ];
 
-var sincedate = "2017-09-08",
-  finaldate = "2017-09-09",
+var sincedate = "2017-08-04",
+  finaldate = "2017-08-06",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -720,7 +720,7 @@ async function mainshare(id, length, res_comments, res_reactions, reactionusers)
 };
 
 var merge = function merge(sharedposts, res_comments, res_reactions, res_sharedposts) {
-   var fmsharedposts = [];
+  var fmsharedposts = [];
   fmsharedposts = fill_reactions(sharedposts, res_reactions);
   fmsharedposts = fill_comments(fmsharedposts, res_comments);
   //serverUtilities.savejson("sharedposts_", sharedposts);
@@ -813,7 +813,13 @@ var fill_sharedposts = function fill_sharedposts(res_posts, res_sharedposts) {
   for (var i = 0; i < res_posts.data.length; i++) {
     for (var j = 0; j < res_sharedposts.length; j++) {
       if (res_posts.data[i].id === res_sharedposts[j].postid) {
-        res_posts.data[i].sharedposts.data = res_sharedposts[j].data;
+        if (res_posts.data[i].sharedposts) {
+          res_posts.data[i].sharedposts.data = res_sharedposts[j].data;
+        } else {
+          res_posts.data[i].sharedposts = {
+            "data": [],
+          };
+        }
       }
     }
   }
