@@ -42,10 +42,10 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //   '935262873170231', // 青年居住論壇
   //   '565274156891915', // 台灣居住正義協會
   //   '431824973661134', // 焦點事件
-  //   '148475335184300', //greenpeace
-  //'103640919705348', //綠盟
-  //'148513668543221', //CitizenoftheEarth
-  //'282353111158', //TaiwanGreenParty
+  '148475335184300', //greenpeace
+  '103640919705348', //綠盟
+  '148513668543221', //CitizenoftheEarth
+  '282353111158', //TaiwanGreenParty
   //   '100010574583275', // 梁振英personal
   //'46251501064', //蔡英文 Tsai Ing-wen
   //'157215971120682', //Taipei 2017 Universiade - 世大運
@@ -55,12 +55,12 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //'112037075517141', //古斌
   //'119002761508899', //安唯綾
   //'253190465516', //張靜之
-  '305591146182964', //客台
+  //'305591146182964', //客台
   //'188535634604417', //for testing
 ];
 
-var sincedate = "2017-08-04",
-  finaldate = "2017-08-06",
+var sincedate = "2017-06-28",
+  finaldate = "2017-09-01",
   range = 1;
 
 untildate = nextdays(sincedate, finaldate, range);
@@ -433,10 +433,15 @@ function get_recursive_comments(id, res_comments, timeout) {
           logger.log('error', id + " Err res_comments === null: ");
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        logger.log('info', 'try get_recursive_comments: ' + id + ' again');
-        setTimeout(function () {
-          resolve(get_recursive_comments(id, res_comments, ctimeout));
-        }, 1000);
+        if (err.code === 100 && err.error_subcode === 33) {
+          logger.log('error', err.message);
+          resolve(res_comments);
+        } else {
+          logger.log('info', 'try get_recursive_comments: ' + id + ' again');
+          setTimeout(function () {
+            resolve(get_recursive_comments(id, res_comments, ctimeout));
+          }, 1000);
+        }
       } else if (res.data.length != 0) {
         logger.log('info', "resolve comments: " + id);
         resolve(each_comment(res, id, res_comments, ctimeout));
@@ -563,13 +568,18 @@ function get_recursive_reactions(id, reactionusers, timeout) {
       // serverUtilities.savejson("res_" + sincedate + "_" + untildate + "_" + userid, res.data);
       if (err || !res) {
         if (!res) {
-          logger.log('error', id + " Err res_reactionusers === null: ");
+          logger.log('error', id + " Err reactionusers === null: ");
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        logger.log('info', 'try get_recursive_reactions: ' + id + ' again');
-        setTimeout(function () {
-          resolve(get_recursive_reactions(id, reactionusers, rtimeout));
-        }, 1000);
+        if (err.code === 100 && err.error_subcode === 33) {
+          logger.log('error', err.message);
+          resolve(reactionusers);
+        } else {
+          logger.log('info', 'try get_recursive_reactions: ' + id + ' again');
+          setTimeout(function () {
+            resolve(get_recursive_reactions(id, reactionusers, rtimeout));
+          }, 1000);
+        }
       } else {
         // console.log("id=" + id)
         reactionusers.push(res);
@@ -594,10 +604,15 @@ function get_reaction_counts(id, res_reactions) {
           logger.log('error', id + " Err res_reactions === null: ");
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        logger.log('info', 'try get_reaction_counts: ' + id + ' again');
-        setTimeout(function () {
-          resolve(get_reaction_counts(id, res_reactions));
-        }, 1000);
+        if (err.code === 100 && err.error_subcode === 33) {
+          logger.log('error', err.message);
+          resolve(res_reactions);
+        } else {
+          logger.log('info', 'try get_reaction_counts: ' + id + ' again');
+          setTimeout(function () {
+            resolve(get_reaction_counts(id, res_reactions));
+          }, 1000);
+        }
         //res.send({ "error": { "message": JSON.stringify(err) } });
       } else {
         // console.log("id=" + id)
@@ -624,10 +639,15 @@ function get_recursive_sharedposts(id, res_sharedposts, timeout) {
           logger.log('error', id + " Err res_sharedposts === null: ");
           //callback({"error": {"message": "No reaction."}}, res_reactions);
         }
-        logger.log('info', 'try get_recursive_sharedposts: ' + id + ' again');
-        setTimeout(function () {
-          resolve(get_recursive_sharedposts(id, res_sharedposts, sptimeout));
-        }, 1000);
+        if (err.code === 100 && err.error_subcode === 33) {
+          logger.log('error', err.message);
+          resolve(res_sharedposts);
+        } else {
+          logger.log('info', 'try get_recursive_sharedposts: ' + id + ' again');
+          setTimeout(function () {
+            resolve(get_recursive_sharedposts(id, res_sharedposts, sptimeout));
+          }, 1000);
+        }
       } else if (res.data.length != 0) {
         var postid = [];
         var res_comments = [];

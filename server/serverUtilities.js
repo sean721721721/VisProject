@@ -282,15 +282,30 @@ var format_json = function format_json(inputdata, outputjson) {
 	// console.log(inputdata.data)
 	var sub = inputdata.data;
 	for (var i = 0; i < sub.length; i++) {
-		var reactions = {
-			"like": sub[i].reaction_detail.LIKE,
-			"love": sub[i].reaction_detail.LOVE,
-			"haha": sub[i].reaction_detail.HAHA,
-			"wow": sub[i].reaction_detail.WOW,
-			"angry": sub[i].reaction_detail.ANGRY,
-			"sad": sub[i].reaction_detail.SAD,
-			"thankful": sub[i].reaction_detail.TNANKFUL,
-		};
+		var like = sub[i].reactions.summary.total_count;
+		if (sub[i].reaction_detail) {
+			var reactions = {
+				"like": sub[i].reaction_detail.LIKE,
+				"love": sub[i].reaction_detail.LOVE,
+				"haha": sub[i].reaction_detail.HAHA,
+				"wow": sub[i].reaction_detail.WOW,
+				"angry": sub[i].reaction_detail.ANGRY,
+				"sad": sub[i].reaction_detail.SAD,
+				"thankful": sub[i].reaction_detail.TNANKFUL,
+				"list": [],
+			};
+		} else {
+			var reactions = {
+				"like": null,
+				"love": null,
+				"haha": null,
+				"wow": null,
+				"angry": null,
+				"sad": null,
+				"thankful": null,
+				"list": [],
+			};
+		}
 		var context = [];
 		if (sub[i].comments) {
 			var sub1 = sub[i].comments.data
@@ -364,7 +379,7 @@ var format_json = function format_json(inputdata, outputjson) {
 			"type": sub[i].type,
 			"message": sub[i].message,
 			"from": sub[i].from,
-			"likes": reactions.like,
+			"likes": like,
 			"reactions": reactions,
 			"comments": comments,
 			"attachments": attachments,
