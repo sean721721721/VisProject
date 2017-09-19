@@ -3,15 +3,14 @@
 var express = require('express'); // npm install express
 var exphbs = require('express-handlebars');
 var path = require('path');
-var bodyParser = require('body-parser');
+
 var app = express();
 //pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
 var helpers = require('./lib/helpers');
 var ansyc = require('./server/ansyc.js');
 // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
 var tableHandler = require('./server/tableHandler.js');
-var query = require('./routes/handle.js');
-const querystring = require('querystring');
+var handle = require('./routes/handle.js');
 // sharevisExpressHandler			    = require('./server/sharevisExpressHandler.js'),
 // pagedataExpressHandler			    = require('./server/pagedataExpressHandler.js'),
 // crawlervisExpressHandler		    = require('./server/crawlervisExpressHandler.js'),
@@ -26,13 +25,6 @@ var options = {
     connection: "keep-alive"
   }
 };
-
-// create application/json parser
-var jsonParser = bodyParser.json()
-// create application/x-www-form-urlencoded parser
-var urlencodedParser = bodyParser.urlencoded({
-  extended: false,
-})
 
 // Create `ExpressHandlebars` instance with a default layout.
 var hbs = exphbs.create({
@@ -81,26 +73,6 @@ function exposeTemplates(req, res, next) {
     .catch(next);
 }
 
-app.get('/', function (req, res) {
-  res.render('home', {
-    title: 'Home',
-  });
-});
-
-app.get('/echo/:message?', exposeTemplates, function (req, res) {
-  res.render('echo', {
-    title: 'Echo',
-    message: req.params.message,
-
-    // Overrides which layout to use, instead of the defaul "main" layout.
-    layout: 'shared-templates',
-
-    partials: Promise.resolve({
-      echo: hbs.handlebars.compile('<p>ECHO: {{message}}</p>'),
-    })
-  });
-});
-
 app.use(express.static('public/'));
 //var conf = require("./config").facebook;
 /*app.use(express.static(path.join(__dirname, 'html')));
@@ -113,25 +85,7 @@ app.get('/table', tableHandler.callback);
 //app.get('/mongodbTextSearch', mongodbTextSearchExpressHandler.callback);
 //app.get('/qq', urlencodedParser, queryHandler.callback);
 */
-app.use('/query', query);
-app.post('/query', urlencodedParser, function (req, res) {
-  var body = req.body;
-  const query = querystring.stringify({
-    "minlike": body.minlike,
-    "maxlike": body.maxlike,
-    "mincomment": body.mincomment,
-    "maxcomment": body.maxcomment,
-    "posttype": body.posttype,
-    "page1": body.pagename[0],
-    "page2": body.pagename[1],
-    "time1": body.date[0],
-    "time2": body.date[1],
-    "time3": body.date[2],
-    "time4": body.date[3],
-    "co": body.co,
-  });
-  res.redirect('/query?' + query);
-})
+app.use('/', handle);
 
 var port = process.env.PORT || 3000,
   ip = process.env.IP || '140.119.164.22';

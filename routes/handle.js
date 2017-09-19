@@ -1,15 +1,18 @@
 /* eslint-disable */
 var express = require('express');
 var router = express.Router();
-var queryHandler = require('../server/query.js');
+var bodyParser = require('body-parser');
+var query = require('../server/query.js');
+const querystring = require('querystring');
 
-router.param('postid', function (req, res, next, postid) {
-  req.postid = postid;
-  //console.log(postid);
-  next();
+// create application/json parser
+var jsonParser = bodyParser.json()
+// create application/x-www-form-urlencoded parser
+var urlencodedParser = bodyParser.urlencoded({
+  extended: false,
 })
 
-router.get('/', function (req, res, next) {
+function urlhandle(req, res, next) {
   //console.log(req.query);
   var hasquery = false;
   //var postid = req.params.postid;
@@ -94,7 +97,76 @@ router.get('/', function (req, res, next) {
   */
   //console.log(req.params);
   next();
-}, queryHandler.callback);
+};
 
+function redirecturl(req,res){
+  var body = req.body;
+  const query = querystring.stringify({
+    "minlike": body.minlike,
+    "maxlike": body.maxlike,
+    "mincomment": body.mincomment,
+    "maxcomment": body.maxcomment,
+    "posttype": body.posttype,
+    "page1": body.pagename[0],
+    "page2": body.pagename[1],
+    "time1": body.date[0],
+    "time2": body.date[1],
+    "time3": body.date[2],
+    "time4": body.date[3],
+    "co": body.co,
+  });
+  res.redirect('/query?' + query);
+};
+/*
+router.get('/echo/:message?', exposeTemplates, function (req, res) {
+  res.render('echo', {
+    title: 'Echo',
+    message: req.params.message,
+
+    // Overrides which layout to use, instead of the defaul "main" layout.
+    layout: 'shared-templates',
+
+    partials: Promise.resolve({
+      echo: hbs.handlebars.compile('<p>ECHO: {{message}}</p>'),
+    })
+  });
+});*/
+
+router.param('postid', function (req, res, next, postid) {
+  req.postid = postid;
+  //console.log(postid);
+  next();
+})
+
+router.get('/', function (req, res) {
+  res.render('home', {
+    title: 'Home',
+  });
+});
+
+router.get('/query', urlhandle, async function (req, res) {
+  var result = await query.callback(req, res);
+  //console.log(result);
+  res.render('query', result);
+});
+
+router.get('/vis', urlhandle, async function (req, res) {
+  var result = await query.callback(req, res);
+  result.title='vis';
+  //console.log(result);
+  res.render('vis', result);
+});
+
+router.post('/query', urlencodedParser, redirecturl);
+
+router.post('/vis', urlencodedParser, redirecturl);
+/*
+res.render('vis', {
+  title: 'vis',
+  query: "query1: " + req.params.page1 + "　time:　" + req.params.time1 + "　to　" + req.params.time2 + "貼文數: " + result[0].length + "<br>" +
+    "query2: " + req.params.page2 + "　time:　" + req.params.time3 + "　to　" + req.params.time4 + "貼文數: " + result[1].length,
+  summary: "共同活動使用者數: " + oldata.length + "<br>" + "所有貼文數: " + postlist.length,
+  data: [postlist, oldata],
+});*/
 //var testurl ="http://140.119.164.22:3000/query?time1=2010-11-17T04:54:56+0000&time2=2010-11-28T04:54:56+0000"
 module.exports = router;
