@@ -21,6 +21,7 @@ var user_list = function user_list(files) {
                         post["id"] = data.id
                         post["like"] = post_liketype(post, reaction);
                         post["commentcount"] = 0;
+                        post["share"] = false;
                         //console.log(post)
                         user = {};
                         user["id"] = reaction.id;
@@ -49,8 +50,9 @@ var user_list = function user_list(files) {
             }
         }
     }
-    console.log(userlist.length)
+    console.log("ul len: " + userlist.length)
     comment_count(files, userlist);
+    share_count(files, userlist);
     //console.log("people "+people)
     return userlist;
 }
@@ -168,7 +170,8 @@ function comment_count(files, userlist) {
                                     post = {
                                         "id": data.id,
                                         "like": 0,
-                                        "commentcount": 1
+                                        "commentcount": 1,
+                                        "share": false,
                                     }
                                     userlist[a].posts.push(post);
                                 }
@@ -179,15 +182,16 @@ function comment_count(files, userlist) {
                             post = {
                                 "id": data.id,
                                 "like": 0,
-                                "commentcount": 1
+                                "commentcount": 1,
+                                "share": false,
                             }
                             user = {
                                 "id": comment.from.id,
                                 "name": comment.from.name,
-                                "posts": []
+                                "posts": [],
                             }
-                            user.posts.push(post)
-                            userlist.push(user)
+                            user.posts.push(post);
+                            userlist.push(user);
                         }
                     }
                 }
@@ -254,6 +258,74 @@ function comment_countdb(files, userlist) {
                         }
                         user.posts.push(post)
                         userlist.push(user)
+                    }
+                }
+            }
+        }
+    }
+}
+
+//share check for csv
+function share_count(files, userlist) {
+    var data, sharedpost, user, post, sharelength;
+    var filelength = files.length;
+    var listlength = userlist.length;
+    var findid = false;
+    var findpost = false;
+    for (var i = 0; i < filelength; i++) {
+        var datalength = files[i].contents.data.length;
+        for (var j = 0; j < datalength; j++) {
+            data = files[i].contents.data[j];
+            if (data.sharedposts) {
+                sharelength = data.sharedposts.data.length;
+                if (sharelength !== 0) {
+                    //console.log(userlist.length)
+                    for (var k = 0; k < sharelength; k++) {
+                        sharedpost = data.sharedposts.data[k];
+                        findid = false;
+                        for (var a = 0; a < listlength; a++) {
+                            if (sharedpost.from.id == userlist[a].id) {
+                                findid = true;
+                                //console.log("find")
+                                var length = userlist[a].posts.length;
+                                //console.log(length)
+                                findpost = false;
+                                for (var b = 0; b < length; b++) {
+                                    if (data.id == userlist[a].posts[b].id) {
+                                        findpost = true;
+                                        //console.log("find")
+                                        userlist[a].posts[b].share = true;
+                                        b = length;
+                                    }
+                                }
+                                if (!findpost) {
+                                    //console.log("no post!")
+                                    post = {
+                                        "id": data.id,
+                                        "like": 0,
+                                        "commentcount": 0,
+                                        "share": true,
+                                    }
+                                    userlist[a].posts.push(post);
+                                }
+                            }
+                        }
+                        if (!findid) {
+                            //console.log("no user!")
+                            post = {
+                                "id": data.id,
+                                "like": 0,
+                                "commentcount": 0,
+                                "share": true,
+                            }
+                            user = {
+                                "id": sharedpost.from.id,
+                                "name": sharedpost.from.name,
+                                "posts": [],
+                            }
+                            user.posts.push(post)
+                            userlist.push(user)
+                        }
                     }
                 }
             }
