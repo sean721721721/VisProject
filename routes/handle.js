@@ -6,11 +6,11 @@ var query = require('../server/query.js');
 const querystring = require('querystring');
 
 // create application/json parser
-var jsonParser = bodyParser.json()
+var jsonParser = bodyParser.json();
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParser.urlencoded({
   extended: false,
-})
+});
 
 function urlhandle(req, res, next) {
   //console.log(req.query);
@@ -136,7 +136,7 @@ router.param('postid', function (req, res, next, postid) {
   req.postid = postid;
   //console.log(postid);
   next();
-})
+});
 
 router.get('/', function (req, res) {
   res.render('home', {

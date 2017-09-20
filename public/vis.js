@@ -1,5 +1,7 @@
 console.log(data);
-/*
+let userlist = activitymatrix(data);
+console.log(userlist);
+
 let epsilon = getparam('epsilon');
 let perplexity = getparam('perplexity');
 let dim = 2;
@@ -16,14 +18,14 @@ let tsne1 = new tsnejs.tSNE(opt); // create a tSNE instance
 let tsne2 = new tsnejs.tSNE(opt);
 // initialize data. Here we have 3 points and some example pairwise dissimilarities
 let inputs = [];
-inputs.push(big5dist(fbdata, normal));
-inputs.push(propertydist(fbdata, normal));
+inputs.push(userdist(userlist, normal));
+// inputs.push(propertydist(fbdata, normal));
 tsne1.initDataDist(inputs[0]);
-tsne2.initDataDist(inputs[1]);
+tsne2.initDataDist(inputs[0]);
 let btn = document.querySelector('input[id="submit"]');
 btn.addEventListener('click', function () {
     // console.log("on")
-    submit(fbdata, tsne1, tsne2);
+    submit(data[1], tsne1, tsne2);
 });
 let ubtn = document.querySelector('input[id="update"]');
 ubtn.addEventListener('click', function () {
@@ -32,11 +34,50 @@ ubtn.addEventListener('click', function () {
         // setInterval(function () {
         tsne1.step(); // every time you call this, solution gets better
         tsne2.step(); // every time you call this, solution gets better
-        update(tsne1, tsne2, fbdata);
+        update(tsne1, tsne2, data[1]);
         // }, 1000);
     }
 });
-*/
+
+/**
+ * return user reactions activity list
+ * @param {array} data - inputdata
+ * @return {object} - array
+ */
+function activitymatrix(data) {
+    let posts = data[0];
+    let users = data[1];
+    let list = [];
+    for (let i = 0; i < users.length; i++) {
+        let A = users[i].posts.A;
+        let B = users[i].posts.B;
+        let row = [];
+        for (let i = 0; i < posts.length; i++) {
+            let findpost = false;
+            // console.log(A);
+            for (let a = 0; a < A.length; a++) {
+                if (A[a].id === posts[i].id) {
+                    findpost = true;
+                    row.push(A[a].like);
+                    a = A.length;
+                }
+            }
+            for (let b = 0; b < B.length; b++) {
+                if (B[b].id === posts[i].id) {
+                    findpost = true;
+                    row.push(B[b].like);
+                    b = B.length;
+                }
+            }
+            if (!findpost) {
+                row.push(0);
+            }
+        }
+        list.push(row);
+    }
+    return list;
+};
+
 /**
  * return n*n matrix
  * @param {number} n - *n matrix
@@ -155,6 +196,29 @@ function normalize(pointlist) {
  * @param {bool} normal - normalize or not
  * @return {object} - array
  */
+
+/**
+ * get users dists
+ * @param {object} data - source data object
+ * @param {bool} normal - normalize or not
+ * @return {object} - array
+ */
+function userdist(userlist, normal) {
+    if (normal) {
+        pointlist = normalize(userlist);
+    }
+    let dists = initMat(pointlist.length);
+    for (let i = 0; i < dists.length; i++) {
+        for (let j = i + 1; j < dists.length; j++) {
+            dists[i][j] = distance(pointlist[i], pointlist[j]);
+            dists[j][i] = distance(pointlist[i], pointlist[j]);
+        }
+        // console.log(temp[200]);
+    }
+    // console.log(dists);
+    return dists;
+}
+
 function big5dist(data, normal) {
     let checked = formchecked('Big5');
     let pointlist = [];
@@ -188,7 +252,7 @@ function big5dist(data, normal) {
             dists[i][j] = distance(pointlist[i], pointlist[j]);
             dists[j][i] = distance(pointlist[i], pointlist[j]);
         }
-        // console.log(temp[200])
+        // console.log(temp[200]);
     }
     // console.log(dists);
     return dists;
@@ -263,26 +327,27 @@ function getplot(tsne1, tsne2, data) {
 
 function update(tsne1, tsne2, data) {
     let Y = tsne1.getSolution();
-    let Z = tsne2.getSolution();
+    // let Z = tsne2.getSolution();
     console.log(Y);
     // console.log(Z);
     for (let i = 0; i < data.length; i++) {
-        data[i]['BPLOT'] = {
+        data[i]['PLOT'] = {
             x: Y[i][0],
             y: Y[i][1],
         };
     }
+    /*
     for (let i = 0; i < data.length; i++) {
         data[i]['PPLOT'] = {
             x: Z[i][0],
             y: Z[i][1],
         };
-    };
+    };*/
     console.log('update');
     d3.select('.svg').select('.big5').remove();
-    d3.select('.svg').select('.property').remove();
+    // d3.select('.svg').select('.property').remove();
     drawbig5(Y, data, 500);
-    drawproperty(Z, data, 500);
+    // drawproperty(Z, data, 500);
 }
 
 /**
@@ -340,8 +405,8 @@ function drawbig5(P, data, px) {
 
     // generate a quadtree for faster lookups for brushing
     const quadtree = d3.quadtree()
-        .x((d) => x(d.BPLOT.x))
-        .y((d) => y(d.BPLOT.y))
+        .x((d) => x(d.PLOT.x))
+        .y((d) => y(d.PLOT.y))
         .addAll(data);
 
     /**
@@ -455,8 +520,8 @@ function drawbig5(P, data, px) {
             // that all the points within that box are covered by the brush.
             if (!node.length) {
                 const d = node.data;
-                const dx = x(d.BPLOT.x);
-                const dy = y(d.BPLOT.y);
+                const dx = x(d.PLOT.x);
+                const dy = y(d.PLOT.y);
                 if (rectContains(selection, [dx, dy])) {
                     brushedNodes.push(d);
                 }
@@ -489,7 +554,7 @@ function drawbig5(P, data, px) {
             'color': color,
         };
         // Call function to draw the Radar chart
-        radarchart('.radarChart', brushedNodes, radarChartOptions);
+        // radarchart('.radarChart', brushedNodes, radarChartOptions);
     }
 
     let graph = d3.select('.svg').append('div')
@@ -527,8 +592,8 @@ function drawbig5(P, data, px) {
 
     circles = g.append('g').attr('class', 'circle').selectAll('circle').data(data).enter().append('circle')
         .attr('class', 'circle')
-        .attr('cx', (d) => x(d.BPLOT.x))
-        .attr('cy', (d) => y(d.BPLOT.y))
+        .attr('cx', (d) => x(d.PLOT.x))
+        .attr('cy', (d) => y(d.PLOT.y))
         .attr('r', 5)
         .style('fill', function (d) {
             // return color(d.BIG5.sEXT);
@@ -548,121 +613,12 @@ function drawbig5(P, data, px) {
             tooltip1.transition()
                 .duration(200)
                 .style('opacity', .9);
-            tooltip1.html('ID=' + d.AUTHID + '<br/>' + 'sAGR=' + d.BIG5.sAGR + '<br/>' + 'sCON=' + d.BIG5.sCON + '<br/>' + 'sEXT=' + d.BIG5.sEXT + '<br/>' + 'sNEU=' + d.BIG5.sNEU + '<br/>' + 'sOPN=' + d.BIG5.sOPN)
+            tooltip1.html('ID=' + d.id + '<br/>' + 'Name=' + d.name + '<br/>' + 'Activities on A=' + d.posts.A.length + '<br/>' + 'Activities on B=' + d.posts.B.length)
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
         .on('mouseout', function (d) {
             tooltip1.transition()
-                .duration(500)
-                .style('opacity', 0);
-        })
-        .on('click', function (d) {
-            status(d);
-        });
-    console.log('g');
-}
-
-/**
- * render property plot
- * @param {object} P
- * @param {object} data
- * @param {number} px - pixel
- */
-function drawproperty(P, data, px) {
-    let max;
-    let min;
-    for (let i = 0; i < P.length; i++) {
-        for (let j = 0; j < 2; j++) {
-            if (P[i][j] > max || max === undefined) {
-                max = P[i][j];
-            }
-            if (P[i][j] < min || min === undefined) {
-                min = P[i][j];
-            }
-        }
-    }
-
-    let width = px;
-    let height = px;
-
-    let x = d3.scaleLinear()
-        .domain([min, max])
-        .range([15, width - 15]);
-
-    let y = d3.scaleLinear()
-        .domain([min, max])
-        .range([15, height - 15]);
-
-    let tooltip2 = d3.select('body').select('.b')
-        // .attr('class', 'tooltip2')
-        .style('opacity', 0);
-    // .style("width","200px")
-    // .style("height","30px");
-
-    let graph = d3.select('.svg').append('div')
-        .attr('class', 'property');
-    swapcolor(data, graph, '#property', 'defult', '460px', '50px', 'defult');
-    swapcolor(data, graph, '#property', 'BETWEENNESS', '500px', '50px', 'PROPERTY.BETWEENNESS');
-    swapcolor(data, graph, '#property', 'BROKERAGE', '540px', '50px', 'PROPERTY.BROKERAGE');
-    swapcolor(data, graph, '#property', 'DENSITY', '580px', '50px', 'PROPERTY.DENSITY');
-    swapcolor(data, graph, '#property', 'NBETWEENNESS', '620px', '50px', 'PROPERTY.NBETWEENNESS');
-    swapcolor(data, graph, '#property', 'NBROKERAGE', '660px', '50px', 'PROPERTY.NBROKERAGE');
-    swapcolor(data, graph, '#property', 'NETWORKSIZE', '700px', '50px', 'PROPERTY.NETWORKSIZE');
-    swapcolor(data, graph, '#property', 'TRANSITIVITY', '740px', '50px', 'PROPERTY.TRANSITIVITY');
-
-    d3.select('.svg').select('#property').remove();
-
-    let svg = d3.select('.svg').append('svg')
-        .attr('id', 'property')
-        .attr('width', width)
-        .attr('height', height)
-        .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .call(d3.zoom()
-            .scaleExtent([1 / 2, 4])
-            .on('zoom', function () {
-                g.attr('transform', d3.event.transform);
-                let k = this.__zoom.k;
-                g.selectAll('.circle').attr('r', 5 / k)
-                    .attr('stroke-width', 1 / k);
-            }));
-    let g = svg.append('g')
-        .attr('id', 'property');
-
-    g.append('g').attr('class', 'circle').selectAll('circle').data(data).enter().append('circle')
-        .attr('class', 'circle')
-        .attr('cx', function (d) {
-            return x(d.PPLOT.x);
-        })
-        .attr('cy', function (d) {
-            return y(d.PPLOT.y);
-        })
-        .attr('r', 5)
-        .style('fill', function (d) {
-            // return color(d.BIG5.sEXT);
-            // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
-            return defultcolor('#property', d);
-        })
-        .on('mouseover', function (d) {
-            d3.select('#big5').selectAll('circle')
-                .style('fill', function (s) {
-                    // console.log(d.AUTHID)
-                    if (d.AUTHID === s.AUTHID) {
-                        return 'black';
-                    } else {
-                        return defultcolor('#big5', s);
-                    }
-                });
-            tooltip2.transition()
-                .duration(200)
-                .style('opacity', .9);
-            tooltip2.html('ID=' + d.AUTHID + '<br/>' + 'BETWEENNESS=' + d.PROPERTY.BETWEENNESS + '<br/>' + 'BROKERAGE=' + d.PROPERTY.BROKERAGE + '<br/>' + 'DENSITY=' + d.PROPERTY.DENSITY + '<br/>' + 'NBETWEENNESS=' + d.PROPERTY.NBETWEENNESS + '<br/>' + 'NBROKERAGE=' + d.PROPERTY.NBROKERAGE + '<br/>' + 'NETWORKSIZE=' + d.PROPERTY.NETWORKSIZE + '<br/>' + 'TRANSITIVITY=' + d.PROPERTY.TRANSITIVITY)
-                .style('left', (d3.event.pageX + 5) + 'px')
-                .style('top', (d3.event.pageY - 30) + 'px');
-        })
-        .on('mouseout', function (d) {
-            tooltip2.transition()
                 .duration(500)
                 .style('opacity', 0);
         })
@@ -852,345 +808,6 @@ function defultcolor(id, d) {
         return 'rgb(' + Math.round(d.PROPERTY.NBETWEENNESS) + ',' + Math.round(d.PROPERTY.NETWORKSIZE * 0.1) + ',' + Math.round(d.PROPERTY.TRANSITIVITY * 500) + ')';
     }
     if (id === '#big5') {
-        return 'rgb(' + Math.round(d.BIG5.sEXT * 51) + ',' + Math.round(d.BIG5.sCON * 51) + ',' + Math.round(d.BIG5.sAGR * 51) + ')';
+        return 'rgb(' + Math.round(51) + ',' + Math.round(51) + ',' + Math.round(51) + ')';
     }
-}
-
-/**
- * make radar chart
- * @param {string} id - select id
- * @param {object} data - input data
- * @param {object} option - chart options
- */
-function radarchart(id, data, option) {
-    let cfg = {
-        w: 450, // Width of the circle
-        h: 450, // Height of the circle
-        margin: {
-            top: 20,
-            right: 20,
-            bottom: 20,
-            left: 20,
-        }, // The margins of the SVG
-        levels: 5, // How many levels or inner circles should there be drawn
-        maxValue: 0, // What is the value that the biggest circle will represent
-        labelFactor: 1.25, // How much farther than the radius of the outer circle should the labels be placed
-        wrapWidth: 60, // The number of pixels after which a label needs to be given a new line
-        opacityArea: 0, // The opacity of the area of the blob
-        dotRadius: 4, // The size of the colored circles of each blog
-        opacityCircles: 0.1, // The opacity of the circles of each blob
-        strokeWidth: 2, // The width of the stroke around each blob
-        roundStrokes: true, // If true the area and stroke will follow a round path (cardinal-closed)
-        color: d3.interpolateRdBu, // Color function
-    };
-    // console.log(cfg.color);
-    // Put all of the options into a letiable called cfg
-    if ('undefined' !== typeof options) {
-        for (let i in options) {
-            if ('undefined' !== typeof options[i]) {
-                cfg[i] = options[i];
-            }
-        } // for i
-    } // if
-
-    // If the supplied maxValue is smaller than the actual one, replace by the max in the data
-    let maxValue = 5;
-    // Math.max(cfg.maxValue, d3.max(data, minmax(d, 'Big5', ['sEXT', 'sNEU', 'sAGR', 'sCON', 'sOPN'])));
-
-    let allAxis = ['sEXT', 'sNEU', 'sAGR', 'sCON', 'sOPN'];
-    /* (data[0].map(function (i, j) {
-        return i.axis;
-    })); // Names of each axis */
-    let total = allAxis.length; // The number of different axes
-    let radius = Math.min(cfg.w / 2.5, cfg.h / 2.5); // Radius of the outermost circle
-    let Format = d3.format(' '); // Percentage formatting
-    let angleSlice = Math.PI * 2 / total; // The width in radians of each "slice"
-
-    // Scale for the radius
-    let rScale = d3.scaleLinear()
-        .range([0, radius])
-        .domain([0, maxValue]);
-
-    // ///////////////////////////////////////////////////////
-    // ////////// Create the container SVG and g /////////////
-    // ///////////////////////////////////////////////////////
-
-    // Remove whatever chart with the same id/class was present before
-    d3.select(id).select('svg').remove();
-
-    // Initiate the radar chart SVG
-    let svg = d3.select(id).append('svg')
-        .attr('width', cfg.w + cfg.margin.left + cfg.margin.right)
-        .attr('height', cfg.h + cfg.margin.top + cfg.margin.bottom)
-        .attr('class', 'radar' + id);
-    // Append a g element
-    let g = svg.append('g')
-        .attr('transform', 'translate(' + (cfg.w / 2 + cfg.margin.left) + ',' + (cfg.h / 2 + cfg.margin.top) + ')');
-
-    // ///////////////////////////////////////////////////////
-    // //////// Glow filter for some extra pizzazz ///////////
-    // ///////////////////////////////////////////////////////
-
-    // Filter for the outside glow
-    let filter = g.append('defs').append('filter').attr('id', 'glow');
-    // let feGaussianBlur =
-    filter.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'coloredBlur');
-    let feMerge = filter.append('feMerge');
-    // let feMergeNode1 =
-    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
-    // let feMergeNode2 =
-    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-
-    let indata = [];
-    for (let i = 0; i < data.length; i++) {
-        let temp = [];
-        for (let j = 0; j < allAxis.length; j++) {
-            let str = allAxis[j];
-            temp.push(Number(data[i].BIG5[str]));
-        }
-        indata.push(temp);
-    }
-    // console.log(indata);
-
-    // ///////////////////////////////////////////////////////
-    // ///////////// Draw the Circular grid //////////////////
-    // ///////////////////////////////////////////////////////
-
-    // Wrapper for the grid & axes
-    let axisGrid = g.append('g').attr('class', 'axisWrapper');
-
-    // Draw the background circles
-    axisGrid.selectAll('.levels')
-        .data(d3.range(1, (cfg.levels + 1)).reverse())
-        .enter()
-        .append('circle')
-        .attr('class', 'gridCircle')
-        .attr('r', function (d, i) {
-            return radius / cfg.levels * d;
-        })
-        .style('fill', '#CDCDCD')
-        .style('stroke', '#CDCDCD')
-        .style('fill-opacity', cfg.opacityCircles)
-        .style('filter', 'url(#glow)');
-
-    // Text indicating at what % each level is
-    axisGrid.selectAll('.axisLabel')
-        .data(d3.range(1, (cfg.levels + 1)).reverse())
-        .enter().append('text')
-        .attr('class', 'axisLabel')
-        .attr('x', 4)
-        .attr('y', function (d) {
-            return -d * radius / cfg.levels;
-        })
-        .attr('dy', '0.4em')
-        .style('font-size', '10px')
-        .attr('fill', '#737373')
-        .text(function (d, i) {
-            return (maxValue * d / cfg.levels);
-        });
-
-    // ///////////////////////////////////////////////////////
-    // ////////////////// Draw the axes //////////////////////
-    // ///////////////////////////////////////////////////////
-
-    // Create the straight lines radiating outward from the center
-    let axis = axisGrid.selectAll('.axis')
-        .data(allAxis)
-        .enter()
-        .append('g')
-        .attr('class', 'axis');
-    // Append the lines
-    axis.append('line')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('x2', function (d, i) {
-            return rScale(maxValue * 1.1) * Math.cos(angleSlice * i - Math.PI / 2);
-        })
-        .attr('y2', function (d, i) {
-            return rScale(maxValue * 1.1) * Math.sin(angleSlice * i - Math.PI / 2);
-        })
-        .attr('class', 'line')
-        .style('stroke', 'white')
-        .style('stroke-width', '2px');
-
-    // Append the labels at each axis
-    axis.append('text')
-        .attr('class', 'legend')
-        .style('font-size', '11px')
-        .attr('text-anchor', 'middle')
-        .attr('dy', '0.35em')
-        .attr('x', function (d, i) {
-            return rScale(maxValue * cfg.labelFactor) * Math.cos(angleSlice * i - Math.PI / 2);
-        })
-        .attr('y', function (d, i) {
-            return rScale(maxValue * cfg.labelFactor) * Math.sin(angleSlice * i - Math.PI / 2);
-        })
-        .text(function (d) {
-            return d;
-        })
-        .call(wrap, cfg.wrapWidth);
-
-    // ///////////////////////////////////////////////////////
-    // /////////// Draw the radar chart blobs ////////////////
-    // ///////////////////////////////////////////////////////
-
-    // The radial line function
-    let radarLine = d3.radialLine()
-        .curve(d3.curveBasisClosed)
-        .radius(function (d, i) {
-            return rScale(d);
-        })
-        .angle(function (d, i) {
-            return i * angleSlice;
-        });
-
-    if (cfg.roundStrokes) {
-        radarLine.curve(d3.curveCardinalClosed);
-    }
-
-    // Create a wrapper for the blobs
-    let blobWrapper = g.selectAll('.radarWrapper')
-        .data(indata)
-        .enter().append('g')
-        .attr('class', 'radarWrapper');
-
-    // Append the backgrounds
-    blobWrapper
-        .append('path')
-        .attr('class', 'radarArea')
-        .attr('d', (d) => radarLine(d))
-        .style('fill', function (d, i) {
-            return cfg.color(i / indata.length);
-        })
-        .style('fill-opacity', cfg.opacityArea)
-        .on('mouseover', function (d, i) {
-            // Dim all blobs
-            d3.selectAll('.radarArea')
-                .transition().duration(200)
-                .style('fill-opacity', 0.1);
-            // Bring back the hovered over blob
-            d3.select(this)
-                .transition().duration(200)
-                .style('fill-opacity', 0.7);
-        })
-        .on('mouseout', function () {
-            // Bring back all blobs
-            d3.selectAll('.radarArea')
-                .transition().duration(200)
-                .style('fill-opacity', cfg.opacityArea);
-        });
-
-    // Create the outlines
-    blobWrapper.append('path')
-        .attr('class', 'radarStroke')
-        .attr('d', (d) => radarLine(d))
-        .style('stroke-width', cfg.strokeWidth + 'px')
-        .style('stroke', function (d, i) {
-            return cfg.color(i / indata.length);
-        })
-        .style('fill', 'none')
-        .style('filter', 'url(#glow)');
-
-    // Append the circles
-    blobWrapper.selectAll('.radarCircle')
-        .data(function (d, i) {
-            let key = i;
-            d3.select(this).style('fill', function (d, i) {
-                return cfg.color(key / indata.length);
-            });
-            return d;
-        })
-        .enter().append('circle')
-        .attr('class', 'radarCircle')
-        .attr('r', cfg.dotRadius * 0.75)
-        .attr('cx', function (d, i) {
-            return rScale(d) * Math.cos(angleSlice * i - Math.PI / 2);
-        })
-        .attr('cy', function (d, i) {
-            return rScale(d) * Math.sin(angleSlice * i - Math.PI / 2);
-        })
-        .style('fill-opacity', 0.8);
-
-    // ///////////////////////////////////////////////////////
-    // ////// Append invisible circles for tooltip ///////////
-    // ///////////////////////////////////////////////////////
-
-    // Wrapper for the invisible circles on top
-    let blobCircleWrapper = g.selectAll('.radarCircleWrapper')
-        .data(indata)
-        .enter().append('g')
-        .attr('class', 'radarCircleWrapper');
-
-    // Append a set of invisible circles on top for the mouseover pop-up
-    blobCircleWrapper.selectAll('.radarInvisibleCircle')
-        .data(function (d, i) {
-            return d;
-        })
-        .enter().append('circle')
-        .attr('class', 'radarInvisibleCircle')
-        .attr('r', cfg.dotRadius * 1.5)
-        .attr('cx', function (d, i) {
-            return rScale(d) * Math.cos(angleSlice * i - Math.PI / 2);
-        })
-        .attr('cy', function (d, i) {
-            return rScale(d) * Math.sin(angleSlice * i - Math.PI / 2);
-        })
-        .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .on('mouseover', function (d, i) {
-            newX = parseFloat(d3.select(this).attr('cx')) - 10;
-            newY = parseFloat(d3.select(this).attr('cy')) - 10;
-
-            tooltip
-                .attr('x', newX)
-                .attr('y', newY)
-                .text(Format(d))
-                .transition().duration(200)
-                .style('opacity', 1);
-        })
-        .on('mouseout', function () {
-            tooltip.transition().duration(200)
-                .style('opacity', 0);
-        });
-
-    // Set up the small tooltip for when you hover over a circle
-    let tooltip = g.append('text')
-        .attr('class', 'tooltip')
-        .style('opacity', 0);
-
-    // ///////////////////////////////////////////////////////
-    // ///////////////// Helper Function /////////////////////
-    // ///////////////////////////////////////////////////////
-
-    /**
-     * Taken from http://bl.ocks.org/mbostock/7555321
-     * Wraps SVG text
-     * @param {*} text
-     * @param {*} width
-     */
-    function wrap(text, width) {
-        text.each(function () {
-            let text = d3.select(this);
-            let words = text.text().split(/\s+/).reverse();
-            let word;
-            let line = [];
-            let lineNumber = 0;
-            let lineHeight = 1.4; // ems
-            let y = text.attr('y');
-            let x = text.attr('x');
-            let dy = parseFloat(text.attr('dy'));
-            let tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
-
-            while (word = words.pop()) {
-                line.push(word);
-                tspan.text(line.join(' '));
-                if (tspan.node().getComputedTextLength() > width) {
-                    line.pop();
-                    tspan.text(line.join(' '));
-                    line = [word];
-                    tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
-                }
-            }
-        });
-    } // wrap
 }
