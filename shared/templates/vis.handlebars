@@ -66,41 +66,7 @@
         <h1>結果：</h1>
         <p>{{{query}}}</p>
         <p>{{{summary}}}</p>
-        <table class=“cooltable”>
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Activity in query1</th>
-                    <th>Activity in query2</th>
-                </tr>
-            </thead>
-            {{#each data.[1]}}
-            <tbody>
-                <tr>
-                    <td>
-                        <ul>{{{toURL id}}}</ul>
-                        <ul>username: {{name}}</ul>
-                    </td>
-                    <td>
-                        <ul>
-                            <li>count: {{{count posts.A}}}</li>
-                            {{#each posts.A}}
-                            <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}, share: {{share}}</li>
-                            {{/each}}
-                        </ul>
-                    </td>
-                    <td>
-                        <ul>
-                            <li>count: {{{count posts.B}}}</li>
-                            {{#each posts.B}}
-                            <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}, share: {{share}}</li>
-                            {{/each}}
-                        </ul>
-                    </td>
-                </tr>
-            </tbody>
-            {{/each}}
-        </table>
+        <div id="cooltable"></div>
     </div>
 </div>
 <div class="tooltip a"></div>

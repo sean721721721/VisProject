@@ -191,15 +191,8 @@ function normalize(pointlist) {
 }
 
 /**
- * get big5dist dists
- * @param {object} data - source data object
- * @param {bool} normal - normalize or not
- * @return {object} - array
- */
-
-/**
  * get users dists
- * @param {object} data - source data object
+ * @param {object} userlist - source list object
  * @param {bool} normal - normalize or not
  * @return {object} - array
  */
@@ -219,104 +212,11 @@ function userdist(userlist, normal) {
     return dists;
 }
 
-function big5dist(data, normal) {
-    let checked = formchecked('Big5');
-    let pointlist = [];
-    for (let i = 0; i < data.length; i++) {
-        let point = [];
-        point.push(data[i].AUTHID);
-        if (checked.sEXT) {
-            point.push(data[i].BIG5.sEXT);
-        }
-        if (checked.sNEU) {
-            point.push(data[i].BIG5.sNEU);
-        }
-        if (checked.sAGR) {
-            point.push(data[i].BIG5.sAGR);
-        }
-        if (checked.sCON) {
-            point.push(data[i].BIG5.sCON);
-        }
-        if (checked.sOPN) {
-            point.push(data[i].BIG5.sOPN);
-        }
-        pointlist.push(point);
-    }
-    // console.log(pointlist)
-    if (normal) {
-        pointlist = normalize(pointlist);
-    }
-    let dists = initMat(pointlist.length);
-    for (let i = 0; i < dists.length; i++) {
-        for (let j = i + 1; j < dists.length; j++) {
-            dists[i][j] = distance(pointlist[i], pointlist[j]);
-            dists[j][i] = distance(pointlist[i], pointlist[j]);
-        }
-        // console.log(temp[200]);
-    }
-    // console.log(dists);
-    return dists;
-}
-
 /**
- * get network properties dist
- * @param {object} data - source data object
- * @param {bool} normal - normalize or not
- * @return {object}
- */
-function propertydist(data, normal) {
-    let checked = formchecked('Property');
-    let pointlist = [];
-    for (let i = 0; i < data.length; i++) {
-        let point = [];
-        point.push(data[i].AUTHID);
-        if (checked.BETWEENNESS) {
-            point.push(data[i].PROPERTY.BETWEENNESS);
-        }
-        if (checked.BROKERAGE) {
-            point.push(data[i].PROPERTY.BROKERAGE);
-        }
-        if (checked.DENSITY) {
-            point.push(data[i].PROPERTY.DENSITY);
-        }
-        if (checked.NBETWEENNESS) {
-            point.push(data[i].PROPERTY.NBETWEENNESS);
-        }
-        if (checked.NBROKERAGE) {
-            point.push(data[i].PROPERTY.NBROKERAGE);
-        }
-        if (checked.NETWORKSIZE) {
-            point.push(data[i].PROPERTY.NETWORKSIZE);
-        }
-        if (checked.TRANSITIVITY) {
-            point.push(data[i].PROPERTY.TRANSITIVITY);
-        }
-        pointlist.push(point);
-    }
-    // console.log(pointlist)
-    if (normal) {
-        pointlist = normalize(pointlist);
-    }
-    let dists = initMat(pointlist.length);
-    for (let i = 0; i < dists.length; i++) {
-        for (let j = i + 1; j < dists.length; j++) {
-            dists[i][j] = distance(pointlist[i], pointlist[j]);
-            dists[j][i] = distance(pointlist[i], pointlist[j]);
-        }
-        // console.log(temp[200])
-    }
-    // console.log(dists);
-    return dists;
-}
-
-/**
- * get scatterplot {x:,y:}
- * @param {number} epsilon
- * @param {number} perplexity
- * @param {number} dim
- * @param {number} iteration
- * @param {object} data
- * @return {object}
+ * get x,y to datapoint list
+ * @param {object} tsne1 - method object
+ * @param {object} tsne2 - method object
+ * @param {object} data - datapoint list
  */
 function getplot(tsne1, tsne2, data) {
     // console.log(dists);
@@ -325,6 +225,43 @@ function getplot(tsne1, tsne2, data) {
     // return tsne.getSolution();
 }
 
+/**
+ * sumit option and render
+ * @param {object} data - source data
+ * @param {object} tsne1 - method object
+ * @param {object} tsne2 - method object
+ */
+function submit(data, tsne1, tsne2) {
+    getplot(tsne1, tsne2, data);
+    // let Y = getplot(epsilon, perplexity, dim, iteration, big5dist(data, normal));
+    // let Z = getplot(epsilon, perplexity, dim, iteration, propertydist(data, normal));
+    // console.log(Y);
+    /*
+    for (let i = 0; i < data.length; i++) {
+        data[i]['BPLOT'] = {
+            x: Y[i][0],
+            y: Y[i][1],
+        };
+    }
+    for (let i = 0; i < data.length; i++) {
+        data[i]['PPLOT'] = {
+            x: Z[i][0],
+            y: Z[i][1],
+        };
+    }
+    console.log(data);
+    d3.select('.svg').selectAll('div').remove();
+    drawbig5(Y, data, 500);
+    drawproperty(Z, data, 500);
+    */
+}
+
+/**
+ * set x,y to datapoint list
+ * @param {object} tsne1 - method object
+ * @param {object} tsne2 - method object
+ * @param {object} data - datapoint list
+ */
 function update(tsne1, tsne2, data) {
     let Y = tsne1.getSolution();
     // let Z = tsne2.getSolution();
@@ -344,19 +281,19 @@ function update(tsne1, tsne2, data) {
         };
     };*/
     console.log('update');
-    d3.select('.svg').select('.big5').remove();
+    d3.select('.svg').select('.plot').remove();
     // d3.select('.svg').select('.property').remove();
-    drawbig5(Y, data, 500);
+    draw(Y, data, 500);
     // drawproperty(Z, data, 500);
 }
 
 /**
- * render big5 plot
- * @param {object} P
+ * render data plot
+ * @param {object} P - point(x,y)
  * @param {object} data
  * @param {number} px - pixel
  */
-function drawbig5(P, data, px) {
+function draw(P, data, px) {
     let max;
     let min;
     for (let i = 0; i < P.length; i++) {
@@ -450,19 +387,7 @@ function drawbig5(P, data, px) {
          */
         function highlightBrushed(brushedNodes) {
             d3.selectAll('.circles-brushed').remove();
-            // const brushedCircles = g.append('g').attr('class', 'circles-brushed');
-            // overlap colored circles to indicate the highlighted ones in the chart
-            // really slow
-            /*
-            let circle = g.selectAll('circle')._groups[0];
-            for (let i = 0; i < circle.length; i++) {
-                for (let j = 0; j < brushedNodes.length; j++) {
-                    console.log(circle[i]['__data__']);
-                    if (circle[i]['__data__'] === brushedNodes[j]) {
-                        d3.select(circle[i]).style('fill', 'red');
-                    }
-                }
-            }*/
+
             if (brushedNodes.lenght !== 0) {
                 const circles = g.selectAll('circle'); // .data(brushedNodes);
                 let t = brushedNodes.length;
@@ -481,7 +406,7 @@ function drawbig5(P, data, px) {
                         d3.select(this).style('fill', color(index / t))
                             .style('stroke', 'black');
                     } else {
-                        d3.select(this).style('fill', defultcolor('#big5', d))
+                        d3.select(this).style('fill', defultcolor('#plot', data, d))
                             .style('stroke', 'none');
                     }
                     return find;
@@ -558,18 +483,14 @@ function drawbig5(P, data, px) {
     }
 
     let graph = d3.select('.svg').append('div')
-        .attr('class', 'big5');
-    swapcolor(data, graph, '#big5', 'defult', '220px', '50px', 'defult');
-    swapcolor(data, graph, '#big5', 'sEXT', '260px', '50px', 'BIG5.sEXT');
-    swapcolor(data, graph, '#big5', 'sNEU', '300px', '50px', 'BIG5.sNEU');
-    swapcolor(data, graph, '#big5', 'sAGR', '340px', '50px', 'BIG5.sAGR');
-    swapcolor(data, graph, '#big5', 'sCON', '380px', '50px', 'BIG5.sCON');
-    swapcolor(data, graph, '#big5', 'sOPN', '420px', '50px', 'BIG5.sOPN');
-
-    d3.select('.svg').select('#big5').remove();
+        .attr('class', 'plot');
+    swapcolor(data, graph, '#plot', 'defult', '220px', '50px', 'defult');
+    swapcolor(data, graph, '#plot', 'A', '260px', '50px', 'posts.A.length');
+    swapcolor(data, graph, '#plot', 'B', '300px', '50px', 'posts.B.length');
+    d3.select('.svg').select('#plot').remove();
 
     let svg = d3.select('.svg').append('svg')
-        .attr('id', 'big5')
+        .attr('id', 'plot')
         .attr('width', width)
         .attr('height', height)
         .style('fill', 'none')
@@ -577,7 +498,7 @@ function drawbig5(P, data, px) {
         .call(zoom);
 
     let g = svg.append('g')
-        .attr('id', 'big5');
+        .attr('id', 'plot');
 
     let gBrush = g.append('g')
         .attr('class', 'brush')
@@ -598,7 +519,7 @@ function drawbig5(P, data, px) {
         .style('fill', function (d) {
             // return color(d.BIG5.sEXT);
             // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
-            return defultcolor('#big5', d);
+            return defultcolor('#plot', data, d);
         })
         .on('mouseover', function (d) {
             d3.select('#property').selectAll('circle')
@@ -607,13 +528,13 @@ function drawbig5(P, data, px) {
                     if (d.AUTHID === s.AUTHID) {
                         return 'black';
                     } else {
-                        return defultcolor('#property', s);
+                        return defultcolor('#property', data, s);
                     }
                 });
             tooltip1.transition()
                 .duration(200)
                 .style('opacity', .9);
-            tooltip1.html('ID=' + d.id + '<br/>' + 'Name=' + d.name + '<br/>' + 'Activities on A=' + d.posts.A.length + '<br/>' + 'Activities on B=' + d.posts.B.length)
+            tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
@@ -625,31 +546,6 @@ function drawbig5(P, data, px) {
         .on('click', function (d) {
             status(d);
         });
-}
-
-/**
- * make status table
- * @param {object} point - user point object
- */
-function status(point) {
-    let table = '<table><tbody>';
-    table += '<tr>' +
-        '<th width="6%">#</th>' +
-        '<th width="90%">Status</th>' +
-        '</tr>';
-    for (let i = 0; i < point.STATUS.length; i++) {
-        let s = '<tr>' +
-            '<th>' + (i + 1) + '</th>' +
-            '<td>' + point.STATUS[i] + '</td>' +
-            '</tr>';
-        table += s;
-    }
-    table += '</tbody></table>';
-    let div = document.getElementById('table');
-    // console.log(div);
-    let index = div.innerHTML.indexOf('<table');
-    div.innerHTML = div.innerHTML.slice(0, index);
-    div.innerHTML += table;
 }
 
 /**
@@ -682,35 +578,6 @@ function formchecked(query) {
 }
 
 /**
- * sumit option and render
- * @param {object} data - source data
- */
-function submit(data, tsne1, tsne2) {
-    getplot(tsne1, tsne2, data);
-    // let Y = getplot(epsilon, perplexity, dim, iteration, big5dist(data, normal));
-    // let Z = getplot(epsilon, perplexity, dim, iteration, propertydist(data, normal));
-    // console.log(Y);
-    /*
-    for (let i = 0; i < data.length; i++) {
-        data[i]['BPLOT'] = {
-            x: Y[i][0],
-            y: Y[i][1],
-        };
-    }
-    for (let i = 0; i < data.length; i++) {
-        data[i]['PPLOT'] = {
-            x: Z[i][0],
-            y: Z[i][1],
-        };
-    }
-    console.log(data);
-    d3.select('.svg').selectAll('div').remove();
-    drawbig5(Y, data, 500);
-    drawproperty(Z, data, 500);
-    */
-}
-
-/**
  * swap color
  * @param {object} data - ref data
  * @param {object} select - element
@@ -734,10 +601,10 @@ function swapcolor(data, select, id, value, top, left, attribute) {
             d3.select(id).selectAll('circle')
                 .style('fill', function (d) {
                     if (attribute === 'defult') {
-                        return defultcolor(id, d);
+                        return defultcolor(id, data, d);
                     } else {
                         let domain = attrdomain(data, attribute);
-                        return colorscale(domain, setDescendantProp(d, attribute));
+                        return colorscale(domain, setDescendantProp(d, attribute), 'lightgrey', 'black');
                     }
                 });
         });
@@ -788,26 +655,107 @@ function attrdomain(data, attribute) {
  * color scale
  * @param {object} domain
  * @param {number} value
+ * @param {string} color1 - string
+ * @param {string} color2 - string
  * @return {number}
  */
-function colorscale(domain, value) {
+function colorscale(domain, value, color1, color2) {
     let color = d3.scaleLinear()
         .domain([domain.min, domain.max])
-        .range(['lightgrey', 'black']);
+        .range([color1, color2]);
     return color(value);
 }
 
 /**
  * set defultcolor
  * @param {string} id
+ * @param {object} data
  * @param {object} d
  * @return {color}
  */
-function defultcolor(id, d) {
-    if (id === '#property') {
-        return 'rgb(' + Math.round(d.PROPERTY.NBETWEENNESS) + ',' + Math.round(d.PROPERTY.NETWORKSIZE * 0.1) + ',' + Math.round(d.PROPERTY.TRANSITIVITY * 500) + ')';
+function defultcolor(id, data, d) {
+    if (id === '#plot') {
+        let domainA = attrdomain(data, 'posts.A.length');
+        let domainB = attrdomain(data, 'posts.B.length');
+        let domain = {
+            'min': domainA.min + domainB.min,
+            'max': domainA.max + domainB.max,
+        };
+        console.log(d);
+        let len = d.posts.A.length + d.posts.B.length;
+        return colorscale(domain, len, 'red', 'blue');
     }
-    if (id === '#big5') {
-        return 'rgb(' + Math.round(51) + ',' + Math.round(51) + ',' + Math.round(51) + ')';
+}
+
+/**
+ * make status table
+ * @param {object} point - user point object
+ */
+function status(point) {
+    let table = '<table><thead>';
+    table += '<tr>' +
+        '<th width="45%">PageA</th>' +
+        '<th width="45%">PageB</th>' +
+        '</tr>' + '</thead>' + '<tbody>';
+    let subtable = '<table><thead>' + '<tr>' +
+        '<th width="5%">#</th>' +
+        '<th width="45%">Acivities on Posts</th>' +
+        '</tr>' + '</thead>' + '<tbody>';
+    let subtableend = '</tbody></table>';
+    table += '<tr>' + '<td>' + subtable;
+    for (let i = 0; i < point.posts.A.length; i++) {
+        let s = '<tr>' + '<th>' + (i + 1) + '</th>' +
+            '<td>' + '<ul>' + point.posts.A[i].id + '</ul>' +
+            '<ul>' + 'comment count: ' + point.posts.A[i].commentcount + '</ul>' +
+            '<ul>' + 'reaction type: ' + liketype(point.posts.A[i].like) + '</ul>' +
+            '<ul>' + 'share post: ' + point.posts.A[i].share + '</ul>' +
+            '</td>' + '</tr>';
+        table += s;
+    }
+    table += subtableend + '</td>';
+    table += '<td>' + subtable;
+    for (let i = 0; i < point.posts.B.length; i++) {
+        let s = '<tr>' + '<th>' + (i + 1) + '</th>' +
+            '<td>' + '<ul>' + point.posts.B[i].id + '</ul>' +
+            '<ul>' + 'comment count: ' + point.posts.B[i].commentcount + '</ul>' +
+            '<ul>' + 'reaction type: ' + liketype(point.posts.B[i].like) + '</ul>' +
+            '<ul>' + 'share post: ' + point.posts.B[i].share + '</ul>' +
+            '</td>' + '</tr>';
+        table += s;
+    }
+    table += subtableend + '</td>';
+    table += '</tbody></table>';
+    let div = document.getElementById('cooltable');
+    console.log(div);
+    let index = div.innerHTML.indexOf('<table');
+    div.innerHTML = div.innerHTML.slice(0, index);
+    div.innerHTML += table;
+}
+
+/**
+ * change liketype number to string name
+ * @param {number} typenum
+ * @return {string}
+ */
+function liketype(typenum) {
+    if (typenum === 1) {
+        return 'like';
+    }
+    if (typenum === 2) {
+        return 'love';
+    }
+    if (typenum === 3) {
+        return 'haha';
+    }
+    if (typenum === 4) {
+        return 'wow';
+    }
+    if (typenum === 5) {
+        return 'sad';
+    }
+    if (typenum === 6) {
+        return 'angry';
+    } else {
+        return 'thankful';
     }
 }
