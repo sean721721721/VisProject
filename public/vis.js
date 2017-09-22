@@ -7,7 +7,7 @@ let perplexity = getparam('perplexity');
 let dim = 2;
 let iteration = getparam('iteration');
 let normalized = document.getElementsByName('normalize');
-let normal = normalized[0].checked;
+// let normal = normalized[0].checked;
 // console.log(normalized[0].checked);
 let opt = {};
 opt.epsilon = epsilon; // epsilon is learning rate (10 = default)
@@ -18,18 +18,20 @@ let tsne1 = new tsnejs.tSNE(opt); // create a tSNE instance
 let tsne2 = new tsnejs.tSNE(opt);
 // initialize data. Here we have 3 points and some example pairwise dissimilarities
 let inputs = [];
-inputs.push(userdist(userlist, normal));
+inputs.push(userdist(userlist, false));
 // inputs.push(propertydist(fbdata, normal));
 tsne1.initDataDist(inputs[0]);
 tsne2.initDataDist(inputs[0]);
 let btn = document.querySelector('input[id="submit"]');
-btn.addEventListener('click', function () {
+btn.addEventListener('click', function (e) {
+    e.preventDefault();
     // console.log("on")
-    submit(data[1], tsne1, tsne2);
+    update(tsne1, tsne2, data[1]);
 });
 let ubtn = document.querySelector('input[id="update"]');
-ubtn.addEventListener('click', function () {
-    // console.log("on")
+ubtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    console.log('k=' + iteration);
     for (let k = 0; k < iteration; k++) {
         // setInterval(function () {
         tsne1.step(); // every time you call this, solution gets better
@@ -199,6 +201,8 @@ function normalize(pointlist) {
 function userdist(userlist, normal) {
     if (normal) {
         pointlist = normalize(userlist);
+    } else {
+        pointlist = userlist;
     }
     let dists = initMat(pointlist.length);
     for (let i = 0; i < dists.length; i++) {
@@ -213,78 +217,35 @@ function userdist(userlist, normal) {
 }
 
 /**
- * get x,y to datapoint list
- * @param {object} tsne1 - method object
- * @param {object} tsne2 - method object
- * @param {object} data - datapoint list
- */
-function getplot(tsne1, tsne2, data) {
-    // console.log(dists);
-    update(tsne1, tsne2, data);
-    // console.log(data);
-    // return tsne.getSolution();
-}
-
-/**
- * sumit option and render
- * @param {object} data - source data
- * @param {object} tsne1 - method object
- * @param {object} tsne2 - method object
- */
-function submit(data, tsne1, tsne2) {
-    getplot(tsne1, tsne2, data);
-    // let Y = getplot(epsilon, perplexity, dim, iteration, big5dist(data, normal));
-    // let Z = getplot(epsilon, perplexity, dim, iteration, propertydist(data, normal));
-    // console.log(Y);
-    /*
-    for (let i = 0; i < data.length; i++) {
-        data[i]['BPLOT'] = {
-            x: Y[i][0],
-            y: Y[i][1],
-        };
-    }
-    for (let i = 0; i < data.length; i++) {
-        data[i]['PPLOT'] = {
-            x: Z[i][0],
-            y: Z[i][1],
-        };
-    }
-    console.log(data);
-    d3.select('.svg').selectAll('div').remove();
-    drawbig5(Y, data, 500);
-    drawproperty(Z, data, 500);
-    */
-}
-
-/**
  * set x,y to datapoint list
  * @param {object} tsne1 - method object
  * @param {object} tsne2 - method object
  * @param {object} data - datapoint list
  */
 function update(tsne1, tsne2, data) {
-    let Y = tsne1.getSolution();
-    // let Z = tsne2.getSolution();
-    console.log(Y);
-    // console.log(Z);
-    for (let i = 0; i < data.length; i++) {
-        data[i]['PLOT'] = {
-            x: Y[i][0],
-            y: Y[i][1],
-        };
-    }
-    /*
-    for (let i = 0; i < data.length; i++) {
-        data[i]['PPLOT'] = {
-            x: Z[i][0],
-            y: Z[i][1],
-        };
-    };*/
-    console.log('update');
-    d3.select('.svg').select('.plot').remove();
-    // d3.select('.svg').select('.property').remove();
-    draw(Y, data, 500);
-    // drawproperty(Z, data, 500);
+    setTimeout(function () {
+        let Y = tsne1.getSolution();
+        // let Z = tsne2.getSolution();
+        console.log(Y);
+        // console.log(Z);
+        for (let i = 0; i < data.length; i++) {
+            data[i]['PLOT'] = {
+                x: Y[i][0],
+                y: Y[i][1],
+            };
+        }
+        /*
+        for (let i = 0; i < data.length; i++) {
+            data[i]['PPLOT'] = {
+                x: Z[i][0],
+                y: Z[i][1],
+            };
+        };*/
+        // console.log('update');
+        d3.select('.svg').select('.plot').remove();
+        draw(Y, data, 500);
+        // drawproperty(Z, data, 500);
+    }, 1);
 }
 
 /**
@@ -325,7 +286,7 @@ function draw(P, data, px) {
     // .style("height","30px");
 
     let zoom = d3.zoom()
-        .scaleExtent([1 / 2, 4])
+        .scaleExtent([1, 5])
         .on('zoom', function () {
             g.attr('transform', d3.event.transform);
             let k = this.__zoom.k;
@@ -522,6 +483,7 @@ function draw(P, data, px) {
             return defultcolor('#plot', data, d);
         })
         .on('mouseover', function (d) {
+            d3.event.preventDefault();
             d3.select('#property').selectAll('circle')
                 .style('fill', function (s) {
                     // console.log(d.AUTHID)
@@ -539,11 +501,13 @@ function draw(P, data, px) {
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
         .on('mouseout', function (d) {
+            d3.event.preventDefault();
             tooltip1.transition()
                 .duration(500)
                 .style('opacity', 0);
         })
         .on('click', function (d) {
+            d3.event.preventDefault();
             status(d);
         });
 }
@@ -598,6 +562,7 @@ function swapcolor(data, select, id, value, top, left, attribute) {
         // .style('top', top)
         // .style('left', left)
         .on('click', function () {
+            d3.event.preventDefault();
             d3.select(id).selectAll('circle')
                 .style('fill', function (d) {
                     if (attribute === 'defult') {
@@ -681,7 +646,7 @@ function defultcolor(id, data, d) {
             'min': domainA.min + domainB.min,
             'max': domainA.max + domainB.max,
         };
-        console.log(d);
+        // console.log(d);
         let len = d.posts.A.length + d.posts.B.length;
         return colorscale(domain, len, 'red', 'blue');
     }
@@ -726,7 +691,7 @@ function status(point) {
     table += subtableend + '</td>';
     table += '</tbody></table>';
     let div = document.getElementById('cooltable');
-    console.log(div);
+    // console.log(div);
     let index = div.innerHTML.indexOf('<table');
     div.innerHTML = div.innerHTML.slice(0, index);
     div.innerHTML += table;
