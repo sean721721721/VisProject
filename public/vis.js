@@ -22,22 +22,25 @@ inputs.push(userdist(userlist, false));
 // inputs.push(propertydist(fbdata, normal));
 tsne1.initDataDist(inputs[0]);
 tsne2.initDataDist(inputs[0]);
+let init = false;
 let btn = document.querySelector('input[id="submit"]');
 btn.addEventListener('click', function (e) {
     e.preventDefault();
-    // console.log("on")
-    update(tsne1, tsne2, data[1]);
+    update(tsne1, tsne2, data[1], 500, init);
+    init = true;
 });
 let ubtn = document.querySelector('input[id="update"]');
 ubtn.addEventListener('click', function (e) {
     e.preventDefault();
     console.log('k=' + iteration);
-    for (let k = 0; k < iteration; k++) {
-        // setInterval(function () {
-        tsne1.step(); // every time you call this, solution gets better
-        tsne2.step(); // every time you call this, solution gets better
-        update(tsne1, tsne2, data[1]);
-        // }, 1000);
+    if (init) {
+        for (let k = 0; k < iteration; k++) {
+            // setInterval(function () {
+            tsne1.step(); // every time you call this, solution gets better
+            tsne2.step(); // every time you call this, solution gets better
+            // }, 1000);
+        }
+        update(tsne1, tsne2, data[1], 500, init);
     }
 });
 
@@ -221,40 +224,22 @@ function userdist(userlist, normal) {
  * @param {object} tsne1 - method object
  * @param {object} tsne2 - method object
  * @param {object} data - datapoint list
- */
-function update(tsne1, tsne2, data) {
-    setTimeout(function () {
-        let Y = tsne1.getSolution();
-        // let Z = tsne2.getSolution();
-        console.log(Y);
-        // console.log(Z);
-        for (let i = 0; i < data.length; i++) {
-            data[i]['PLOT'] = {
-                x: Y[i][0],
-                y: Y[i][1],
-            };
-        }
-        /*
-        for (let i = 0; i < data.length; i++) {
-            data[i]['PPLOT'] = {
-                x: Z[i][0],
-                y: Z[i][1],
-            };
-        };*/
-        // console.log('update');
-        d3.select('.svg').select('.plot').remove();
-        draw(Y, data, 500);
-        // drawproperty(Z, data, 500);
-    }, 1);
-}
-
-/**
- * render data plot
- * @param {object} P - point(x,y)
- * @param {object} data
  * @param {number} px - pixel
  */
-function draw(P, data, px) {
+/*
+function update(tsne1, tsne2, data, px) {
+    // setTimeout(function () {
+    let P = tsne1.getSolution();
+    // let Z = tsne2.getSolution();
+    console.log(P);
+    // console.log(Z);
+    for (let i = 0; i < data.length; i++) {
+        data[i]['PLOT'] = {
+            x: P[i][0],
+            y: P[i][1],
+        };
+    }
+
     let max;
     let min;
     for (let i = 0; i < P.length; i++) {
@@ -279,20 +264,71 @@ function draw(P, data, px) {
         .domain([min, max])
         .range([15, height - 15]);
 
-    let tooltip1 = d3.select('body').select('.a')
-        // .attr('class', 'tooltip1')
-        .style('opacity', 0);
-    // .style("width","200px")
-    // .style("height","30px");
+    let quadtree = d3.quadtree()
+        .x((d) => x(d.PLOT.x))
+        .y((d) => y(d.PLOT.y))
+        .addAll(data);
 
-    let zoom = d3.zoom()
-        .scaleExtent([1, 5])
-        .on('zoom', function () {
-            g.attr('transform', d3.event.transform);
-            let k = this.__zoom.k;
-            g.selectAll('.circle').attr('r', 5 / k)
-                .attr('stroke-width', 1 / k);
-        });
+    let select = d3.select('#plot').select('.circle').selectAll('circle');
+    console.log(select);
+    select
+        .data(data)
+        .transition()
+        .attr('cx', (d) => x(d.PLOT.x))
+        .attr('cy', (d) => y(d.PLOT.y));
+    // drawproperty(Z, data, 500);
+    // }, 1);
+}*/
+
+/**
+ * render data plot
+ * @param {object} tsne1 - method object
+ * @param {object} tsne2 - method object
+ * @param {object} data - datapoint list
+ * @param {number} px - pixel
+ * @param {boolean} init - init or not
+ */
+function update(tsne1, tsne2, data, px, init) {
+    // setTimeout(function () {
+    let P = tsne1.getSolution();
+    // let Z = tsne2.getSolution();
+    console.log(P);
+    // console.log(Z);
+    for (let i = 0; i < data.length; i++) {
+        data[i]['PLOT'] = {
+            x: P[i][0],
+            y: P[i][1],
+        };
+    }
+    let max;
+    let min;
+    for (let i = 0; i < P.length; i++) {
+        for (let j = 0; j < 2; j++) {
+            if (P[i][j] > max || max === undefined) {
+                max = P[i][j];
+            }
+            if (P[i][j] < min || min === undefined) {
+                min = P[i][j];
+            }
+        }
+    }
+
+    let width = px;
+    let height = px;
+
+    let x = d3.scaleLinear()
+        .domain([min, max])
+        .range([15, width - 15]);
+
+    let y = d3.scaleLinear()
+        .domain([min, max])
+        .range([15, height - 15]);
+
+    // generate a quadtree for faster lookups for brushing
+    let quadtree = d3.quadtree()
+        .x((d) => x(d.PLOT.x))
+        .y((d) => y(d.PLOT.y))
+        .addAll(data);
 
     let brush = d3.brush()
         .extent([
@@ -301,14 +337,10 @@ function draw(P, data, px) {
         ])
         .on('brush end', updateBrush);
 
-    // generate a quadtree for faster lookups for brushing
-    const quadtree = d3.quadtree()
-        .x((d) => x(d.PLOT.x))
-        .y((d) => y(d.PLOT.y))
-        .addAll(data);
-
     /**
      * callback when the brush updates / ends
+     * @param {object} quadtree - d3.quadtree
+     * @param {object} event - d3.event
      */
     function updateBrush() {
         // The following two functions taken from vis-utils: https://github.com/pbeshai/vis-utils
@@ -350,7 +382,7 @@ function draw(P, data, px) {
             d3.selectAll('.circles-brushed').remove();
 
             if (brushedNodes.lenght !== 0) {
-                const circles = g.selectAll('circle'); // .data(brushedNodes);
+                const circles = d3.select('#plot').select('.circle').selectAll('.circle'); // .data(brushedNodes);
                 let t = brushedNodes.length;
                 const color = d3.interpolateRdBu;
                 circles.filter(function (d, i) {
@@ -391,7 +423,7 @@ function draw(P, data, px) {
         // with the brushed selection box
         quadtree.visit((node, x1, y1, x2, y2) => {
             // check that quadtree node intersects
-            const overlaps = rectIntersects(selection, [
+            let overlaps = rectIntersects(selection, [
                 [x1, y1],
                 [x2, y2],
             ]);
@@ -405,9 +437,9 @@ function draw(P, data, px) {
             // we have to do this since an overlapping quadtree box does not guarantee
             // that all the points within that box are covered by the brush.
             if (!node.length) {
-                const d = node.data;
-                const dx = x(d.PLOT.x);
-                const dy = y(d.PLOT.y);
+                let d = node.data;
+                let dx = x(d.PLOT.x);
+                let dy = y(d.PLOT.y);
                 if (rectContains(selection, [dx, dy])) {
                     brushedNodes.push(d);
                 }
@@ -419,97 +451,103 @@ function draw(P, data, px) {
 
         // update the highlighted brushed nodes
         highlightBrushed(brushedNodes);
-
-        let margin = {
-            top: 100,
-            right: 100,
-            bottom: 100,
-            left: 100,
-        };
-        let width = Math.min(700, window.innerWidth - 10) - margin.left - margin.right;
-        let height = Math.min(width, window.innerHeight - margin.top - margin.bottom - 20);
-        let color = d3.scaleOrdinal(['#EDC951', '#CC333F', '#00A0B0']);
-
-        let radarChartOptions = {
-            'w': width,
-            'h': height,
-            'margin': margin,
-            'maxValue': 0.5,
-            'levels': 5,
-            'roundStrokes': true,
-            'color': color,
-        };
         // Call function to draw the Radar chart
         // radarchart('.radarChart', brushedNodes, radarChartOptions);
     }
 
-    let graph = d3.select('.svg').append('div')
-        .attr('class', 'plot');
-    swapcolor(data, graph, '#plot', 'defult', '220px', '50px', 'defult');
-    swapcolor(data, graph, '#plot', 'A', '260px', '50px', 'posts.A.length');
-    swapcolor(data, graph, '#plot', 'B', '300px', '50px', 'posts.B.length');
-    d3.select('.svg').select('#plot').remove();
+    if (!init) {
+        let tooltip1 = d3.select('body').select('.a')
+            // .attr('class', 'tooltip1')
+            .style('opacity', 0);
+        // .style("width","200px")
+        // .style("height","30px");
 
-    let svg = d3.select('.svg').append('svg')
-        .attr('id', 'plot')
-        .attr('width', width)
-        .attr('height', height)
-        .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .call(zoom);
+        let graph = d3.select('.svg').append('div')
+            .attr('class', 'plot');
 
-    let g = svg.append('g')
-        .attr('id', 'plot');
+        swapcolor(data, graph, '#plot', 'defult', '220px', '50px', 'defult');
+        swapcolor(data, graph, '#plot', 'A', '260px', '50px', 'posts.A.length');
+        swapcolor(data, graph, '#plot', 'B', '300px', '50px', 'posts.B.length');
 
-    let gBrush = g.append('g')
-        .attr('class', 'brush')
-        .call(brush);
+        d3.select('.svg').select('#plot').remove();
 
-    // update the styling of the select box (typically done in CSS)
-    gBrush.select('.selection')
-        .style('stroke', 'skyblue')
-        .style('stroke-opacity', 0.4)
-        .style('fill', 'skyblue')
-        .style('fill-opacity', 1);
+        let zoom = d3.zoom()
+            .scaleExtent([1, 5])
+            .on('zoom', function () {
+                g.attr('transform', d3.event.transform);
+                let k = this.__zoom.k;
+                g.attr('r', 5 / k)
+                    .attr('stroke-width', 1 / k);
+            });
 
-    circles = g.append('g').attr('class', 'circle').selectAll('circle').data(data).enter().append('circle')
-        .attr('class', 'circle')
-        .attr('cx', (d) => x(d.PLOT.x))
-        .attr('cy', (d) => y(d.PLOT.y))
-        .attr('r', 5)
-        .style('fill', function (d) {
-            // return color(d.BIG5.sEXT);
-            // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
-            return defultcolor('#plot', data, d);
-        })
-        .on('mouseover', function (d) {
-            d3.event.preventDefault();
-            d3.select('#property').selectAll('circle')
-                .style('fill', function (s) {
-                    // console.log(d.AUTHID)
-                    if (d.AUTHID === s.AUTHID) {
-                        return 'black';
-                    } else {
-                        return defultcolor('#property', data, s);
-                    }
-                });
-            tooltip1.transition()
-                .duration(200)
-                .style('opacity', .9);
-            tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
-                .style('left', (d3.event.pageX + 5) + 'px')
-                .style('top', (d3.event.pageY - 30) + 'px');
-        })
-        .on('mouseout', function (d) {
-            d3.event.preventDefault();
-            tooltip1.transition()
-                .duration(500)
-                .style('opacity', 0);
-        })
-        .on('click', function (d) {
-            d3.event.preventDefault();
-            status(d);
-        });
+        let svg = d3.select('.svg').append('svg')
+            .attr('id', 'plot')
+            .attr('width', width)
+            .attr('height', height)
+            .style('fill', 'none')
+            .style('pointer-events', 'all')
+            .call(zoom);
+
+        let g = svg.append('g')
+            .attr('id', 'plot');
+
+        let gBrush = g.append('g')
+            .attr('class', 'brush')
+            .call(brush);
+
+        // update the styling of the select box (typically done in CSS)
+        gBrush.select('.selection')
+            .style('stroke', 'skyblue')
+            .style('stroke-opacity', 0.4)
+            .style('fill', 'skyblue')
+            .style('fill-opacity', 1);
+
+        g.append('g').attr('class', 'circle').selectAll('circle').data(data).enter().append('circle')
+            .attr('class', 'circle')
+            .attr('cx', (d) => x(d.PLOT.x))
+            .attr('cy', (d) => y(d.PLOT.y))
+            .attr('r', 5)
+            .style('fill', function (d) {
+                // return color(d.BIG5.sEXT);
+                // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
+                return defultcolor('#plot', data, d);
+            });
+
+        g.selectAll('.circle').selectAll('.circle')
+            .on('mouseover', function (d) {
+                d3.event.preventDefault();
+                tooltip1.transition()
+                    .duration(200)
+                    .style('opacity', .9);
+                tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
+                    .style('left', (d3.event.pageX + 5) + 'px')
+                    .style('top', (d3.event.pageY - 30) + 'px');
+            })
+            .on('mouseout', function (d) {
+                d3.event.preventDefault();
+                tooltip1.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            })
+            .on('click', function (d) {
+                d3.event.preventDefault();
+                status(d);
+            });
+    } else {
+        /*
+        quadtree = d3.quadtree()
+            .x((d) => x(d.PLOT.x))
+            .y((d) => y(d.PLOT.y))
+            .addAll(data);*/
+        d3.select('.brush').call(brush);
+        let select = d3.select('#plot').select('.circle').selectAll('.circle');
+        console.log(select);
+        select
+            .data(data)
+            .transition()
+            .attr('cx', (d) => x(d.PLOT.x))
+            .attr('cy', (d) => y(d.PLOT.y));
+    }
 }
 
 /**
