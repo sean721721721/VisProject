@@ -59,7 +59,7 @@ var fanpageId = [ //'155846434444584', // 台大新聞E論壇
   //'188535634604417', //for testing
 ];
 
-var sincedate = "2017-06-28",
+var sincedate = "2016-01-01",
   finaldate = "2017-09-01",
   range = 1;
 
@@ -280,11 +280,12 @@ function getData(i, step) {
             "message": JSON.stringify(err)
           }
         });
-        logger.log('info', 'try getData : ' + i + ' ' + step + ' again');
+        logger.log('info', 'try getData : ' + step[i] + ' again');
         setTimeout(function () {
           resolve(getData(i, step));
         }, 1000);
       } else {
+        logger.log('info', 'getData : ' + step[i]);
         //console.log("res0.id: " + res0.id);
         userid = res0.id;
         serverUtilities.createfolder(userid);
@@ -447,6 +448,7 @@ function get_recursive_comments(id, res_comments, timeout) {
         resolve(each_comment(res, id, res_comments, ctimeout));
       } else {
         res_comments.push(res);
+        logger.log('info', "no comments: " + id);
         resolve(res_comments);
       }
     });
