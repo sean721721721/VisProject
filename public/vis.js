@@ -220,66 +220,59 @@ function userdist(userlist, normal) {
 }
 
 /**
- * set x,y to datapoint list
- * @param {object} tsne1 - method object
- * @param {object} tsne2 - method object
- * @param {object} data - datapoint list
- * @param {number} px - pixel
+ * make users co-activities links list
+ * @param {object} userlist - users
+ * @return {object} - linklist
  */
-/*
-function update(tsne1, tsne2, data, px) {
-    // setTimeout(function () {
-    let P = tsne1.getSolution();
-    // let Z = tsne2.getSolution();
-    console.log(P);
-    // console.log(Z);
-    for (let i = 0; i < data.length; i++) {
-        data[i]['PLOT'] = {
-            x: P[i][0],
-            y: P[i][1],
-        };
-    }
-
-    let max;
-    let min;
-    for (let i = 0; i < P.length; i++) {
-        for (let j = 0; j < 2; j++) {
-            if (P[i][j] > max || max === undefined) {
-                max = P[i][j];
+function linklist(userlist) {
+    // let undouser = userlist;
+    let linklist = [];
+    let len = userlist.length;
+    for (let i = 0; i < len; i++) {
+        for (let j = i + 1; j < userlist.length; j++) {
+            let Alen1 = userlist[i].posts.A.length;
+            let Alen2 = userlist[j].posts.A.length;
+            let find = false;
+            for (let a1 = 0; a1 < Alen1; a1++) {
+                for (let a2 = 0; a2 < Alen2; a2++) {
+                    let A1 = userlist[i].posts.A[a1];
+                    let A2 = userlist[j].posts.A[a2];
+                    if (A1 != undefined && A2 != undefined) {
+                        if (A1.id === A2.id) {
+                            find = true;
+                            a1 = Alen1;
+                            a2 = Alen2;
+                        }
+                    }
+                }
             }
-            if (P[i][j] < min || min === undefined) {
-                min = P[i][j];
+            let Blen1 = userlist[i].posts.B.length;
+            let Blen2 = userlist[j].posts.B.length;
+            // let find = false;
+            for (let b1 = 0; b1 < Blen1; b1++) {
+                for (let b2 = 0; b2 < Blen2; b2++) {
+                    let B1 = userlist[i].posts.B[b1];
+                    let B2 = userlist[j].posts.B[b2];
+                    if (B1 != undefined && B2 != undefined) {
+                        if (B1.id === B2.id) {
+                            find = true;
+                            b1 = Blen1;
+                            b2 = Blen2;
+                        }
+                    }
+                }
+            }
+            if (find === true) {
+                let link = {
+                    'source': userlist[i].PLOT,
+                    'target': userlist[j].PLOT,
+                };
+                linklist.push(link);
             }
         }
     }
-
-    let width = px;
-    let height = px;
-
-    let x = d3.scaleLinear()
-        .domain([min, max])
-        .range([15, width - 15]);
-
-    let y = d3.scaleLinear()
-        .domain([min, max])
-        .range([15, height - 15]);
-
-    let quadtree = d3.quadtree()
-        .x((d) => x(d.PLOT.x))
-        .y((d) => y(d.PLOT.y))
-        .addAll(data);
-
-    let select = d3.select('#plot').select('.circle').selectAll('circle');
-    console.log(select);
-    select
-        .data(data)
-        .transition()
-        .attr('cx', (d) => x(d.PLOT.x))
-        .attr('cy', (d) => y(d.PLOT.y));
-    // drawproperty(Z, data, 500);
-    // }, 1);
-}*/
-
+    return linklist;
+}
 /**
  * render data plot
  * @param {object} tsne1 - method object
@@ -292,8 +285,7 @@ function update(tsne1, tsne2, data, px, init) {
     // setTimeout(function () {
     let P = tsne1.getSolution();
     // let Z = tsne2.getSolution();
-    console.log(P);
-    // console.log(Z);
+    // console.log(P);
     for (let i = 0; i < data.length; i++) {
         data[i]['PLOT'] = {
             x: P[i][0],
@@ -340,7 +332,6 @@ function update(tsne1, tsne2, data, px, init) {
     /**
      * callback when the brush updates / ends
      * @param {object} quadtree - d3.quadtree
-     * @param {object} event - d3.event
      */
     function updateBrush() {
         // The following two functions taken from vis-utils: https://github.com/pbeshai/vis-utils
@@ -512,6 +503,34 @@ function update(tsne1, tsne2, data, px, init) {
                 // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
                 return defultcolor('#plot', data, d);
             });
+        /*
+        let line = d3.line()
+            .x((d) => x(d.PLOT.x))
+            .y((d) => x(d.PLOT.y));*/
+        let linkdata = linklist(data);
+        console.log(linkdata);
+        let link = svg.append('g').attr('class', 'link').selectAll('line');
+        // let link = d3.select('svg#plot').append('g').attr('class', 'link');
+        link.data(linkdata).enter().append('line')
+            .attr('class', 'link')
+            .attr('fill', 'none')
+            .attr('stroke', 'steelblue')
+            // .attr('stroke-linejoin', 'round')
+            // .attr('stroke-linecap', 'round')
+            .attr('stroke-width', 1.5)
+            .attr('x1', (d) => x(d.source.x))
+            .attr('y1', (d) => y(d.source.y))
+            .attr('x2', (d) => x(d.target.x))
+            .attr('y2', (d) => y(d.target.y));
+        /*
+        g.append('path')
+            .datum(data)
+            .attr('fill', 'none')
+            .attr('stroke', 'steelblue')
+            .attr('stroke-linejoin', 'round')
+            .attr('stroke-linecap', 'round')
+            .attr('stroke-width', 1.5)
+            .attr('d', line);*/
 
         g.selectAll('.circle').selectAll('.circle')
             .on('mouseover', function (d) {
