@@ -1,6 +1,11 @@
 console.log(data);
 let userlist = activitymatrix(data);
 console.log(userlist);
+for (let i = 0; i < data[1].length; i++) {
+    if (!data[1][i].posts) {
+        console.log(i);
+    }
+}
 
 let epsilon = getparam('epsilon');
 let perplexity = getparam('perplexity');
@@ -23,10 +28,11 @@ inputs.push(userdist(userlist, false));
 tsne1.initDataDist(inputs[0]);
 tsne2.initDataDist(inputs[0]);
 let init = false;
+let width = document.querySelector('div.svg').offsetWidth;
 let btn = document.querySelector('input[id="submit"]');
 btn.addEventListener('click', function (e) {
     e.preventDefault();
-    update(tsne1, tsne2, data[1], 500, init);
+    update(tsne1, tsne2, data[1], width, init);
     init = true;
 });
 let ubtn = document.querySelector('input[id="update"]');
@@ -40,7 +46,7 @@ ubtn.addEventListener('click', function (e) {
             tsne2.step(); // every time you call this, solution gets better
             // }, 1000);
         }
-        update(tsne1, tsne2, data[1], 500, init);
+        update(tsne1, tsne2, data[1], width, init);
     }
 });
 
@@ -329,6 +335,14 @@ function update(tsne1, tsne2, data, px, init) {
         ])
         .on('brush end', updateBrush);
 
+    let linkdata = linklist(data);
+
+    let tooltip1 = d3.select('body').select('.a')
+        // .attr('class', 'tooltip1')
+        .style('opacity', 0);
+    // .style("width","200px")
+    // .style("height","30px");
+
     /**
      * callback when the brush updates / ends
      * @param {object} quadtree - d3.quadtree
@@ -447,12 +461,6 @@ function update(tsne1, tsne2, data, px, init) {
     }
 
     if (!init) {
-        let tooltip1 = d3.select('body').select('.a')
-            // .attr('class', 'tooltip1')
-            .style('opacity', 0);
-        // .style("width","200px")
-        // .style("height","30px");
-
         let graph = d3.select('.svg').append('div')
             .attr('class', 'plot');
 
@@ -493,31 +501,21 @@ function update(tsne1, tsne2, data, px, init) {
             .style('fill', 'skyblue')
             .style('fill-opacity', 1);
 
-        g.append('g').attr('class', 'circle').selectAll('circle').data(data).enter().append('circle')
-            .attr('class', 'circle')
-            .attr('cx', (d) => x(d.PLOT.x))
-            .attr('cy', (d) => y(d.PLOT.y))
-            .attr('r', 5)
-            .style('fill', function (d) {
-                // return color(d.BIG5.sEXT);
-                // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
-                return defultcolor('#plot', data, d);
-            });
         /*
         let line = d3.line()
             .x((d) => x(d.PLOT.x))
             .y((d) => x(d.PLOT.y));*/
-        let linkdata = linklist(data);
-        console.log(linkdata);
-        let link = svg.append('g').attr('class', 'link').selectAll('line');
+        // console.log(linkdata);
+        let link = g.append('g').attr('class', 'link').selectAll('line');
         // let link = d3.select('svg#plot').append('g').attr('class', 'link');
         link.data(linkdata).enter().append('line')
             .attr('class', 'link')
             .attr('fill', 'none')
             .attr('stroke', 'steelblue')
+            .attr('opacity', '0')
             // .attr('stroke-linejoin', 'round')
             // .attr('stroke-linecap', 'round')
-            .attr('stroke-width', 1.5)
+            .attr('stroke-width', 1)
             .attr('x1', (d) => x(d.source.x))
             .attr('y1', (d) => y(d.source.y))
             .attr('x2', (d) => x(d.target.x))
@@ -532,26 +530,17 @@ function update(tsne1, tsne2, data, px, init) {
             .attr('stroke-width', 1.5)
             .attr('d', line);*/
 
-        g.selectAll('.circle').selectAll('.circle')
-            .on('mouseover', function (d) {
-                d3.event.preventDefault();
-                tooltip1.transition()
-                    .duration(200)
-                    .style('opacity', .9);
-                tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
-                    .style('left', (d3.event.pageX + 5) + 'px')
-                    .style('top', (d3.event.pageY - 30) + 'px');
-            })
-            .on('mouseout', function (d) {
-                d3.event.preventDefault();
-                tooltip1.transition()
-                    .duration(500)
-                    .style('opacity', 0);
-            })
-            .on('click', function (d) {
-                d3.event.preventDefault();
-                status(d);
+        g.append('g').attr('class', 'circle').selectAll('circle').data(data).enter().append('circle')
+            .attr('class', 'circle')
+            .attr('cx', (d) => x(d.PLOT.x))
+            .attr('cy', (d) => y(d.PLOT.y))
+            .attr('r', 5)
+            .style('fill', function (d) {
+                // return color(d.BIG5.sEXT);
+                // console.log("rgb("+d.BIG5.sEXT * 51+","+d.BIG5.sCON*51+","+d.BIG5.sAGR*51+")")
+                return defultcolor('#plot', data, d);
             });
+        // g.selectAll('.circle').selectAll('.circle')
     } else {
         /*
         quadtree = d3.quadtree()
@@ -559,14 +548,56 @@ function update(tsne1, tsne2, data, px, init) {
             .y((d) => y(d.PLOT.y))
             .addAll(data);*/
         d3.select('.brush').call(brush);
+        d3.selectAll('line').data(linkdata)
+            .attr('class', 'link')
+            .attr('fill', 'none')
+            .attr('stroke', 'steelblue')
+            .attr('opacity', '0')
+            // .attr('stroke-linejoin', 'round')
+            // .attr('stroke-linecap', 'round')
+            .attr('stroke-width', 1)
+            .attr('x1', (d) => x(d.source.x))
+            .attr('y1', (d) => y(d.source.y))
+            .attr('x2', (d) => x(d.target.x))
+            .attr('y2', (d) => y(d.target.y));
+
         let select = d3.select('#plot').select('.circle').selectAll('.circle');
-        console.log(select);
+        // console.log(select);
         select
             .data(data)
             .transition()
             .attr('cx', (d) => x(d.PLOT.x))
             .attr('cy', (d) => y(d.PLOT.y));
     }
+    d3.select('#plot').select('.circle').selectAll('.circle')
+        .on('mouseover', function (d) {
+            d3.event.preventDefault();
+            tooltip1.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
+                .style('left', (d3.event.pageX + 5) + 'px')
+                .style('top', (d3.event.pageY - 30) + 'px');
+        })
+        .on('mouseout', function (d) {
+            d3.event.preventDefault();
+            tooltip1.transition()
+                .duration(500)
+                .style('opacity', 0);
+        })
+        .on('click', function (d) {
+            d3.event.preventDefault();
+            d3.selectAll('line').data(linkdata).attr('opacity', function (u) {
+                // console.log(data);
+                // console.log(d);
+                if (u.source === d.PLOT || u.target === d.PLOT) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+            status(d);
+        });
 }
 
 /**
@@ -640,14 +671,16 @@ function swapcolor(data, select, id, value, top, left, attribute) {
  */
 function setDescendantProp(obj, desc) {
     let arr = desc.split('.');
+    // console.log(obj);
     while (arr.length > 1) {
+        // console.log(arr);
         obj = obj[arr.shift()];
     }
     return obj[arr[0]];
 }
 
 /**
- * get array domain
+ * get array element value range
  * @param {object} data
  * @param {string} attribute
  * @return {object}
