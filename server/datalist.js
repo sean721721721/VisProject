@@ -106,9 +106,9 @@ var ualist = function ualist(files) {
             }
         }
     }
-    console.log("userlist length: " + userlist.length)
     comment_countdb(files, userlist);
     share_db(files, userlist);
+    console.log("userlist length: " + userlist.length)
     //console.log("people "+people)
     return userlist;
 }
@@ -475,6 +475,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
 var binduserlist = function binduserlist(userlist1, userlist2) {
     var user = userlist1;
     var tuser = userlist2;
+    var result = [];
     var l1 = userlist1.length;
     var l2 = userlist2.length;
     for (var i = 0; i < l1; i++) {
@@ -482,13 +483,14 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
             "A": userlist1[i].posts,
             "B": [],
         }
+        result.push(user[i]);
     }
     for (var i = 0; i < l2; i++) {
         var find = false;
         for (var j = 0; j < l1; j++) {
-            if (tuser[i].id === user[j].id) {
+            if (tuser[i].id === result[j].id) {
                 find = true;
-                user[i].posts.B = tuser[i].posts;
+                result[j].posts.B = tuser[i].posts;
                 j = l1;
             }
         }
@@ -497,11 +499,11 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
                 "A": [],
                 "B": userlist2[i].posts,
             }
-            user.push(tuser[i]);
+            result.push(tuser[i]);
         }
     }
-    //console.log(user);
-    return user;
+    console.log("user length: " + result.length);
+    return result;
 }
 
 //insert activity state

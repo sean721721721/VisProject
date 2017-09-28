@@ -270,9 +270,8 @@ var callback = function callback(req, res) {
                 //logger.log('info', response);
                 var queryresult = {
                     title: 'query',
-                    query: "query1: " + req.params.page1 + "　time:　" + req.params.time1 + "　to　" + req.params.time2 + "貼文數: " + result[0].length + "<br>" +
-                        "query2: " + req.params.page2 + "　time:　" + req.params.time3 + "　to　" + req.params.time4 + "貼文數: " + result[1].length,
-                    summary: "共同活動使用者數: " + oldata.length + "<br>" + "所有貼文數: " + postlist.length,
+                    query: req.params,
+                    summary: [[result[0].length, result[1].length], [ul1.length, ul2.length, userlist.length]],
                     data: [postlist, oldata],
                 };
                 return queryresult;
