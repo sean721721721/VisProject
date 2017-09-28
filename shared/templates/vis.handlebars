@@ -62,10 +62,54 @@
         <div class="svg"></div>
     </div>
     <div class="box table" id="table">
-        <h2>Status Table</h2>
-        <h1>結果：</h1>
-        <p>{{{query}}}</p>
-        <p>{{{summary}}}</p>
+        <h1>{{{query.co}}}結果：</h1>
+        <div>
+            <table class="query">
+                <thead>
+                    <tr>
+                        <th>Page name</th>
+                        <th>from</th>
+                        <th>to</th>
+                        <th>貼文數</th>
+                        <th>使用者數</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>{{{query.page1}}}</th>
+                        <th>{{{query.time1}}}</th>
+                        <th>{{{query.time2}}}</th>
+                        <th>{{{summary.[0].[0]}}}</th>
+                        <th>{{{summary.[1].[0]}}}</th>
+                    </tr>
+                    <tr>
+                        <th>{{{query.page2}}}</th>
+                        <th>{{{query.time3}}}</th>
+                        <th>{{{query.time4}}}</th>
+                        <th>{{{summary.[0].[1]}}}</th>
+                        <th>{{{summary.[1].[1]}}}</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <table class="summary">
+                <tbody>
+                    <tr>
+                        <th>所有貼文數:</th>
+                        <th>{{{data.[0].length}}}</th>
+                    </tr>
+                    <tr>
+                        <th>所有使用者數:</th>
+                        <th>{{{summary.[1].[2]}}}</th>
+                    </tr>
+                    <tr>
+                        <th>{{{query.co}}}使用者數:</th>
+                        <th>{{{data.[1].length}}}</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div id="cooltable"></div>
     </div>
 </div>
@@ -74,5 +118,6 @@
 
 <script>
     var data = {{{toJSON data}}};
+    //var data = {{{toJSON data}}};
 </script>
 <script src="/vis.js"></script>

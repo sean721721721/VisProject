@@ -1,42 +1,90 @@
-<h1>結果：</h1>
-<p>{{{query}}}</p>
-<p>{{{summary}}}</p>
-<table class=“cooltable”>
-    <thead>
-        <tr>
-            <th>User</th>
-            <th>Activity in query1</th>
-            <th>Activity in query2</th>
-        </tr>
-    </thead>
-    {{#each data.[1]}}
-    <tbody>
-        <tr>
-            <td>
-                <ul>{{{toURL id}}}</ul>
-                <ul>username: {{name}}</ul>
-            </td>
-            <td>
-                <ul>
-                    <li>count: {{{count posts.A}}}</li>
-                    {{#each posts.A}}
-                    <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}, share: {{share}}</li>
-                    {{/each}}
-                </ul>
-            </td>
-            <td>
-                <ul>
-                    <li>count: {{{count posts.B}}}</li>
-                    {{#each posts.B}}
-                    <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}, share: {{share}}</li>
-                    {{/each}}
-                </ul>
-            </td>
-        </tr>
-    </tbody>
-    {{/each}}
-</table>
+<h1>{{{query.co}}}結果：</h1>
+<div>
+    <table class="query">
+        <thead>
+            <tr>
+                <th>Page name</th>
+                <th>from</th>
+                <th>to</th>
+                <th>貼文數</th>
+                <th>使用者數</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>{{{query.page1}}}</th>
+                <th>{{{query.time1}}}</th>
+                <th>{{{query.time2}}}</th>
+                <th>{{{summary.[0].[0]}}}</th>
+                <th>{{{summary.[1].[0]}}}</th>
+            </tr>
+            <tr>
+                <th>{{{query.page2}}}</th>
+                <th>{{{query.time3}}}</th>
+                <th>{{{query.time4}}}</th>
+                <th>{{{summary.[0].[1]}}}</th>
+                <th>{{{summary.[1].[1]}}}</th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div>
+    <table class="summary">
+        <tbody>
+            <tr>
+                <th>所有貼文數:</th>
+                <th>{{{data.[0].length}}}</th>
+            </tr>
+            <tr>
+                <th>所有使用者數:</th>
+                <th>{{{summary.[1].[2]}}}</th>
+            </tr>
+            <tr>
+                <th>{{{query.co}}}使用者數:</th>
+                <th>{{{data.[1].length}}}</th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div>
+    <table class=“cooltable”>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Activity in query1</th>
+                <th>Activity in query2</th>
+            </tr>
+        </thead>
+        {{#each data.[1]}}
+        <tbody>
+            <tr>
+                <td>
+                    <ul>{{{toURL id}}}</ul>
+                    <ul>username: {{name}}</ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>count: {{{count posts.A}}}</li>
+                        {{#each posts.A}}
+                        <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}, share: {{share}}</li>
+                        {{/each}}
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>count: {{{count posts.B}}}</li>
+                        {{#each posts.B}}
+                        <li>{{{toURL id}}}, like: {{like}}, commentcount: {{commentcount}}, share: {{share}}</li>
+                        {{/each}}
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+        {{/each}}
+    </table>
+</div>
 <script>
     var data = {{{toJSON data}}};
+    //var data = {{{toJSON data}}};
     console.log(data);
 </script>
