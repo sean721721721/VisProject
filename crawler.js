@@ -24,6 +24,8 @@ app.get('/crawler', croncrawlerHandler.callback);
 
 var port = process.env.PORT || 2000,
 ip = process.env.IP || '140.119.164.22';
+//for windows
+//ip = process.env.IP || '140.119.164.166';
 
 app.listen(port, ip, function () {
 console.log("Express server listening on port %d", port);

@@ -34,6 +34,10 @@ var getdateformat = function getdateformat() {
 
 var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
 	dirpathAfter20141202 = "/windows/D/pagedata after 20141202/";
+/*
+//for windows
+var dirpath = "F:/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
+	dirpathAfter20141202 = "F:/pagedata after 20141202/";*/
 
 
 var savejson = function savejson(name, jsondata) {
@@ -87,6 +91,15 @@ var createfolder = function createfolder(id) {
 		fs.mkdirSync(dirpath);
 		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
 	}
+	/*
+	// for windows
+	if (fs.existsSync("F:/Crawler_data/" + id + getdateformat() + "/")) {
+		dirpath = "F:/Crawler_data/" + id + getdateformat() + "/";
+	} else {
+		dirpath = "F:/Crawler_data/" + id + getdateformat() + "/";
+		fs.mkdirSync(dirpath);
+		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
+	}*/
 	/*
 	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
 	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/")) {
