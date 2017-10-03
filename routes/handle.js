@@ -99,7 +99,7 @@ function urlhandle(req, res, next) {
   next();
 };
 
-function redirecturl(req,res){
+function redirecturl(req, res) {
   var body = req.body;
   const query = querystring.stringify({
     "minlike": body.minlike,
@@ -152,7 +152,7 @@ router.get('/query', urlhandle, async function (req, res) {
 
 router.get('/vis', urlhandle, async function (req, res) {
   var result = await query.callback(req, res);
-  result.title='vis';
+  result.title = 'vis';
   //console.log(result);
   res.render('vis', result);
 });

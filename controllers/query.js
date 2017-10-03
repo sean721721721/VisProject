@@ -1,12 +1,12 @@
 /* eslint-disable */
 var fs = require('fs');
-var readFiles = require('./readfile.js');
+var readFiles = require('../server/readfile.js');
 /*var MongoClient = require('mongodb').MongoClient,*/
 var assert = require('assert');
 var mongoose = require('mongoose');
 var dl = require('./datalist.js');
 var winston = require('winston');
-var schema = require('./postSchema.js');
+var schema = require('../models/postSchema.js');
 
 // Use native promises
 mongoose.Promise = global.Promise;
@@ -213,14 +213,6 @@ var mapreduce = function mapreduce(queryobj) {
         return res;
     });
 };
-
-// Using `mongoose.connect`...
-var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/haka?authSource=admin', options);
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-    console.log("we're connected!")
-    // we're connected!
-});
 
 var callback = function callback(req, res) {
     if (req.query.hasquery === false) {

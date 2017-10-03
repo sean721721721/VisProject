@@ -6,7 +6,7 @@ var path = require('path');
 
 var app = express();
 //pagevisExpressHandler = require('./server/pagevisExpressHandler.js'),
-var helpers = require('./lib/helpers');
+// var helpers = require('./lib/helpers');
 var ansyc = require('./server/ansyc.js');
 // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
 var tableHandler = require('./server/tableHandler.js');
@@ -29,17 +29,29 @@ var options = {
 // Create `ExpressHandlebars` instance with a default layout.
 var hbs = exphbs.create({
   defaultLayout: 'main',
-  helpers: helpers,
+  extname: ".hbs",
+  //helpers: helpers, // old setups for server
+  helpers: require("./lib/helpers").helpers,
 
   // Uses multiple partials dirs, templates in "shared/templates/" are shared
   // with the client-side of the app (see below).
+
   partialsDir: [
     'shared/templates/',
     'views/partials/'
-  ]
+  ],
+  //partialsDir: 'views/partials/', // same as default, I just like to be explicit
+  layoutsDir: "views/layouts/" // same as default, I just like to be explicit
 });
-app.engine('handlebars', hbs.engine);
-app.set('view engine', 'handlebars');
+/*
+hbs.loadPartials(function(err, partials){
+		// attach partials to Handlebars instance, exposing them to helpers
+		hbs.handlebars.partials = partials;
+		require("./lib/helpers").register(hbs.handlebars);
+	});*/
+
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
 //app.enable('view cache');
 
 // Middleware to expose the app's shared templates to the cliet-side of the app
