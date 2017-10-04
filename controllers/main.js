@@ -107,15 +107,15 @@ function redirecturl(req, res) {
         "mincomment": body.mincomment,
         "maxcomment": body.maxcomment,
         "posttype": body.posttype,
-        "page1": body.pagename[0],
-        "page2": body.pagename[1],
-        "time1": body.date[0],
-        "time2": body.date[1],
-        "time3": body.date[2],
-        "time4": body.date[3],
+        "page1": body.pagename1,
+        "page2": body.pagename2,
+        "time1": body.date1,
+        "time2": body.date2,
+        "time3": body.date3,
+        "time4": body.date4,
         "co": body.co,
     });
-    res.redirect('/query?' + query);
+    //res.redirect('/query?' + query);
 };
 /*
 router.get('/echo/:message?', exposeTemplates, function (req, res) {
@@ -186,6 +186,14 @@ module.exports = function (app) {
     app.post('/query', urlencodedParser, redirecturl);
 
     app.post('/vis', urlencodedParser, redirecturl);
+
+    app.get('/searching', urlencodedParser, async function(req, res){
+        console.log(req);
+        var result = await query.callback(req, res);
+        result.title = 'search';
+        //console.log(result);
+        res.send(result);
+    });
 
     //app.get('/pagevis', pagevisExpressHandler.callback);
     //app.get('/pagevis', ansyc.callback);

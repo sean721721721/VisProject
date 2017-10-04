@@ -50,6 +50,62 @@ ubtn.addEventListener('click', function (e) {
     }
 });
 
+// jquery ajax example
+/*
+$(function () {
+    let source = $('#search-results').html();
+    let dataTemplate = Handlebars.compile(source);
+    $results = $('#results');
+
+    $('#search').on('keyup', function (e) {
+        if (e.keyCode === 13) {
+            let parameters = {
+                search: $(this).val(),
+            };
+            $.get('/searching', parameters, function (data) {
+                if (data instanceof Array) {
+                    $results.html(dataTemplate({
+                        resultsArray: data,
+                    }));
+                } else {
+                    $results.html(data);
+                };
+            });
+        };
+    });
+});*/
+
+// fetch
+/*
+let myRequest = new Request('/searching', {
+    method: 'get',
+});
+
+let rawTemplate = document.getElementById('template').innerHTML;
+let template = Handlebars.compile(rawTemplate);
+// let slideList = document.querySelector('.slider__list');
+let coreaction = document.getElementById('coreaction');
+let coreaction = document.getElementById('coreaction');
+let coreaction = document.getElementById('coreaction');
+let coreaction = document.getElementById('coreaction');
+let coreaction = document.getElementById('coreaction');
+let coreaction = document.getElementById('coreaction');
+
+coreaction.addEventListener('click', get_cr,fasle);
+
+function get_cr(){
+    let para = { coreaction.value};
+    fetch(myRequest)
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (json) {
+
+        let html = template(json[0]);
+        slideList.innerHTML += html;
+    });
+}*/
+
 /**
  * return user reactions activity list
  * @param {array} data - inputdata

@@ -44,12 +44,12 @@ module.exports = function (app, config) {
     //partialsDir: 'views/partials/', // same as default, I just like to be explicit
     layoutsDir: "views/layouts/" // same as default, I just like to be explicit
   });
-  /*
-  hbs.loadPartials(function(err, partials){
+  
+  hbs.getPartials(function(err, partials){
           // attach partials to Handlebars instance, exposing them to helpers
           hbs.handlebars.partials = partials;
           require("./lib/helpers").register(hbs.handlebars);
-      });*/
+      });
 
   app.engine('hbs', hbs.engine);
   app.set('view engine', 'hbs');

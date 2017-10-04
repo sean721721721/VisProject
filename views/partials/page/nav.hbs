@@ -3,7 +3,7 @@
     <!--li><a href="/echo/Hello">Echo: Hello</a></li-->
 </ul>
 <div "overflow-x:auto;">
-    <form action="/query" method="post">
+    <form action="/query" method="post" id="para">
         <fieldset>
             <legend>Set query Parameters</legend>
             <label for="x">minlike:</label>
@@ -28,7 +28,7 @@
         <fieldset>
             <legend>Query date1</legend>
             <label for="x">pagename:</label>
-            <input name="pagename" id="pagename" type="text" list="pagenamelist"></input>
+            <input name="pagename1" id="pagename1" type="text" list="pagenamelist"></input>
             <datalist id="pagenamelist">
                 <select multiple id="pagename" name="pagename">
                     <option>客台</option>
@@ -40,14 +40,14 @@
                 </select>
             </datalist>
             <label for="x">since:</label>
-            <input type="date" name="date" id="date" placeholder="date" value="2017-03-27"></input>
+            <input type="date1" name="date1" id="date1" placeholder="date" value="2017-03-27"></input>
             <label for="x">until:</label>
-            <input type="date" name="date" id="date" placeholder="date" value="2017-04-27"></input>
+            <input type="date2" name="date2" id="date2" placeholder="date" value="2017-04-27"></input>
         </fieldset>
         <fieldset>
             <legend>Query date2</legend>
             <label for="x">pagename:</label>
-            <input name="pagename" id="pagename" type="text" list="pagenamelist"></input>
+            <input name="pagename2" id="pagename2" type="text" list="pagenamelist"></input>
             <datalist id="pagenamelist">
                 <select multiple id="pagename" name="pagename">
                     <option>客台</option>
@@ -59,16 +59,18 @@
                 </select>
             </datalist>
             <label for="x">since:</label>
-            <input type="date" name="date" id="date" placeholder="date" value="2017-03-27"></input>
+            <input type="date3" name="date3" id="date3" placeholder="date" value="2017-03-27"></input>
             <label for="x">until:</label>
-            <input type="date" name="date" id="date" placeholder="date" value="2017-04-27"></input>
+            <input type="date4" name="date4" id="date4" placeholder="date" value="2017-04-27"></input>
         </fieldset>
         <fieldset>
             <legend>Get co-activity</legend>
             <input name="co" id="coreaction" type="submit" value="Co reaction"></input>
             <input name="co" id="cocomment" type="submit" value="Co comment"></input>
-            <input name="co" id="share" type="submit" value="Co share"></input>
+            <input name="co" id="coshare" type="submit" value="Co share"></input>
         </fieldset>
     </form>
 </div>
+<button name="submit" type="button" onclick="getCR()">submit</button>
+<div id="template" class="slider__list"></div>
 <script src="/nav.js"></script>
