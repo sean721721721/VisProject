@@ -115,7 +115,7 @@ function redirecturl(req, res) {
         "time4": body.date4,
         "co": body.co,
     });
-    //res.redirect('/query?' + query);
+    res.redirect('/query?' + query);
 };
 /*
 router.get('/echo/:message?', exposeTemplates, function (req, res) {
@@ -187,8 +187,8 @@ module.exports = function (app) {
 
     app.post('/vis', urlencodedParser, redirecturl);
 
-    app.get('/searching', urlencodedParser, async function(req, res){
-        console.log(req);
+    app.get('/searching', urlencodedParser, urlhandle, async function(req, res){
+        //console.log(req.query);
         var result = await query.callback(req, res);
         result.title = 'search';
         //console.log(result);

@@ -29,8 +29,9 @@ $(function () {
  * //get cr
  */
 function getCR() {
-    let rawTemplate = document.getElementById('template').innerHTML;
+    let rawTemplate = document.getElementById('search-results').innerHTML;
     let template = Handlebars.compile(rawTemplate);
+
     let slideList = document.querySelector('.slider__list');
     let minlike = document.getElementById('minlike');
     let maxlike = document.getElementById('maxlike');
@@ -47,35 +48,44 @@ function getCR() {
     let cocomment = document.getElementById('cocomment');
     let coshare = document.getElementById('coshare');
 
-    let para = {
-        'minlike': minlike.value,
-        'maxlike': maxlike.value,
-        'mincomment': mincomment.value,
-        'maxcomment': maxcomment.value,
-        'posttype': posttype.value,
-        'page1': pagename1.value,
-        'time1': date1.value,
-        'time2': date2.value,
-        'page2': pagename2.value,
-        'time3': date3.value,
-        'time4': date4.value,
-        'co': coreaction.value,
-        // 'cocomment': cocomment.value,
-        // 'coshare': coshare.value,
-    };
+    let strminlike = 'minlike=' + minlike.value;
+    let strmaxlike = 'maxlike=' + maxlike.value;
+    let strmincomment = 'mincomment=' + mincomment.value;
+    let strmaxcomment = 'maxcomment=' + maxcomment.value;
+    let strposttype = 'posttype=' + posttype.value;
+    let strpage1 = 'page1=' + pagename1.value;
+    let strtime1 = 'time1=' + date1.value;
+    let strtime2 = 'time2=' + date2.value;
+    let strpage2 = 'page2=' + pagename2.value;
+    let strtime3 = 'time3=' + date3.value;
+    let strtime4 = 'time4=' + date4.value;
+    let strco = 'co=' + coreaction.value;
+    let str = 'http://140.119.164.22:3000/searching?' + strminlike + '&' + strmaxlike + '&' + strmincomment + '&' + strmaxcomment + '&' + strposttype + '&' +
+        strpage1 + '&' + strpage2 + '&' + strtime1 + '&' + strtime2 + '&' + strtime3 + '&' + strtime4 + '&' + strco;
 
-    var form = new FormData(document.getElementById('para'));
-    var url = 'http://140.119.164.22:3000/query?minlike=0&maxlike=&mincomment=0&maxcomment=&posttype=&page1=%E5%AE%A2%E5%8F%B0&page2=%E5%8B%9E%E5%8B%95%E4%B9%8B%E7%8E%8B&time1=2017-03-27&time2=2017-04-27&time3=2017-03-27&time4=2017-04-27&co=Co%20reaction';
+    // let form = new FormData(document.getElementById('para'));
+    // let url ='/searching';
+    let url = encodeURI(str);
+    console.log(url);
     let myRequest = new Request(url, {
         method: 'get',
+        query: para,
     });
+    // console.log(myRequest);
     fetch(myRequest)
         .then(function (response) {
-            console.log(response);
-            return response.json();
+            if (response.ok) {
+                // console.log(response);
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
         })
         .then(function (json) {
-            let html = template(json[0]);
+            console.log(json);
+            let html = template(json);
+            // console.log(html);
             slideList.innerHTML += html;
+        }).catch(function (error) {
+            console.log('There has been a problem with your fetch operation: ' + error.message);
         });
 }
