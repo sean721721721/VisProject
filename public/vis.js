@@ -85,11 +85,6 @@ let rawTemplate = document.getElementById('template').innerHTML;
 let template = Handlebars.compile(rawTemplate);
 // let slideList = document.querySelector('.slider__list');
 let coreaction = document.getElementById('coreaction');
-let coreaction = document.getElementById('coreaction');
-let coreaction = document.getElementById('coreaction');
-let coreaction = document.getElementById('coreaction');
-let coreaction = document.getElementById('coreaction');
-let coreaction = document.getElementById('coreaction');
 
 coreaction.addEventListener('click', get_cr,fasle);
 

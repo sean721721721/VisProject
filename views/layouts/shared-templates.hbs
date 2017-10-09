@@ -7,13 +7,16 @@
     <script src="//d3js.org/d3.v4.min.js"></script>
     <script src="//d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="./tsne.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.js"></script>
+    <link rel="import" href="./search.html">
+    <script src="./lib/helpers.js"></script>
 </head>
 <body>
 
     {{{body}}}
 
     {{! Only needs the Handlebars Runtime, because the exposed templates are precompiled. }}
-    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.js"></script>
+    
     <script>
         (function () {
             var revive    = Handlebars.template,
@@ -23,6 +26,6 @@
           {{/templates}}
         }());
     </script>
-    <script src="./getdata.js"></script>
+    
 </body>
 </html>

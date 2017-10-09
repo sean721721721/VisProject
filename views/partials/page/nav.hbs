@@ -65,12 +65,14 @@
         </fieldset>
         <fieldset>
             <legend>Get co-activity</legend>
-            <input name="co" id="coreaction" type="submit" value="Co reaction"></input>
+            <!--input name="co" id="coreaction" type="submit" value="Co reaction" onclick="getCR()"></input>
             <input name="co" id="cocomment" type="submit" value="Co comment"></input>
-            <input name="co" id="coshare" type="submit" value="Co share"></input>
+            <input name="co" id="coshare" type="submit" value="Co share"></input-->
+            <button name="submit" type="button" onclick="getCR('Co reaction')">Co reaction</button>
+            <button name="submit" type="button" onclick="getCR('Co comment')">Co comment</button>
+            <button name="submit" type="button" onclick="getCR('Co share')">Co share</button>
         </fieldset>
     </form>
 </div>
-<button name="submit" type="button" onclick="getCR()">submit</button>
 <div id="template" class="slider__list"></div>
 <script src="/nav.js"></script>

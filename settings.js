@@ -32,7 +32,7 @@ module.exports = function (app, config) {
     defaultLayout: 'main',
     extname: ".hbs",
     //helpers: helpers, // old setups for server
-    helpers: require("./lib/helpers").helpers,
+    helpers: require("./public/lib/helpers").helpers,
 
     // Uses multiple partials dirs, templates in "shared/templates/" are shared
     // with the client-side of the app (see below).
@@ -48,7 +48,7 @@ module.exports = function (app, config) {
   hbs.getPartials(function(err, partials){
           // attach partials to Handlebars instance, exposing them to helpers
           hbs.handlebars.partials = partials;
-          require("./lib/helpers").register(hbs.handlebars);
+          require("./public/lib/helpers").register(hbs.handlebars);
       });
 
   app.engine('hbs', hbs.engine);

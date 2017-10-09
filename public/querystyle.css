@@ -238,7 +238,7 @@ td {
 /**************************************Loading effect*/
 
 .wrapperloading {
-    position: absolute;
+    position: relative;
     height: 200px;
     width: 200px;
     top: 50%;
@@ -248,7 +248,7 @@ td {
 }
 
 .wrapperloading .loading.down {
-    position: absolute;
+    position: relative;
     height: 100px;
     width: 100px;
     top: 50%;
@@ -256,11 +256,11 @@ td {
     left: 50%;
     margin-left: -50px;
     border-radius: 150px;
-    border: 3px solid #fff;
-    border-left-color: #fff;
-    border-top-color: #0080FF;
+    border: 3px solid lightsteelblue;
+    border-left-color: lightsteelblue;
+    border-top-color: rgb(75, 75, 124);
     border-bottom-color: #0080FF;
-    border-right-color: #fff;
+    border-right-color: lightsteelblue;
     -webkit-animation: rotation 1s linear infinite;
     -moz-animation: rotation 1s linear infinite;
     -o-animation: rotation 1s linear infinite;
