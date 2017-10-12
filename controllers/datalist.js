@@ -416,7 +416,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
                 posts.reactions = reactions;
                 var comments = {};
                 for (prop in obj.comments) {
-                    if (prop.match(/^(summary)$/)) {
+                    if (prop.match(/^(context|summary)$/)) {
                         comments[prop] = obj.comments[prop];
                     }
                 }

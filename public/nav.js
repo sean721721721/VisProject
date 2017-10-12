@@ -192,7 +192,7 @@ function getCR(type) {
             let html = template(json);
             // console.log(html);
             slideList.innerHTML = initslideList;
-            console.log(csv1(json.data[1]));
+            // console.log(csv1(json.data[1]));
             slideList.innerHTML += download(json);
             slideList.innerHTML += html;
         }).catch(function (error) {
@@ -206,12 +206,20 @@ function getCR(type) {
  * @return {string} - html
  */
 function download(data) {
-    let csv = csv1(data.data[1]);
-    let blob = new Blob([csv], {
+    let html = '<div id="csv">';
+    let csvstr1 = csv1(data.data[1]);
+    let blob1 = new Blob([csvstr1], {
         type: 'text/csv',
     });
-    let url = URL.createObjectURL(blob);
-    let html = '<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '.csv" href = "' + url + '">' + '<img src="img/download.jpg" class="img-circle" style="width:24px;height:24px">' + '</a>';
+    let url1 = URL.createObjectURL(blob1);
+    html = html + '<h1>csv1<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '.csv" href = "' + url1 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:16px;height:16px">' + '</h1></a>';
+    let csvstr2 = csv2(data.data[0]);
+    let blob2 = new Blob([csvstr2], {
+        type: 'text/csv',
+    });
+    let url2 = URL.createObjectURL(blob2);
+    html = html + '<h1>csv2<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '.csv" href = "' + url2 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:16px;height:16px">' + '</h1></a>';
+    html += '</div>';
     return html;
 }
 
@@ -233,7 +241,7 @@ function csv1(userlist) {
         user.push(userlist[i].id);
         user.push(userlist[i].name);
         // console.log(user)
-        let posts = userlist[i].posts;
+        let posts = userlist[i].posts.A;
         // console.log(postlist.length)
         for (let j = 0; j < posts.length; j++) {
             findpost = false;
@@ -295,13 +303,27 @@ function csv1(userlist) {
         string += ',';
         string += csv[x][1];
         let len = postlist.length * 3;
-        for (let y = 0; y < len; y++) {
+        for (let y = 0; y < len; y += 3) {
             string += ',';
-            if (csv[x][y + 2] !== null) {
+            if (csv[x][y + 2] !== undefined && csv[x][y + 2] !== null) {
                 let num = csv[x][y + 2];
                 string += num;
             } else {
-                string += '';
+                string += '0';
+            }
+            string += ',';
+            if (csv[x][y + 3] !== undefined && csv[x][y + 3] !== null) {
+                let num = csv[x][y + 2];
+                string += num;
+            } else {
+                string += '0';
+            }
+            string += ',';
+            if (csv[x][y + 4] !== undefined && csv[x][y + 4] !== null) {
+                let num = csv[x][y + 4];
+                string += num;
+            } else {
+                string += 'false';
             }
             // string += ",";
             // console.log(csv[x][y])
@@ -324,69 +346,68 @@ function csv2(files) {
     let comment;
     let subcomment;
     let commentlength;
-    let subcomment;
     let filelength = files.length;
     for (let i = 0; i < filelength; i++) {
-        let datalength = files[i].contents.data.length;
+        // let datalength = files[i].contents.data.length;
         // console.log(userlist.length)
-        for (let j = 0; j < datalength; j++) {
-            data = files[i].contents.data[j];
-            // console.log(data.id)
-            let id = data.id;
-            string += id.toString();
-            string += ',';
-            string += '\'';
-            if (data.message !== undefined) {
-                string += clearString(data.message);
-            } else if (data.attachments.description !== undefined) {
-                string += 'attachment description : ';
-                string += clearString(data.attachments.description);
-            } else {
-                string += 'attachment title : ';
-                string += clearString(data.attachments.title);
-            }
-            string += '\'';
-            commentlength = data.comments.context.length;
-            if (commentlength !== 0) {
-                // console.log(userlist.length)
-                for (let k = 0; k < commentlength; k++) {
-                    comment = data.comments.context[k];
-                    string += ',';
-                    let id = comment.from.id;
-                    string += id.toString();
-                    string += ',';
-                    string += '\'';
-                    string += clearString(comment.message);
-                    string += '\'';
-                    subcomment = comment.comments;
-                    if (subcomment !== undefined) {
-                        // console.log(i + " " + j + " " + k)
-                        let sublength = subcomment.length;
-                        for (let l = 0; l < sublength; l++) {
-                            string += ',';
-                            let id = subcomment[l].from.id;
-                            string += id.toString();
-                            // console.log(id.toString())
-                            string += ',';
-                            string += '\'';
-                            string += clearString(subcomment[l].message);
-                            string += '\'';
-                            string += '\n';
-                            if (l !== sublength - 1) {
-                                string += ',,,';
-                            }
-                        }
-                    } else {
-                        string += '\n';
-                    }
-                    if (k != commentlength - 1) {
+        // for (let j = 0; j < datalength; j++) {
+        data = files[i]; // .contents.data[j];
+        // console.log(data.id)
+        let id = data.id;
+        string += id.toString();
+        string += ',';
+        string += '"';
+        if (data.message !== undefined) {
+            string += clearString(data.message);
+        } else if (data.attachments.description !== undefined) {
+            string += 'attachment description : ';
+            string += clearString(data.attachments.description);
+        } else {
+            string += 'attachment title : ';
+            string += clearString(data.attachments.title);
+        }
+        string += '"';
+        commentlength = data.comments.context.length;
+        if (commentlength !== 0) {
+            // console.log(userlist.length)
+            for (let k = 0; k < commentlength; k++) {
+                comment = data.comments.context[k];
+                string += ',';
+                let id = comment.from.id;
+                string += id.toString();
+                string += ',';
+                string += '"';
+                string += clearString(comment.message);
+                string += '"';
+                string += ',';
+                subcomment = comment.comments;
+                if (subcomment !== undefined) {
+                    // console.log(i + " " + j + " " + k)
+                    let sublength = subcomment.length;
+                    for (let l = 0; l < sublength; l++) {
                         string += ',';
+                        let id = subcomment[l].from.id;
+                        string += id.toString();
+                        // console.log(id.toString())
+                        string += ',';
+                        string += '"';
+                        string += clearString(subcomment[l].message);
+                        string += '"';
+                        string += '\n';
+                        if (l !== sublength - 1) {
+                            string += '\n,,,';
+                        }
                     }
+                } else {
+                    string += '\n';
                 }
-            } else {
-                string += '\n';
+                if (k != commentlength - 1) {
+                    string += '\n,';
+                }
             }
         }
+        string += '\n';
+        // }
     }
     return string;
 };
