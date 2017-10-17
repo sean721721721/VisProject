@@ -233,45 +233,83 @@ var callback = function callback(req, res) {
         var time3 = req.params.time3;
         var time4 = req.params.time4;
         var queryobj1 = queryobj(req, res, time1, time2);
-        var queryobj2 = queryobj(req, res, time3, time4);
         console.log(queryobj1);
-        console.log(queryobj2);
-        return Promise.all([findquery(page1, queryobj1), findquery(page2, queryobj2)])
-            .then(result => {
-                console.log("q1 lenght: " + result[0].length);
-                console.log("q2 lenght: " + result[1].length);
-                var postlist = dl.bindpostlist(result[0], result[1]);
-                var response = [];
-                var ul1 = dl.ualist(result[0]);
-                var ul2 = dl.ualist(result[1]);
-                var userlist = dl.binduserlist(ul1, ul2);
-                var oldata = userlist;
-                if (req.params.co === 'Co reaction') {
-                    oldata = dl.overlap(userlist, 'like');
-                }
-                if (req.params.co === 'Co comment') {
-                    oldata = dl.overlap(userlist, 'comment');
-                }
-                if (req.params.co === 'Co share') {
-                    oldata = dl.overlap(userlist, 'share');
-                }
-                console.log(req.params.co);
-                oldata = dl.olresult(oldata);
-                //response.push(ul1);
-                //response.push(ul2);
-                //logger.log('info', response);
-                var queryresult = {
-                    title: 'query',
-                    query: req.params,
-                    summary: [[result[0].length, result[1].length], [ul1.length, ul2.length, userlist.length]],
-                    data: [postlist, oldata],
-                };
-                return queryresult;
-                //res.send(result);
-            })
-            .catch(function (err) {
-                logger.log('error', err);
-            });
+        if (page1 === page2 && time1 === time3 && time2 === time4) {
+            return new Promise((resolve, reject) => {
+                    findquery(page1, queryobj1).then(result => {
+                        console.log("q1 lenght: " + result.length);
+                        var postlist = dl.bindpostlist(result, result);
+                        var response = [];
+                        var ul1 = dl.ualist(result);
+                        var userlist = dl.binduserlist(ul1, ul1);
+                        var oldata = dl.overlap(userlist, 'all');
+                        console.log('All');
+                        oldata = dl.olresult(oldata);
+                        //response.push(ul1);
+                        //response.push(ul2);
+                        //logger.log('info', response);
+                        var queryresult = {
+                            title: 'query',
+                            query: req.params,
+                            summary: [
+                                [result.length, result.length],
+                                [ul1.length, ul1.length, userlist.length]
+                            ],
+                            data: [postlist, oldata],
+                        };
+                        resolve(queryresult);
+                    });
+                })
+                .catch(function (err) {
+                    logger.log('error', err);
+                })
+        } else {
+            var queryobj2 = queryobj(req, res, time3, time4);
+            console.log(queryobj2);
+            return Promise.all([findquery(page1, queryobj1), findquery(page2, queryobj2)])
+                .then(result => {
+                    console.log("q1 lenght: " + result[0].length);
+                    console.log("q2 lenght: " + result[1].length);
+                    var postlist = dl.bindpostlist(result[0], result[1]);
+                    var response = [];
+                    var ul1 = dl.ualist(result[0]);
+                    var ul2 = dl.ualist(result[1]);
+                    var userlist = dl.binduserlist(ul1, ul2);
+                    var oldata = userlist;
+                    if (req.params.co === 'Co reaction') {
+                        oldata = dl.overlap(userlist, 'like');
+                    }
+                    if (req.params.co === 'Co comment') {
+                        oldata = dl.overlap(userlist, 'comment');
+                    }
+                    if (req.params.co === 'Co share') {
+                        oldata = dl.overlap(userlist, 'share');
+                    }
+                    if(req.params.co === 'All') {
+                        oldata = dl.overlap(userlist, 'all');
+                    }
+                    console.log(req.params.co);
+                    oldata = dl.olresult(oldata);
+                    //response.push(ul1);
+                    //response.push(ul2);
+                    //logger.log('info', response);
+                    var queryresult = {
+                        title: 'query',
+                        query: req.params,
+                        summary: [
+                            [result[0].length, result[1].length],
+                            [ul1.length, ul2.length, userlist.length]
+                        ],
+                        data: [postlist, oldata],
+                    };
+                    return queryresult;
+                    //res.send(result);
+                })
+                .catch(function (err) {
+                    logger.log('error', err);
+                });
+        }
+
         /*mapreduce
         mapreduce(queryobj1);
         */

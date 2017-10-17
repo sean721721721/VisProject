@@ -452,18 +452,21 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
         var post = postobj(qobj1[i]);
         list.push(post);
     }
-    for (var i = 0; i < l2; i++) {
-        var find = false;
-        for (var j = 0; j < l1;) {
-            if (qobj1[j].id !== qobj2[i].id) {
-                j++;
-            } else {
-                find = true;
-                j = l1;
-            }
-            if (j === l1 && !find) {
-                var post = postobj(qobj2[i]);
-                list.push(post);
+    // for return single page query faster
+    if (qobj1 !== qobj2) {
+        for (var i = 0; i < l2; i++) {
+            var find = false;
+            for (var j = 0; j < l1;) {
+                if (qobj1[j].id !== qobj2[i].id) {
+                    j++;
+                } else {
+                    find = true;
+                    j = l1;
+                }
+                if (j === l1 && !find) {
+                    var post = postobj(qobj2[i]);
+                    list.push(post);
+                }
             }
         }
     }
@@ -485,21 +488,24 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
         }
         result.push(user[i]);
     }
-    for (var i = 0; i < l2; i++) {
-        var find = false;
-        for (var j = 0; j < l1; j++) {
-            if (tuser[i].id === result[j].id) {
-                find = true;
-                result[j].posts.B = tuser[i].posts;
-                j = l1;
+    // // for return single page query faster
+    if (userlist1 !== userlist2) {
+        for (var i = 0; i < l2; i++) {
+            var find = false;
+            for (var j = 0; j < l1; j++) {
+                if (tuser[i].id === result[j].id) {
+                    find = true;
+                    result[j].posts.B = tuser[i].posts;
+                    j = l1;
+                }
             }
-        }
-        if (!find) {
-            tuser[i].posts = {
-                "A": [],
-                "B": userlist2[i].posts,
+            if (!find) {
+                tuser[i].posts = {
+                    "A": [],
+                    "B": userlist2[i].posts,
+                }
+                result.push(tuser[i]);
             }
-            result.push(tuser[i]);
         }
     }
     console.log("user length: " + result.length);
@@ -508,100 +514,110 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
 
 //insert activity state
 var overlap = function overlap(userlist, type) {
-    if (type === "like") {
-        type = 1;
-    }
-    if (type === "love") {
-        type = 2;
-    }
-    if (type === "haha") {
-        type = 3;
-    }
-    if (type === "wow") {
-        type = 4;
-    }
-    if (type === "sad") {
-        type = 5;
-    }
-    if (type === "angry") {
-        type = 6;
-    }
-    if (type === "other") {
-        type = 7;
-    }
-    var len = userlist.length;
-    for (var i = 0; i < len; i++) {
-        var pal = userlist[i].posts.A.length;
-        for (var j = 0; j < pal; j++) {
-            if (type === "comment") {
-                if (userlist[i].posts.A[j].commentcount != 0) {
-                    userlist[i]["activity"] = {
-                        "A": true,
-                        "B": false,
-                    }
-                    j = pal;
-                }
-            } else if (type === "share") {
-                if (userlist[i].posts.A[j].share === true) {
-                    userlist[i]["activity"] = {
-                        "A": true,
-                        "B": false,
-                    }
-                    j = pal;
-                }
-            } else {
-                if (userlist[i].posts.A[j].like === type) {
-                    userlist[i]["activity"] = {
-                        "A": true,
-                        "B": false,
-                    }
-                    j = pal;
-                }
+    if (type === "all") {
+        var len = userlist.length;
+        for (var i = 0; i < len; i++) {
+            userlist[i]["activity"] = {
+                "A": true,
+                "B": true,
             }
         }
-        var pbl = userlist[i].posts.B.length;
-        for (var j = 0; j < pbl; j++) {
-            if (userlist[i].activity) {
+    } else {
+        if (type === "like") {
+            type = 1;
+        }
+        if (type === "love") {
+            type = 2;
+        }
+        if (type === "haha") {
+            type = 3;
+        }
+        if (type === "wow") {
+            type = 4;
+        }
+        if (type === "sad") {
+            type = 5;
+        }
+        if (type === "angry") {
+            type = 6;
+        }
+        if (type === "other") {
+            type = 7;
+        }
+        var len = userlist.length;
+        for (var i = 0; i < len; i++) {
+            var pal = userlist[i].posts.A.length;
+            for (var j = 0; j < pal; j++) {
                 if (type === "comment") {
-                    if (userlist[i].posts.B[j].commentcount != 0) {
-                        userlist[i]["activity"].B = true;
-                        j = pbl;
+                    if (userlist[i].posts.A[j].commentcount != 0) {
+                        userlist[i]["activity"] = {
+                            "A": true,
+                            "B": false,
+                        }
+                        j = pal;
                     }
                 } else if (type === "share") {
                     if (userlist[i].posts.A[j].share === true) {
-                        userlist[i]["activity"].B = true;
-                        j = pbl;
+                        userlist[i]["activity"] = {
+                            "A": true,
+                            "B": false,
+                        }
+                        j = pal;
                     }
                 } else {
-                    if (userlist[i].posts.B[j].like === type) {
-                        userlist[i]["activity"].B = true;
-                        j = pbl;
+                    if (userlist[i].posts.A[j].like === type) {
+                        userlist[i]["activity"] = {
+                            "A": true,
+                            "B": false,
+                        }
+                        j = pal;
                     }
                 }
-            } else {
-                if (type === "comment") {
-                    if (userlist[i].posts.B[j].commentcount != 0) {
-                        userlist[i]["activity"] = {
-                            "A": false,
-                            "B": true,
+            }
+            var pbl = userlist[i].posts.B.length;
+            for (var j = 0; j < pbl; j++) {
+                if (userlist[i].activity) {
+                    if (type === "comment") {
+                        if (userlist[i].posts.B[j].commentcount != 0) {
+                            userlist[i]["activity"].B = true;
+                            j = pbl;
                         }
-                        j = pbl;
-                    }
-                } else if (type === "share") {
-                    if (userlist[i].posts.B[j].share === true) {
-                        userlist[i]["activity"] = {
-                            "A": false,
-                            "B": true,
+                    } else if (type === "share") {
+                        if (userlist[i].posts.A[j].share === true) {
+                            userlist[i]["activity"].B = true;
+                            j = pbl;
                         }
-                        j = pbl;
+                    } else {
+                        if (userlist[i].posts.B[j].like === type) {
+                            userlist[i]["activity"].B = true;
+                            j = pbl;
+                        }
                     }
                 } else {
-                    if (userlist[i].posts.B[j].like === type) {
-                        userlist[i]["activity"] = {
-                            "A": false,
-                            "B": true,
+                    if (type === "comment") {
+                        if (userlist[i].posts.B[j].commentcount != 0) {
+                            userlist[i]["activity"] = {
+                                "A": false,
+                                "B": true,
+                            }
+                            j = pbl;
                         }
-                        j = pbl;
+                    } else if (type === "share") {
+                        if (userlist[i].posts.B[j].share === true) {
+                            userlist[i]["activity"] = {
+                                "A": false,
+                                "B": true,
+                            }
+                            j = pbl;
+                        }
+                    } else {
+                        if (userlist[i].posts.B[j].like === type) {
+                            userlist[i]["activity"] = {
+                                "A": false,
+                                "B": true,
+                            }
+                            j = pbl;
+                        }
                     }
                 }
             }
