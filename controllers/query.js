@@ -285,11 +285,12 @@ var callback = function callback(req, res) {
                     if (req.params.co === 'Co share') {
                         oldata = dl.overlap(userlist, 'share');
                     }
-                    if(req.params.co === 'All') {
+                    if (req.params.co === 'All') {
                         oldata = dl.overlap(userlist, 'all');
                     }
                     console.log(req.params.co);
                     oldata = dl.olresult(oldata);
+                    var sortdata = dl.sortdegree(oldata);
                     //response.push(ul1);
                     //response.push(ul2);
                     //logger.log('info', response);
@@ -300,7 +301,7 @@ var callback = function callback(req, res) {
                             [result[0].length, result[1].length],
                             [ul1.length, ul2.length, userlist.length]
                         ],
-                        data: [postlist, oldata],
+                        data: [postlist, oldata, sortdata],
                     };
                     return queryresult;
                     //res.send(result);

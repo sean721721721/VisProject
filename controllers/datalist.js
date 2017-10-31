@@ -642,6 +642,135 @@ var olresult = function olresult(ollist) {
     return result;
 }
 
+//sort overlap degree
+var sortdegree = function sortdegree(olrlist) {
+    // console.log(olrlist);
+    function getdeg(item) {
+        var alen = item.posts.A.length;
+        var blen = item.posts.B.length;
+        var deg = alen + blen;
+        return deg;
+    }
+
+    function pushlist(list, item) {
+        var temp = [olrlist[i]];
+        //console.log(list);
+        list.push(temp);
+    }
+
+    function sortA(list, item) {
+        var degA = item.posts.A.length;
+        var temp = [];
+        var eqdeg = false;
+        var l = list.length;
+        if (l > 0) {
+            for (var i = 0; i < l; i++) {
+                if (list[i] instanceof Array) {
+                    var degi = list[i][0].posts.A.length;
+                } else {
+                    var degi = list[i].posts.A.length;
+                }
+                if (degA === degi) {
+                    if (list[i] instanceof Array) {
+                        var posta = list[i][0].posts.A;
+                    } else {
+                        var posta = list[i].posts.A;
+                    }
+                    var iposta = item.posts.A;
+                    for (var a = 0; a < degi;) {
+                        for (var b = 0; b < degA; b++) {
+                            if (posta[a].id === iposta[b].id) {
+                                a++;
+                                b = degA;
+                            } else {
+                                if (b === degA - 1) {
+                                    a = degi + 1;
+                                }
+                            }
+                        }
+                    }
+                    if (a === degi) {
+                        if (list[i] instanceof Array) {
+                            list[i].push(item);
+                        } else {
+                            var temp = [list[i]];
+                            temp.push(item);
+                            list[i] = temp;
+                        }
+                        eqdeg = true;
+                    } else {
+                        list.push(item);
+                    }
+                    i = l;
+                } else if (degA > degi) {
+                    if (!eqdeg && i === l - 1) {
+                        list.push(item);
+                    }
+                } else {
+                    list.splice(i, 0, item);
+                    i = l;
+                }
+            }
+        } else {
+            list.push(item);
+        }
+        return list;
+    }
+
+    var sortlist = [];
+    var degree = [];
+    var len = olrlist.length;
+    for (var i = 0; i < len; i++) {
+        var deg = getdeg(olrlist[i]);
+        var finddeg = false;
+        var l = degree.length;
+        if (l > 0) {
+            for (var d = 0; d < l; d++) {
+                if (degree[d] === deg) {
+                    finddeg = true;
+                    //sortlist[d].push(olrlist[i]);
+                    sortA(sortlist[d], olrlist[i]);
+                    d = l;
+                } else if (degree[d] < deg) {
+                    // degree
+                    if (!finddeg && d === l - 1) {
+                        degree.push(deg);
+                        pushlist(sortlist, olrlist[i]);
+                    }
+                } else {
+                    //console.log(d + " : " + l + " | " + degree[d] + ">" + deg);
+                    degree.splice(d, 0, deg);
+                    //console.log(degree);
+                    var list = [olrlist[i]];
+                    //console.log(list);
+                    sortlist.splice(d, 0, list);
+                    //console.log(getdeg(sortlist[d][0])+" "+deg);
+                    d = l;
+                }
+            }
+        } else {
+            degree.push(deg);
+            pushlist(sortlist, olrlist[i]);
+            //console.log(degree);
+        }
+        //console.log(degree);
+    }
+    //console.log(degree.length === sortlist.length);
+    /*
+    function sortdegA(sortlist) {
+        function compareNumbers(a, b) {
+            console.log(a.posts.A.length + " " + b.posts.A.length);
+            return a.posts.A.length - b.posts.A.length;
+        }
+        var len = sortlist.length;
+        for (var i = 0; i < len; i++) {
+            sortlist[i].sort(compareNumbers);
+        }
+        return sortlist;
+    }*/
+    return sortlist;
+}
+
 var exports = module.exports = {};
 exports.user_list = user_list;
 exports.ualist = ualist;
@@ -651,3 +780,4 @@ exports.bindpostlist = bindpostlist;
 exports.binduserlist = binduserlist;
 exports.overlap = overlap;
 exports.olresult = olresult;
+exports.sortdegree = sortdegree;
