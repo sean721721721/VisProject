@@ -245,6 +245,7 @@ var callback = function callback(req, res) {
                         var oldata = dl.overlap(userlist, 'all');
                         console.log('All');
                         oldata = dl.olresult(oldata);
+                        var sortdata = dl.sortdegree(oldata);
                         //response.push(ul1);
                         //response.push(ul2);
                         //logger.log('info', response);
@@ -255,7 +256,7 @@ var callback = function callback(req, res) {
                                 [result.length, result.length],
                                 [ul1.length, ul1.length, userlist.length]
                             ],
-                            data: [postlist, oldata],
+                            data: [postlist, oldata, sortdata],
                         };
                         resolve(queryresult);
                     });
