@@ -5,6 +5,7 @@ var path = require('path');
 var ansyc = require('./server/ansyc.js');
 // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
 var tableHandler = require('./server/tableHandler.js');
+
 //var handle = require('./routes/handle.js');
 // var helpers = require('./lib/helpers');
 // sharevisExpressHandler			    = require('./server/sharevisExpressHandler.js'),
@@ -44,12 +45,12 @@ module.exports = function (app, config) {
     //partialsDir: 'views/partials/', // same as default, I just like to be explicit
     layoutsDir: "views/layouts/" // same as default, I just like to be explicit
   });
-  
-  hbs.getPartials(function(err, partials){
-          // attach partials to Handlebars instance, exposing them to helpers
-          hbs.handlebars.partials = partials;
-          require("./public/lib/helpers").register(hbs.handlebars);
-      });
+
+  hbs.getPartials(function (err, partials) {
+    // attach partials to Handlebars instance, exposing them to helpers
+    hbs.handlebars.partials = partials;
+    require("./public/lib/helpers").register(hbs.handlebars);
+  });
 
   app.engine('hbs', hbs.engine);
   app.set('view engine', 'hbs');
@@ -133,9 +134,12 @@ module.exports = function (app, config) {
 
   // global error handler
   app.use(function (err, req, res, next) {
-    res.status(500);
+    res.status(err.status || 500);
     // handle error somehow
+    res.render('error', {
+      message: err.message,
+      error: {}
+    });
     res.end();
   });
-
 };

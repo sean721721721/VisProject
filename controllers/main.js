@@ -11,6 +11,13 @@ var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({
     extended: false,
 });
+//
+var textParser = bodyParser.text();
+
+
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+
 
 function urlhandle(req, res, next) {
     //console.log(req.query);
@@ -133,6 +140,24 @@ router.get('/echo/:message?', exposeTemplates, function (req, res) {
 });*/
 
 module.exports = function (app) {
+    /* 
+     * passort settings
+     */
+    app.use(require('express-session')({
+        secret: 'keyboard cat',
+        resave: true,
+        saveUninitialized: true
+    }));
+
+    app.use(passport.initialize());
+    app.use(passport.session());
+    // passport config
+
+    var Account = require('../models/account');
+    passport.use(new LocalStrategy(Account.authenticate()));
+    passport.serializeUser(Account.serializeUser());
+    passport.deserializeUser(Account.deserializeUser());
+    //console.log('account');
     /*
     app.get("/", function (req, res, next) {
         res.render("home", {
@@ -187,12 +212,83 @@ module.exports = function (app) {
 
     app.post('/vis', urlencodedParser, redirecturl);
 
-    app.get('/searching', urlencodedParser, urlhandle, async function(req, res){
+    app.get('/searching', urlencodedParser, urlhandle, async function (req, res) {
         //console.log(req.query);
         var result = await query.callback(req, res);
         result.title = 'search';
         //console.log(result);
         res.send(result);
+    });
+
+    // for passport
+    app.get('/register', function (req, res) {
+        res.render('register', {
+            layout: 'auth',
+            title: 'Register',
+        });
+    });
+
+    app.post('/register', urlencodedParser, function (req, res, next) {
+        console.log(req.body);
+        Account.register(new Account({
+            username: req.body.username
+        }), req.body.password, function (err, account) {
+            if (err) {
+                console.log(err.message);
+                return res.render('error', {
+                    layout: 'auth',
+                    title: 'Register',
+                    error: err.message
+                });
+            }
+
+            passport.authenticate('local')(req, res, function () {
+                req.session.save(function (err) {
+                    if (err) {
+                        return next(err);
+                    }
+                    console.log('register');
+                    res.redirect('/');
+                });
+            });
+        });
+    });
+
+    app.get('/login', function (req, res) {
+        //console.log(res);
+        res.render('login', {
+            layout: 'auth',
+            title: 'Login',
+        });
+    });
+
+    app.post('/login', urlencodedParser, passport.authenticate('local', {
+        failureRedirect: '/login',
+        failureFlash: true
+    }), (req, res, next) => {
+        req.session.save((err) => {
+            if (err) {
+                return next(err);
+            }
+            Account.findOne({
+                username: req.body.username
+            }, (err, account) => {
+                account.username.should.eql(req.body.username);
+                console.log("   username: ", account.username);
+                console.log('login');
+                res.redirect('/');
+            });
+        });
+    });
+
+    app.get('/logout', (req, res, next) => {
+        req.logout();
+        req.session.save((err) => {
+            if (err) {
+                return next(err);
+            }
+            res.redirect('/');
+        });
     });
 
     //app.get('/pagevis', pagevisExpressHandler.callback);

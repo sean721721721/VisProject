@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 module.exports = function (app) {
-    var files = ["main"];
+    var files = ['main'];
     /*
 	app.use(function(req, res, next){
 	  	res.locals.path = req.path;
