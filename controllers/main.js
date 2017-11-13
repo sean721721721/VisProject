@@ -4,6 +4,7 @@
 var bodyParser = require('body-parser');
 var query = require('./query.js');
 const querystring = require('querystring');
+var should = require('should');
 
 // create application/json parser
 var jsonParser = bodyParser.json();
@@ -190,9 +191,22 @@ module.exports = function (app) {
     });
 
     app.get('/', function (req, res) {
-        res.render('home', {
-            title: 'Home',
-        });
+        console.log(" passport: ", req.session.passport);
+        if (req.session.passport) {
+            if (req.session.passport.user === undefined) {
+                res.render('home', {
+                    title: 'Home',
+                    boturl: '/login',
+                    botton: 'Login',
+                });
+            } else {
+                res.render('home', {
+                    title: 'Home',
+                    boturl: '/logout',
+                    botton: 'Logout',
+                });
+            }
+        }
     });
 
     app.get('/query', urlhandle, async function (req, res) {
@@ -214,10 +228,12 @@ module.exports = function (app) {
 
     app.get('/searching', urlencodedParser, urlhandle, async function (req, res) {
         //console.log(req.query);
+        //if (req.session.passport.user == "villager") {
         var result = await query.callback(req, res);
         result.title = 'search';
         //console.log(result);
         res.send(result);
+        //}
     });
 
     // for passport
@@ -268,11 +284,13 @@ module.exports = function (app) {
     }), (req, res, next) => {
         req.session.save((err) => {
             if (err) {
+                console.log(err);
                 return next(err);
             }
             Account.findOne({
                 username: req.body.username
             }, (err, account) => {
+                console.log(account);
                 account.username.should.eql(req.body.username);
                 console.log("   username: ", account.username);
                 console.log('login');
@@ -287,6 +305,7 @@ module.exports = function (app) {
             if (err) {
                 return next(err);
             }
+            console.log('logout');
             res.redirect('/');
         });
     });
