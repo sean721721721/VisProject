@@ -179,25 +179,30 @@ function getCR(type) {
         query: para,
     });
     // console.log(myRequest);
-    fetch(myRequest)
-        .then(function (response) {
-            if (response.ok) {
-                // console.log(response);
-                return response.json();
-            }
-            throw new Error('Network response was not ok.');
-        })
-        .then(function (json) {
-            console.log(json);
-            let html = template(json);
-            // console.log(html);
-            slideList.innerHTML = initslideList;
-            // console.log(csv1(json.data[1]));
-            slideList.innerHTML += download(json);
-            slideList.innerHTML += html;
-        }).catch(function (error) {
-            console.log('There has been a problem with your fetch operation: ' + error.message);
-        });
+    if (document.getElementById('auth').text === 'Logout') {
+        fetch(myRequest)
+            .then(function (response) {
+                if (response.ok) {
+                    // console.log(response);
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(function (json) {
+                console.log(json);
+                let html = template(json);
+                // console.log(html);
+                slideList.innerHTML = initslideList;
+                // console.log(csv1(json.data[1]));
+                slideList.innerHTML += download(json);
+                slideList.innerHTML += html;
+            }).catch(function (error) {
+                console.log('There has been a problem with your fetch operation: ' + error.message);
+            });
+    } else {
+        window.alert('Access Deny!!!');
+        slideList.innerHTML = initslideList;
+    }
 }
 
 /**
