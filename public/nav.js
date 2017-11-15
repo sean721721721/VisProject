@@ -130,7 +130,8 @@ body.appendChild(clone);
  */
 function getCR(type) {
     // compile template
-    let rawTemplate = document.getElementById('search-results').innerHTML;
+    // let rawTemplate = document.getElementById('search-results').innerHTML;
+    let rawTemplate = document.getElementById('search-vis').innerHTML;
     let template = Handlebars.compile(rawTemplate);
 
     // initslidelist and add loading effect
@@ -196,6 +197,7 @@ function getCR(type) {
                 // console.log(csv1(json.data[1]));
                 slideList.innerHTML += download(json);
                 slideList.innerHTML += html;
+                visMain(json.data);
             }).catch(function (error) {
                 console.log('There has been a problem with your fetch operation: ' + error.message);
             });

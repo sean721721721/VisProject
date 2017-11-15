@@ -1,54 +1,62 @@
-console.log(data);
-let userlist = activitymatrix(data);
-console.log(userlist);
-for (let i = 0; i < data[1].length; i++) {
-    if (!data[1][i].posts) {
-        console.log(i);
+/**
+ * visualization main
+ * @param {object} data - inputdata
+ */
+function visMain(data) {
+    console.log(data);
+    let userlist = activitymatrix(data);
+    console.log(userlist);
+    for (let i = 0; i < data[1].length; i++) {
+        if (!data[1][i].posts) {
+            console.log(i);
+        }
     }
+
+    let epsilon = getparam('epsilon');
+    let perplexity = getparam('perplexity');
+    let dim = 2;
+    let iteration = getparam('iteration');
+    let normalized = document.getElementsByName('normalize');
+    // let normal = normalized[0].checked;
+    // console.log(normalized[0].checked);
+    let opt = {};
+    opt.epsilon = epsilon; // epsilon is learning rate (10 = default)
+    opt.perplexity = perplexity; // roughly how many neighbors each point influences (30 = default)
+    opt.dim = dim; // dimensionality of the embedding (2 = default)
+
+    let tsne1 = new tsnejs.tSNE(opt); // create a tSNE instance
+    let tsne2 = new tsnejs.tSNE(opt);
+    // initialize data. Here we have 3 points and some example pairwise dissimilarities
+    let inputs = [];
+    inputs.push(userdist(userlist, false));
+    // inputs.push(propertydist(fbdata, normal));
+    tsne1.initDataDist(inputs[0]);
+    tsne2.initDataDist(inputs[0]);
+    let init = false;
+    let width = document.querySelector('div.svg').offsetWidth;
+    let btn = document.querySelector('input[id="submit"]');
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        update(tsne1, tsne2, data[1], width, init);
+        init = true;
+    });
+    let ubtn = document.querySelector('input[id="update"]');
+    ubtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        console.log('k=' + iteration);
+        if (init) {
+            for (let k = 0; k < iteration; k++) {
+                // setInterval(function () {
+                tsne1.step(); // every time you call this, solution gets better
+                tsne2.step(); // every time you call this, solution gets better
+                // }, 1000);
+            }
+            update(tsne1, tsne2, data[1], width, init);
+        }
+    });
+    console.log('vis fine');
 }
 
-let epsilon = getparam('epsilon');
-let perplexity = getparam('perplexity');
-let dim = 2;
-let iteration = getparam('iteration');
-let normalized = document.getElementsByName('normalize');
-// let normal = normalized[0].checked;
-// console.log(normalized[0].checked);
-let opt = {};
-opt.epsilon = epsilon; // epsilon is learning rate (10 = default)
-opt.perplexity = perplexity; // roughly how many neighbors each point influences (30 = default)
-opt.dim = dim; // dimensionality of the embedding (2 = default)
-
-let tsne1 = new tsnejs.tSNE(opt); // create a tSNE instance
-let tsne2 = new tsnejs.tSNE(opt);
-// initialize data. Here we have 3 points and some example pairwise dissimilarities
-let inputs = [];
-inputs.push(userdist(userlist, false));
-// inputs.push(propertydist(fbdata, normal));
-tsne1.initDataDist(inputs[0]);
-tsne2.initDataDist(inputs[0]);
-let init = false;
-let width = document.querySelector('div.svg').offsetWidth;
-let btn = document.querySelector('input[id="submit"]');
-btn.addEventListener('click', function (e) {
-    e.preventDefault();
-    update(tsne1, tsne2, data[1], width, init);
-    init = true;
-});
-let ubtn = document.querySelector('input[id="update"]');
-ubtn.addEventListener('click', function (e) {
-    e.preventDefault();
-    console.log('k=' + iteration);
-    if (init) {
-        for (let k = 0; k < iteration; k++) {
-            // setInterval(function () {
-            tsne1.step(); // every time you call this, solution gets better
-            tsne2.step(); // every time you call this, solution gets better
-            // }, 1000);
-        }
-        update(tsne1, tsne2, data[1], width, init);
-    }
-});
 
 // jquery ajax example
 /*

@@ -191,22 +191,21 @@ module.exports = function (app) {
     });
 
     app.get('/', function (req, res) {
-        console.log(" passport: ", req.session.passport);
-        if (req.session.passport) {
-            if (req.session.passport.user === undefined) {
-                res.render('home', {
-                    title: 'Home',
-                    boturl: '/login',
-                    botton: 'Login',
-                });
-            } else {
-                res.render('home', {
-                    title: 'Home',
-                    boturl: '/logout',
-                    botton: 'Logout',
-                });
-            }
+        if (req.session.passport && req.session.passport.user !== undefined) {
+            res.render('home', {
+                title: 'Home',
+                boturl: '/logout',
+                botton: 'Logout',
+            });
+        } else {
+            req.session.passport = {};
+            res.render('home', {
+                title: 'Home',
+                boturl: '/login',
+                botton: 'Login',
+            });
         }
+        console.log(" passport: ", req.session.passport);
     });
 
     app.get('/query', urlhandle, async function (req, res) {
