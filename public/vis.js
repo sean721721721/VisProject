@@ -5,7 +5,7 @@
 function visMain(data) {
     console.log(data);
     let userlist = activitymatrix(data);
-    console.log(userlist);
+    // console.log(userlist);
     for (let i = 0; i < data[1].length; i++) {
         if (!data[1][i].posts) {
             console.log(i);
@@ -54,6 +54,7 @@ function visMain(data) {
             update(tsne1, tsne2, data[1], width, init);
         }
     });
+    overlapvis(data);
     console.log('vis fine');
 }
 
@@ -872,4 +873,179 @@ function liketype(typenum) {
     } else {
         return 'thankful';
     }
+}
+
+/**
+ * overlap vis
+ * @param {*} data - inputdata
+ */
+function overlapvis(data) {
+    let width = document.querySelector('div#overlap').offsetWidth;
+    let height = width;
+    let cellSize = 17;
+    let initx = 50;
+    let color = d3.scaleQuantize()
+        .domain([0, 10])
+        .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837']);
+
+    let zoom = d3.zoom()
+        .scaleExtent([1 / 10, 10])
+        .on('zoom', function () {
+            g.attr('transform', d3.event.transform);
+            let k = this.__zoom.k;
+            g.attr('r', 5 / k)
+                .attr('stroke-width', 1 / k);
+        });
+
+    let svg = d3.select('#overlap')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', 'none')
+        .style('pointer-events', 'all')
+        .call(zoom);
+
+    let g = svg.append('g')
+        .attr('id', 'overlapmap');
+
+    let posts = data[0];
+    let users = data[1];
+    let overlap = data[2];
+
+    let rect = g.selectAll('g')
+        .data(overlap)
+        .enter().append('g')
+        .attr('id', (d, i) => 'degree' + i)
+        .append('rect')
+        .attr('class', (d, i) => 'degree' + i)
+        .attr('fill', 'none')
+        .attr('stroke', '#ccc')
+        .attr('opacity', 1)
+        .attr('width', (d) => d.length * cellSize)
+        .attr('height', cellSize)
+        .attr('x', function (d, i) {
+            return initx;
+        })
+        .attr('y', function (d, i) {
+            return i * cellSize;
+        });
+
+    // .datum(d3.timeFormat('%Y-%m-%d'));
+    /**
+     * return width
+     * @param {object} d - datum
+     * @return {number}
+     */
+    function rwidth(d) {
+        if (d instanceof Array) {
+            return cellSize * d.length;
+        } else {
+            return cellSize;
+        }
+    }
+
+    let degcounts = overlap.length;
+    for (let i = 0; i < degcounts; i++) {
+        let degree = overlap[i];
+        let did = '#degree' + i;
+        let x = 50;
+        let subrect = g.selectAll(did)
+            .selectAll('g')
+            .data(degree)
+            .enter().append('g')
+            .attr('id', (d, l) => 'd' + i + 'g' + l)
+            .append('rect')
+            .attr('fill', (d) => {
+                if (d instanceof Array) {
+                    return 'none';
+                } else {
+                    return color(Math.sqrt(d.posts.A.length));
+                }
+            })
+            .attr('stroke', '#000')
+            .attr('width', (d) => rwidth(d))
+            .attr('height', cellSize)
+            .attr('x', function (d) {
+                result = x;
+                x += rwidth(d);
+                return result;
+            })
+            .attr('y', function (d) {
+                result = i * cellSize;
+                // console.log(i);
+                return result;
+            });
+
+        let gcount = degree.length;
+        for (let j = 0; j < gcount; j++) {
+            let group = degree[j];
+            let gid = '#d' + i + 'g' + j;
+            if (group instanceof Array) {
+                let user = g.selectAll(gid)
+                    .selectAll('g')
+                    .data(group)
+                    .enter().append('rect')
+                    .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
+                    .attr('stroke', '#fff')
+                    .attr('width', (d) => cellSize)
+                    .attr('height', cellSize)
+                    .attr('x', function (d, k) {
+                        return initx + k * cellSize;
+                    })
+                    .attr('y', function (d) {
+                        result = i * cellSize;
+                        // console.log(i);
+                        return result;
+                    });
+            }
+        }
+    }
+
+    let tooltip3 = d3.select('body').select('.c')
+        // .attr('class', 'tooltip1')
+        .style('opacity', 0);
+    // .style("width","200px")
+    // .style("height","30px");
+    d3.selectAll('rect')
+        .on('mouseover', function (d) {
+            d3.event.preventDefault();
+            tooltip3.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip3.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
+                .style('left', (d3.event.pageX + 5) + 'px')
+                .style('top', (d3.event.pageY - 30) + 'px');
+        })
+        .on('mouseout', function (d) {
+            d3.event.preventDefault();
+            tooltip3.transition()
+                .duration(500)
+                .style('opacity', 0);
+        })
+        .on('click', function (d) {
+            d3.event.preventDefault();
+            status(d);
+        });
+
+    // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
+    /*
+    svg.append('text')
+        // .attr('transform', 'translate(-6," + cellSize * 3.5 + ")rotate(-90)')
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', 10)
+        .attr('text-anchor', 'middle')
+        .text(function (d) {
+            return d;
+        });*/
+
+    /*
+    svg.append('g')
+        .attr('fill', 'none')
+        .attr('stroke', '#000')
+        .selectAll('path')
+        .data(function (d) {
+            return d3.timeMonths(new Date(d, 0, 1), new Date(d + 1, 0, 1));
+        })
+        .enter().append('path')
+        .attr('d', pathMonth);*/
 }
