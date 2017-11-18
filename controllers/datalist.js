@@ -653,45 +653,44 @@ var sortdegree = function sortdegree(olrlist) {
     }
 
     function pushlist(list, item) {
-        var temp = [olrlist[i]];
+        var temp = [item];
         //console.log(list);
         list.push(temp);
     }
 
-    function sortA(list, item) {
-        var degA = item.posts.A.length;
+    function sort(list, item) {
+        var deg = item.posts.A.length;
         var temp = [];
         var eqdeg = false;
         var l = list.length;
         if (l > 0) {
             for (var i = 0; i < l; i++) {
-                if (list[i] instanceof Array) {
-                    var degi = list[i][0].posts.A.length;
-                } else {
-                    var degi = list[i].posts.A.length;
-                }
-                if (degA === degi) {
-                    if (list[i] instanceof Array) {
-                        var posta = list[i][0].posts.A;
-                    } else {
-                        var posta = list[i].posts.A;
+                var degi = list[i][0].posts.A.length;
+                if (deg === degi) {
+                    var post = list[i][0].posts.A;
+                    var ipost = item.posts.A;
+                    if (deg === 0) {
+                        var deg = item.posts.B.length;
+                        degi = list[i][0].posts.B.length;
+                        post = list[i][0].posts.B;
+                        ipost = item.posts.B;
                     }
-                    var iposta = item.posts.A;
                     for (var a = 0; a < degi;) {
-                        for (var b = 0; b < degA; b++) {
-                            if (posta[a].id === iposta[b].id) {
+                        for (var b = 0; b < deg; b++) {
+                            if (post[a].id === ipost[b].id) {
                                 a++;
-                                b = degA;
+                                b = deg;
                             } else {
-                                if (b === degA - 1) {
+                                if (b === deg - 1) {
                                     a = degi + 1;
                                 }
                             }
                         }
                     }
                     if (a === degi) {
-                        if (list[i] instanceof Array) {
+                        if (list[i].length > 0) {
                             list[i].push(item);
+                            //console.log(list[i].length);
                         } else {
                             var temp = [list[i]];
                             temp.push(item);
@@ -699,22 +698,34 @@ var sortdegree = function sortdegree(olrlist) {
                         }
                         eqdeg = true;
                     } else {
-                        list.push(item);
+                        list.push([item]);
                     }
                     i = l;
-                } else if (degA > degi) {
-                    if (!eqdeg && i === l - 1) {
-                        list.push(item);
+                } else if (deg > degi) {
+                    if (!eqdeg && i === (l - 1)) {
+                        list.push([item]);
                     }
                 } else {
-                    list.splice(i, 0, item);
+                    list.splice(i, 0, [item]);
                     i = l;
                 }
             }
         } else {
-            list.push(item);
+            list.push([item]);
         }
         return list;
+    }
+
+    function sortlength(sortlist) {
+        function compareNumbers(a, b) {
+            console.log(a.length + " " + b.length);
+            return a.length - b.length;
+        }
+        var len = sortlist.length;
+        for (var i = 0; i < len; i++) {
+            sortlist[i].sort(compareNumbers);
+        }
+        return sortlist;
     }
 
     var sortlist = [];
@@ -729,13 +740,13 @@ var sortdegree = function sortdegree(olrlist) {
                 if (degree[d] === deg) {
                     finddeg = true;
                     //sortlist[d].push(olrlist[i]);
-                    sortA(sortlist[d], olrlist[i]);
+                    sort(sortlist[d], olrlist[i]);
                     d = l;
                 } else if (degree[d] < deg) {
                     // degree
                     if (!finddeg && d === l - 1) {
                         degree.push(deg);
-                        pushlist(sortlist, olrlist[i]);
+                        pushlist(sortlist, [olrlist[i]]);
                     }
                 } else {
                     //console.log(d + " : " + l + " | " + degree[d] + ">" + deg);
@@ -743,30 +754,24 @@ var sortdegree = function sortdegree(olrlist) {
                     //console.log(degree);
                     var list = [olrlist[i]];
                     //console.log(list);
-                    sortlist.splice(d, 0, list);
+                    sortlist.splice(d, 0, [list]);
                     //console.log(getdeg(sortlist[d][0])+" "+deg);
                     d = l;
                 }
             }
         } else {
             degree.push(deg);
-            pushlist(sortlist, olrlist[i]);
+            pushlist(sortlist, [olrlist[i]]);
             //console.log(degree);
         }
         //console.log(degree);
     }
     //console.log(degree.length === sortlist.length);
     /*
-    function sortdegA(sortlist) {
-        function compareNumbers(a, b) {
-            console.log(a.posts.A.length + " " + b.posts.A.length);
-            return a.posts.A.length - b.posts.A.length;
-        }
-        var len = sortlist.length;
-        for (var i = 0; i < len; i++) {
-            sortlist[i].sort(compareNumbers);
-        }
-        return sortlist;
+    var sl = sortlist.length;
+    for (var i = 0; i < sl; i++) {
+        var deglist = sortlist[i];
+        sortlist[i] = sortlength(deglist);
     }*/
     return sortlist;
 }
