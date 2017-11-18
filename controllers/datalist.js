@@ -718,7 +718,7 @@ var sortdegree = function sortdegree(olrlist) {
 
     function sortlength(sortlist) {
         function compareNumbers(a, b) {
-            console.log(a.length + " " + b.length);
+            // console.log(a.length + " " + b.length);
             return a.length - b.length;
         }
         var len = sortlist.length;

@@ -882,7 +882,9 @@ function liketype(typenum) {
 function overlapvis(data) {
     let width = document.querySelector('div#overlap').offsetWidth;
     let height = width;
-    let cellSize = 17;
+    let cellSize1 = 17;
+    let cellSize2 = 16;
+    let cellSize3 = 15;
     let initx = 50;
     let color = d3.scaleQuantize()
         .domain([0, 10])
@@ -912,6 +914,8 @@ function overlapvis(data) {
     let users = data[1];
     let overlap = data[2];
 
+    let nextline = parseInt(((0.8 * width) / cellSize1), 10);
+    let y = 0;
     let rect = g.selectAll('g')
         .data(overlap)
         .enter().append('g')
@@ -919,36 +923,38 @@ function overlapvis(data) {
         .append('rect')
         .attr('class', (d, i) => 'degree' + i)
         .attr('fill', 'none')
-        .attr('stroke', '#ccc')
+        .attr('stroke', '#f00')
         .attr('opacity', 1)
-        .attr('width', (d) => d.length * cellSize)
-        .attr('height', cellSize)
+        .attr('width', (d) => {
+            if (rwidth(d, cellSize1) < nextline * cellSize1) {
+                return rwidth(d, cellSize1);
+            } else {
+                return nextline * cellSize1;
+            }
+        })
+        .attr('height', (d) => {
+            let nl = parseInt((rwidth(d, cellSize1) / cellSize1) / nextline) + 1;
+            return cellSize1 * nl;
+        })
         .attr('x', function (d, i) {
             return initx;
         })
         .attr('y', function (d, i) {
-            return i * cellSize;
+            let result = (i + y) * cellSize1;
+            y += parseInt((rwidth(d, cellSize1) / cellSize1) / nextline);
+            return result;
         });
 
     // .datum(d3.timeFormat('%Y-%m-%d'));
-    /**
-     * return width
-     * @param {object} d - datum
-     * @return {number}
-     */
-    function rwidth(d) {
-        if (d instanceof Array) {
-            return cellSize * d.length;
-        } else {
-            return cellSize;
-        }
-    }
 
+
+    let offset = 0;
     let degcounts = overlap.length;
     for (let i = 0; i < degcounts; i++) {
         let degree = overlap[i];
         let did = '#degree' + i;
-        let x = 50;
+        let x = 0;
+        let yc = 0;
         let subrect = g.selectAll(did)
             .selectAll('g')
             .data(degree)
@@ -956,24 +962,29 @@ function overlapvis(data) {
             .attr('id', (d, l) => 'd' + i + 'g' + l)
             .append('rect')
             .attr('fill', 'none')
-            /* (d) => {
-                           if (d.length > 1) {
-                               return 'none';
-                           } else {
-                               return color(Math.sqrt(d[0].posts.A.length));
-                           }
-                       })*/
-            .attr('stroke', '#000')
-            .attr('width', (d) => rwidth(d))
-            .attr('height', cellSize)
+            .attr('stroke', '#0f0')
+            .attr('opacity', 1)
+            .attr('width', (d) => {
+                if (rwidth(d, cellSize1) < nextline * cellSize1) {
+                    return rwidth(d, cellSize1) - (cellSize1 - cellSize2);
+                } else {
+                    return nextline * cellSize1 - (cellSize1 - cellSize2);
+                }
+            })
+            .attr('height', (d) => cellSize2)
             .attr('x', function (d) {
-                result = x;
-                x += rwidth(d);
+                result = initx + x + (cellSize1 - cellSize2) / 2;
+                x += rwidth(d, cellSize1);
+                if (x >= nextline * cellSize1) {
+                    x -= nextline * cellSize1;
+                }
                 return result;
             })
-            .attr('y', function (d) {
-                result = i * cellSize;
-                // console.log(i);
+            .attr('y', function (d, j) {
+                let offsety = parseInt(yc / nextline, 10);
+                result = (i + offset + offsety) * cellSize1 + (cellSize1 - cellSize2) / 2;
+                yc += d.length;
+                // console.log(i)
                 return result;
             });
 
@@ -989,21 +1000,24 @@ function overlapvis(data) {
                     .enter().append('rect')
                     .attr('class', 'user')
                     .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
-                    .attr('stroke', '#fff')
-                    .attr('width', (d) => cellSize)
-                    .attr('height', cellSize)
+                    .attr('stroke', '#00f')
+                    .attr('opacity', 0)
+                    .attr('width', cellSize3)
+                    .attr('height', cellSize3)
                     .attr('x', function (d, k) {
-                        result = initx + (ucount + k) * cellSize;
+                        result = initx + ((ucount + k) % nextline) * cellSize1 + (cellSize1 - cellSize3) / 2;
                         return result;
                     })
-                    .attr('y', function (d) {
-                        result = i * cellSize;
-                        // console.log(i);
+                    .attr('y', function (d, k) {
+                        let offsety = parseInt((ucount + k) / nextline, 10);
+                        result = (i + offset + offsety) * cellSize1 + (cellSize1 - cellSize3) / 2;
                         return result;
                     });
             }
             ucount += group.length;
         }
+        offset += parseInt(ucount / nextline, 10);
+        // console.log(ucount, offset);
     }
 
     let tooltip3 = d3.select('body').select('.c')
@@ -1053,6 +1067,24 @@ function overlapvis(data) {
         })
         .enter().append('path')
         .attr('d', pathMonth);*/
+}
+
+/**
+ * return width
+ * @param {object} d - datum
+ * @param {number} size - cellsize
+ * @return {number}
+ */
+function rwidth(d, size) {
+    let count = 0;
+    for (let i = 0; i < d.length; i++) {
+        if (d[i] instanceof Array) {
+            count += d[i].length;
+        } else {
+            count++;
+        }
+    }
+    return size * count;
 }
 
 /**
