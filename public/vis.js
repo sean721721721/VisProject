@@ -882,10 +882,10 @@ function liketype(typenum) {
 function overlapvis(data) {
     let width = document.querySelector('div#overlap').offsetWidth;
     let height = width;
-    let cellSize1 = 17;
-    let cellSize2 = 16;
+    let cellSize1 = 25;
+    let cellSize2 = 20;
     let cellSize3 = 15;
-    let initx = 50;
+    let initx = width * 0.1;
     let color = d3.scaleQuantize()
         .domain([0, 10])
         .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837']);
@@ -915,58 +915,179 @@ function overlapvis(data) {
     let overlap = data[2];
 
     let nextline = parseInt(((0.8 * width) / cellSize1), 10);
-    let y = 0;
+
+    // construct degree y checklist
+    let degylist = [];
+    for (let i = 0; i < overlap.length; i++) {
+        let deg = overlap[i];
+        let count = 0;
+        for (let j = 0; j < deg.length; j++) {
+            let group = deg[j];
+            count += group.length;
+        }
+        degylist.push(parseInt(count / nextline, 10) + 1);
+    }
+
+    let uclist = [];
+    for (let i = 0; i < overlap.length; i++) {
+        let deg = overlap[i];
+        let temp = [];
+        for (let j = 0; j < deg.length; j++) {
+            let group = deg[j];
+            temp.push(group.length);
+        }
+        uclist.push(temp);
+    }
+    console.log(uclist[0][0]);
+
+    function gety(list, index) {
+        let result = 0;
+        for (let i = 0; i < index; i++) {
+            result += list[i];
+        }
+        return result;
+    }
+
+    function getduc(check, list, index1, index2) {
+        let result = 0;
+        let comp = list[index1];
+        if (check[index1] !== 1) {
+            for (let b = 0; b < index2; b++) {
+                result += comp[b];
+            }
+        }
+        return result;
+    }
+
+    function getguc(check, list, i, j) {
+        let result = 0;
+        for (let a = 0; a < i; a++) {
+            if (check[a] !== 1) {
+                for (let b = 0; b < j; b++) {
+                    result += list[i][j];
+                }
+            } else {
+                for (let b = 0; b < j && b < nextline; b++) {
+                    result += list[i][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    function modify(list, datasource, index) {
+        let l = datasource.length;
+        let count = 0;
+        for (let j = 0; j < l; j++) {
+            let group = datasource[j];
+            count += group.length;
+        }
+        let yc = parseInt(count / nextline, 10) + 1;
+        if (list[index] === 1) {
+            list[index] = yc;
+        } else {
+            list[index] = 1;
+        }
+        return list;
+    }
+
     let rect = g.selectAll('g')
         .data(overlap)
         .enter().append('g')
-        .attr('id', (d, i) => 'degree' + i)
-        .append('rect')
-        .attr('class', (d, i) => 'degree' + i)
+        .attr('id', (d, i) => 'degree' + i);
+
+    let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
         .attr('fill', 'none')
         .attr('stroke', '#f00')
         .attr('opacity', 1)
         .attr('width', (d) => {
-            if (rwidth(d, cellSize1) < nextline * cellSize1) {
-                return rwidth(d, cellSize1);
+            if (widthcount(d) < nextline) {
+                return widthcount(d) * cellSize1;
             } else {
                 return nextline * cellSize1;
             }
         })
-        .attr('height', (d) => {
-            let nl = parseInt((rwidth(d, cellSize1) / cellSize1) / nextline) + 1;
-            return cellSize1 * nl;
+        .attr('height', (d, i) => {
+            return cellSize1 * degylist[i];
         })
-        .attr('x', function (d, i) {
-            return initx;
-        })
+        .attr('x', initx)
         .attr('y', function (d, i) {
-            let result = (i + y) * cellSize1;
-            y += parseInt((rwidth(d, cellSize1) / cellSize1) / nextline);
-            return result;
+            return gety(degylist, i) * cellSize1;
         });
 
-    // .datum(d3.timeFormat('%Y-%m-%d'));
-
+    let degcounts = overlap.length;
+    let botton = rect.append('rect')
+        .attr('class', (d, i) => 'botton' + ' ' + i)
+        .attr('fill', '#aaa')
+        .attr('stroke', '#f00')
+        .attr('opacity', 1)
+        .attr('width', (d) => cellSize1)
+        .attr('height', (d, i) => {
+            return cellSize1 * degylist[i];
+        })
+        .attr('x', initx - cellSize1)
+        .attr('y', function (d, i) {
+            return gety(degylist, i) * cellSize1;
+        })
+        .on('click', function (d, k) {
+            d3.event.preventDefault();
+            degylist = modify(degylist, d, k);
+            d3.selectAll('.degree')
+                .attr('height', (d, i) => {
+                    return cellSize1 * degylist[i];
+                })
+                .attr('y', function (d, i) {
+                    return gety(degylist, i) * cellSize1;
+                });
+            d3.selectAll('.botton')
+                .attr('height', (d, i) => {
+                    return cellSize1 * degylist[i];
+                })
+                .attr('y', function (d, i) {
+                    return gety(degylist, i) * cellSize1;
+                });
+            for (let i = 0; i < degcounts; i++) {
+                let offset = gety(degylist, i);
+                d3.selectAll('#degree' + i).selectAll('.ggrid')
+                    .attr('y', function (d, j) {
+                        let offsety = parseInt(getduc(degylist, uclist, i, j) / nextline, 10);
+                        let result = (offset + offsety) * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        return result;
+                    });
+                let ucount = 0;
+                let gcount = overlap[i].length;
+                for (let j = 0; j < gcount; j++) {
+                    let group = overlap[i][j];
+                    d3.selectAll('.user')
+                        .attr('y', function (d, k) {
+                            let offsety = parseInt((ucount + k) / nextline, 10);
+                            result = (offset + offsety) * cellSize1 + (cellSize1 - cellSize3) / 2;
+                            return result;
+                        });
+                    ucount += group.length;
+                }
+            }
+        });
 
     let offset = 0;
-    let degcounts = overlap.length;
     for (let i = 0; i < degcounts; i++) {
         let degree = overlap[i];
         let did = '#degree' + i;
         let x = 0;
         let yc = 0;
-        let subrect = g.selectAll(did)
+        let groupgrid = g.selectAll(did)
             .selectAll('g')
             .data(degree)
             .enter().append('g')
             .attr('id', (d, l) => 'd' + i + 'g' + l)
             .append('rect')
+            .attr('class', 'ggrid')
             .attr('fill', 'none')
             .attr('stroke', '#0f0')
             .attr('opacity', 1)
             .attr('width', (d) => {
-                if (rwidth(d, cellSize1) < nextline * cellSize1) {
-                    return rwidth(d, cellSize1) - (cellSize1 - cellSize2);
+                if (widthcount(d) < nextline) {
+                    return widthcount(d) * cellSize1 - (cellSize1 - cellSize2);
                 } else {
                     return nextline * cellSize1 - (cellSize1 - cellSize2);
                 }
@@ -974,7 +1095,7 @@ function overlapvis(data) {
             .attr('height', (d) => cellSize2)
             .attr('x', function (d) {
                 result = initx + x + (cellSize1 - cellSize2) / 2;
-                x += rwidth(d, cellSize1);
+                x += widthcount(d) * cellSize1;
                 if (x >= nextline * cellSize1) {
                     x -= nextline * cellSize1;
                 }
@@ -994,7 +1115,7 @@ function overlapvis(data) {
             let group = degree[j];
             let gid = '#d' + i + 'g' + j;
             if (group.length > 0) {
-                let user = g.selectAll(gid)
+                let usergrid = g.selectAll(gid)
                     .selectAll('g')
                     .data(group)
                     .enter().append('rect')
@@ -1072,10 +1193,9 @@ function overlapvis(data) {
 /**
  * return width
  * @param {object} d - datum
- * @param {number} size - cellsize
  * @return {number}
  */
-function rwidth(d, size) {
+function widthcount(d) {
     let count = 0;
     for (let i = 0; i < d.length; i++) {
         if (d[i] instanceof Array) {
@@ -1084,7 +1204,7 @@ function rwidth(d, size) {
             count++;
         }
     }
-    return size * count;
+    return count;
 }
 
 /**
