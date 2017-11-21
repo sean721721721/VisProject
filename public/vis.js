@@ -635,7 +635,9 @@ function update(tsne1, tsne2, data, px, init) {
             tooltip1.transition()
                 .duration(200)
                 .style('opacity', .9);
-            tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + d.posts.A.length + '<br/>' + 'Activities on B = ' + d.posts.B.length)
+            tooltip1.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' +
+                    'Activities on A = ' + d.posts.A.length + '<br/>' +
+                    'Activities on B = ' + d.posts.B.length)
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
@@ -888,7 +890,9 @@ function overlapvis(data) {
     let initx = width * 0.1;
     let color = d3.scaleQuantize()
         .domain([0, 10])
-        .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837']);
+        .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
+            '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
+        ]);
 
     let zoom = d3.zoom()
         .scaleExtent([1 / 10, 10])
@@ -938,39 +942,11 @@ function overlapvis(data) {
         }
         uclist.push(temp);
     }
-    console.log(uclist[0][0]);
 
     function gety(list, index) {
         let result = 0;
         for (let i = 0; i < index; i++) {
             result += list[i];
-        }
-        return result;
-    }
-
-    function getduc(check, list, index1, index2) {
-        let result = 0;
-        let comp = list[index1];
-        if (check[index1] !== 1) {
-            for (let b = 0; b < index2; b++) {
-                result += comp[b];
-            }
-        }
-        return result;
-    }
-
-    function getguc(check, list, i, j) {
-        let result = 0;
-        for (let a = 0; a < i; a++) {
-            if (check[a] !== 1) {
-                for (let b = 0; b < j; b++) {
-                    result += list[i][j];
-                }
-            } else {
-                for (let b = 0; b < j && b < nextline; b++) {
-                    result += list[i][j];
-                }
-            }
         }
         return result;
     }
@@ -989,6 +965,24 @@ function overlapvis(data) {
             list[index] = 1;
         }
         return list;
+    }
+
+    function uccount(check, list) {
+        let result = [];
+        let l = check.length;
+        for (let i = 0; i < l; i++) {
+            let h = list[i].length;
+            let temp = [];
+            let count = 0;
+            for (let j = 0; j < h; j++) {
+                temp.push(parseInt(count / nextline, 10));
+                if (check[i] !== 1) {
+                    count += list[i][j];
+                }
+            }
+            result.push(temp);
+        }
+        return result;
     }
 
     let rect = g.selectAll('g')
@@ -1032,6 +1026,8 @@ function overlapvis(data) {
         .on('click', function (d, k) {
             d3.event.preventDefault();
             degylist = modify(degylist, d, k);
+            uylist = uccount(degylist, uclist);
+            console.log(uylist);
             d3.selectAll('.degree')
                 .attr('height', (d, i) => {
                     return cellSize1 * degylist[i];
@@ -1050,21 +1046,17 @@ function overlapvis(data) {
                 let offset = gety(degylist, i);
                 d3.selectAll('#degree' + i).selectAll('.ggrid')
                     .attr('y', function (d, j) {
-                        let offsety = parseInt(getduc(degylist, uclist, i, j) / nextline, 10);
-                        let result = (offset + offsety) * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        let result = (offset + uylist[i][j]) * cellSize1 + (cellSize1 - cellSize2) / 2;
                         return result;
                     });
-                let ucount = 0;
                 let gcount = overlap[i].length;
                 for (let j = 0; j < gcount; j++) {
-                    let group = overlap[i][j];
-                    d3.selectAll('.user')
+                    let gid = '#d' + i + 'g' + j;
+                    d3.selectAll(gid).selectAll('.user')
                         .attr('y', function (d, k) {
-                            let offsety = parseInt((ucount + k) / nextline, 10);
-                            result = (offset + offsety) * cellSize1 + (cellSize1 - cellSize3) / 2;
+                            result = (offset + uylist[i][j]) * cellSize1 + (cellSize1 - cellSize3) / 2;
                             return result;
                         });
-                    ucount += group.length;
                 }
             }
         });
@@ -1122,7 +1114,7 @@ function overlapvis(data) {
                     .attr('class', 'user')
                     .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
                     .attr('stroke', '#00f')
-                    .attr('opacity', 0)
+                    .attr('opacity', 1)
                     .attr('width', cellSize3)
                     .attr('height', cellSize3)
                     .attr('x', function (d, k) {
@@ -1152,7 +1144,9 @@ function overlapvis(data) {
             tooltip3.transition()
                 .duration(200)
                 .style('opacity', .9);
-            tooltip3.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' + 'Activities on A = ' + getlength(d.posts, 'A') + '<br/>' + 'Activities on B = ' + getlength(d.posts, 'B'))
+            tooltip3.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' +
+                    'Activities on A = ' + getlength(d.posts, 'A') + '<br/>' +
+                    'Activities on B = ' + getlength(d.posts, 'B'))
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
