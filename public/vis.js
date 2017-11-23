@@ -884,9 +884,9 @@ function liketype(typenum) {
 function overlapvis(data) {
     let width = document.querySelector('div#overlap').offsetWidth;
     let height = width;
-    let cellSize1 = 25;
-    let cellSize2 = 20;
-    let cellSize3 = 15;
+    let cellSize1 = 50;
+    let cellSize2 = 40;
+    let cellSize3 = 30;
     let initx = width * 0.1;
     let color = d3.scaleQuantize()
         .domain([0, 10])
@@ -973,22 +973,39 @@ function overlapvis(data) {
         for (let i = 0; i < l; i++) {
             let h = list[i].length;
             let temp = [];
-            let count = 0;
+            let x = 0;
+            let y = 0;
             for (let j = 0; j < h; j++) {
-                temp.push(parseInt(count / nextline, 10));
+                temp.push({
+                    'x': x,
+                    'y': y,
+                });
                 if (check[i] !== 1) {
-                    count += list[i][j];
+                    y += list[i][j];
                 }
+                x += list[i][j];
             }
             result.push(temp);
         }
         return result;
     }
 
+    function count(data) {
+        let c = 0;
+        let l = data.length;
+        for (let i = 0; i < l; i++) {
+            c += data[i].length;
+        }
+        return c;
+    }
+
     let rect = g.selectAll('g')
         .data(overlap)
         .enter().append('g')
-        .attr('id', (d, i) => 'degree' + i);
+        .attr('id', (d, i) => 'degree' + i)
+        .attr('transform', (d, i) => {
+            return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+        });
 
     let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
         .attr('fill', 'none')
@@ -1005,9 +1022,7 @@ function overlapvis(data) {
             return cellSize1 * degylist[i];
         })
         .attr('x', initx)
-        .attr('y', function (d, i) {
-            return gety(degylist, i) * cellSize1;
-        });
+        .attr('y', 0);
 
     let degcounts = overlap.length;
     let botton = rect.append('rect')
@@ -1015,53 +1030,87 @@ function overlapvis(data) {
         .attr('fill', '#aaa')
         .attr('stroke', '#f00')
         .attr('opacity', 1)
-        .attr('width', (d) => cellSize1)
+        .attr('width', cellSize1)
         .attr('height', (d, i) => {
             return cellSize1 * degylist[i];
         })
         .attr('x', initx - cellSize1)
-        .attr('y', function (d, i) {
-            return gety(degylist, i) * cellSize1;
-        })
+        .attr('y', 0)
         .on('click', function (d, k) {
             d3.event.preventDefault();
             degylist = modify(degylist, d, k);
             uylist = uccount(degylist, uclist);
-            console.log(uylist);
+            // console.log(uylist);
+            rect.attr('transform', (d, i) => {
+                return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+            });
             d3.selectAll('.degree')
                 .attr('height', (d, i) => {
                     return cellSize1 * degylist[i];
-                })
-                .attr('y', function (d, i) {
-                    return gety(degylist, i) * cellSize1;
                 });
             d3.selectAll('.botton')
                 .attr('height', (d, i) => {
                     return cellSize1 * degylist[i];
-                })
-                .attr('y', function (d, i) {
-                    return gety(degylist, i) * cellSize1;
                 });
+            text.attr('y', (d, i) => {
+                return (cellSize1 * degylist[i]) / 2;
+            });
+
             for (let i = 0; i < degcounts; i++) {
-                let offset = gety(degylist, i);
-                d3.selectAll('#degree' + i).selectAll('.ggrid')
-                    .attr('y', function (d, j) {
-                        let result = (offset + uylist[i][j]) * cellSize1 + (cellSize1 - cellSize2) / 2;
-                        return result;
+                let did = '#degree' + i;
+                d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
+                    let offsetx = uylist[i][j].x % nextline;
+                    let resultx = initx + offsetx * cellSize1 + (cellSize1 - cellSize2) / 2;
+                    let offsety = 0;
+                    if (degylist[i] !== 1) {
+                        offsety = parseInt(uylist[i][j].y / nextline, 10);
+                    }
+                    let resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
+                    // console.log(offsetx);
+                    return 'translate(' + resultx + ',' + resulty + ')';
+                });
+                d3.selectAll(did).selectAll('.grect')
+                    .attr('height', (d) => {
+                        if (degylist[i] === 1) {
+                            return cellSize1 - (cellSize1 - cellSize2);
+                        } else {
+                            let h = parseInt(d.length / nextline, 10) + 1;
+                            return h * cellSize1 - (cellSize1 - cellSize2);
+                        }
                     });
                 let gcount = overlap[i].length;
                 for (let j = 0; j < gcount; j++) {
                     let gid = '#d' + i + 'g' + j;
                     d3.selectAll(gid).selectAll('.user')
-                        .attr('y', function (d, k) {
-                            result = (offset + uylist[i][j]) * cellSize1 + (cellSize1 - cellSize3) / 2;
-                            return result;
+                        .attr('y', (d, k) => {
+                            function usery(check, index) {
+                                if (check === 1) {
+                                    return (cellSize2 - cellSize3) / 2;
+                                } else {
+                                    let offsety = parseInt(index / nextline, 10);
+                                    let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                    return result;
+                                }
+                            }
+                            return usery(degylist[i], k);
                         });
                 }
             }
         });
 
-    let offset = 0;
+    let text = rect.append('text')
+        .attr('x', initx - cellSize1)
+        .attr('y', (d, i) => {
+            return (cellSize1 * degylist[i]) / 2;
+        })
+        // .attr('dy', '.35em')
+        .attr('fill', '#aaa')
+        .attr('stroke', '#f00')
+        .text((d) => {
+            let data = d[0][0].posts;
+            return getlength(data, 'A') + getlength(data, 'B');
+        });
+
     for (let i = 0; i < degcounts; i++) {
         let degree = overlap[i];
         let did = '#degree' + i;
@@ -1071,9 +1120,21 @@ function overlapvis(data) {
             .selectAll('g')
             .data(degree)
             .enter().append('g')
-            .attr('id', (d, l) => 'd' + i + 'g' + l)
-            .append('rect')
             .attr('class', 'ggrid')
+            .attr('id', (d, l) => 'd' + i + 'g' + l)
+            .attr('transform', (d) => {
+                resultx = initx + x + (cellSize1 - cellSize2) / 2;
+                x += widthcount(d) * cellSize1;
+                while (x >= nextline * cellSize1) {
+                    x -= nextline * cellSize1;
+                }
+                let offsety = parseInt(yc / nextline, 10);
+                resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
+                yc += d.length;
+                return 'translate(' + resultx + ',' + resulty + ')';
+            })
+            .append('rect')
+            .attr('class', 'grect')
             .attr('fill', 'none')
             .attr('stroke', '#0f0')
             .attr('opacity', 1)
@@ -1084,24 +1145,13 @@ function overlapvis(data) {
                     return nextline * cellSize1 - (cellSize1 - cellSize2);
                 }
             })
-            .attr('height', (d) => cellSize2)
-            .attr('x', function (d) {
-                result = initx + x + (cellSize1 - cellSize2) / 2;
-                x += widthcount(d) * cellSize1;
-                if (x >= nextline * cellSize1) {
-                    x -= nextline * cellSize1;
-                }
-                return result;
+            .attr('height', (d) => {
+                let h = parseInt(d.length / nextline, 10) + 1;
+                return h * cellSize1 - (cellSize1 - cellSize2);
             })
-            .attr('y', function (d, j) {
-                let offsety = parseInt(yc / nextline, 10);
-                result = (i + offset + offsety) * cellSize1 + (cellSize1 - cellSize2) / 2;
-                yc += d.length;
-                // console.log(i)
-                return result;
-            });
+            .attr('x', 0)
+            .attr('y', 0);
 
-        let ucount = 0;
         let gcount = degree.length;
         for (let j = 0; j < gcount; j++) {
             let group = degree[j];
@@ -1117,20 +1167,17 @@ function overlapvis(data) {
                     .attr('opacity', 1)
                     .attr('width', cellSize3)
                     .attr('height', cellSize3)
-                    .attr('x', function (d, k) {
-                        result = initx + ((ucount + k) % nextline) * cellSize1 + (cellSize1 - cellSize3) / 2;
+                    .attr('x', (d, k) => {
+                        result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
                         return result;
                     })
-                    .attr('y', function (d, k) {
-                        let offsety = parseInt((ucount + k) / nextline, 10);
-                        result = (i + offset + offsety) * cellSize1 + (cellSize1 - cellSize3) / 2;
+                    .attr('y', (d, k) => {
+                        let offsety = parseInt(k / nextline, 10);
+                        result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
                         return result;
                     });
             }
-            ucount += group.length;
         }
-        offset += parseInt(ucount / nextline, 10);
-        // console.log(ucount, offset);
     }
 
     let tooltip3 = d3.select('body').select('.c')
@@ -1162,15 +1209,6 @@ function overlapvis(data) {
         });
 
     // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
-    /*
-    svg.append('text')
-        // .attr('transform', 'translate(-6," + cellSize * 3.5 + ")rotate(-90)')
-        .attr('font-family', 'sans-serif')
-        .attr('font-size', 10)
-        .attr('text-anchor', 'middle')
-        .text(function (d) {
-            return d;
-        });*/
 
     /*
     svg.append('g')

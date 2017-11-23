@@ -79,6 +79,7 @@ var ualist = function ualist(files) {
                     post["like"] = post_liketype(post, reaction);
                     post["commentcount"] = 0;
                     post["share"] = false;
+                    post["ctime"] = [];
                     //console.log(post)
                     user = {};
                     user["id"] = reaction.id;
@@ -228,6 +229,7 @@ function comment_countdb(files, userlist) {
                                     findpost = true;
                                     //console.log("find")
                                     userlist[a].posts[b].commentcount++;
+                                    userlist[a].posts[b].ctime.push(data.created_time);
                                     b = length;
                                 }
                             }
@@ -238,6 +240,7 @@ function comment_countdb(files, userlist) {
                                     "like": 0,
                                     "commentcount": 1,
                                     "share": false,
+                                    "ctime": [data.created_time],
                                 }
                                 userlist[a].posts.push(post);
                             }
@@ -250,6 +253,7 @@ function comment_countdb(files, userlist) {
                             "like": 0,
                             "commentcount": 1,
                             "share": false,
+                            "ctime": [data.created_time],
                         }
                         user = {
                             "id": comment.from.id,
@@ -416,7 +420,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
                 posts.reactions = reactions;
                 var comments = {};
                 for (prop in obj.comments) {
-                    if (prop.match(/^(context|summary)$/)) {
+                    if (prop.match(/^(context|created_time|summary)$/)) {
                         comments[prop] = obj.comments[prop];
                     }
                 }
