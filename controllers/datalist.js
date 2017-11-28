@@ -720,18 +720,6 @@ var sortdegree = function sortdegree(olrlist) {
         return list;
     }
 
-    function sortlength(sortlist) {
-        function compareNumbers(a, b) {
-            // console.log(a.length + " " + b.length);
-            return a.length - b.length;
-        }
-        var len = sortlist.length;
-        for (var i = 0; i < len; i++) {
-            sortlist[i].sort(compareNumbers);
-        }
-        return sortlist;
-    }
-
     var sortlist = [];
     var degree = [];
     var len = olrlist.length;
@@ -771,12 +759,6 @@ var sortdegree = function sortdegree(olrlist) {
         //console.log(degree);
     }
     //console.log(degree.length === sortlist.length);
-    /*
-    var sl = sortlist.length;
-    for (var i = 0; i < sl; i++) {
-        var deglist = sortlist[i];
-        sortlist[i] = sortlength(deglist);
-    }*/
     return sortlist;
 }
 

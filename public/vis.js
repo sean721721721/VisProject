@@ -3,10 +3,10 @@
  * @param {object} data - inputdata
  */
 function visMain(data) {
-    console.log(data);
-    let userlist = activitymatrix(data);
+    // console.log(data);
+    // let userlist = activitymatrix(data);
     // console.log(userlist);
-    for (let i = 0; i < data[1].length; i++) {
+    /* for (let i = 0; i < data[1].length; i++) {
         if (!data[1][i].posts) {
             console.log(i);
         }
@@ -16,24 +16,24 @@ function visMain(data) {
     let perplexity = getparam('perplexity');
     let dim = 2;
     let iteration = getparam('iteration');
-    let normalized = document.getElementsByName('normalize');
+    let normalized = document.getElementsByName('normalize');*/
     // let normal = normalized[0].checked;
     // console.log(normalized[0].checked);
-    let opt = {};
+    /* let opt = {};
     opt.epsilon = epsilon; // epsilon is learning rate (10 = default)
     opt.perplexity = perplexity; // roughly how many neighbors each point influences (30 = default)
     opt.dim = dim; // dimensionality of the embedding (2 = default)
 
     let tsne1 = new tsnejs.tSNE(opt); // create a tSNE instance
-    let tsne2 = new tsnejs.tSNE(opt);
+    let tsne2 = new tsnejs.tSNE(opt);*/
     // initialize data. Here we have 3 points and some example pairwise dissimilarities
-    let inputs = [];
-    inputs.push(userdist(userlist, false));
+    /* let inputs = [];
+    inputs.push(userdist(userlist, false));*/
     // inputs.push(propertydist(fbdata, normal));
-    tsne1.initDataDist(inputs[0]);
+    /* tsne1.initDataDist(inputs[0]);
     tsne2.initDataDist(inputs[0]);
     let init = false;
-    let width = document.querySelector('div.svg').offsetWidth;
+    let width = document.querySelector('div#over').offsetWidth;
     let btn = document.querySelector('input[id="submit"]');
     btn.addEventListener('click', function (e) {
         e.preventDefault();
@@ -53,9 +53,11 @@ function visMain(data) {
             }
             update(tsne1, tsne2, data[1], width, init);
         }
-    });
-    overlapvis(data);
-    console.log('vis fine');
+    });*/
+    overlapvis(data.data);
+    overview(data);
+    pageview(data.data);
+    // console.log(data);
 }
 
 
@@ -879,15 +881,16 @@ function liketype(typenum) {
 
 /**
  * overlap vis
- * @param {*} data - inputdata
+ * @param {object} data - inputdata
  */
 function overlapvis(data) {
-    let width = document.querySelector('div#overlap').offsetWidth;
+    // let width = document.querySelector('#overlap').offsetWidth;
+    let width = '100%';
     let height = width;
     let cellSize1 = 50;
     let cellSize2 = 40;
     let cellSize3 = 30;
-    let initx = width * 0.1;
+    let initx = 1000 * 0.1;
     let color = d3.scaleQuantize()
         .domain([0, 10])
         .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
@@ -907,6 +910,8 @@ function overlapvis(data) {
         .append('svg')
         .attr('width', width)
         .attr('height', height)
+        .attr('viewBox', '0 0 1000 1000')
+        .attr('preserveAspectRatio', 'xMidYMid meet')
         .style('fill', 'none')
         .style('pointer-events', 'all')
         .call(zoom);
@@ -918,7 +923,7 @@ function overlapvis(data) {
     let users = data[1];
     let overlap = data[2];
 
-    let nextline = parseInt(((0.8 * width) / cellSize1), 10);
+    let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
 
     // construct degree y checklist
     let degylist = [];
@@ -932,6 +937,7 @@ function overlapvis(data) {
         degylist.push(parseInt(count / nextline, 10) + 1);
     }
 
+    // usercount in degree[i] list
     let uclist = [];
     for (let i = 0; i < overlap.length; i++) {
         let deg = overlap[i];
@@ -1251,4 +1257,325 @@ function getlength(data, attr) {
         dl = data[attr].length;
     }
     return dl;
+}
+
+function sortlength(sortlist) {
+    function compareNumbers(a, b) {
+        // console.log(a.length + " " + b.length);
+        return a.length - b.length;
+    }
+    var len = sortlist.length;
+    for (var i = 0; i < len; i++) {
+        sortlist[i].sort(compareNumbers);
+    }
+    return sortlist;
+}
+
+/**
+ * overview
+ * @param {object} data - inputdata
+ */
+function overview(data) {
+    // let width = document.querySelector('#over').offsetWidth;
+    let width = '100%';
+    let height = '50%';
+    let margin = {
+        top: 20,
+        right: 60,
+        bottom: 30,
+        left: 40,
+    };
+
+    let svg = d3.select('#over')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', '0 0 500 250')
+        .attr('preserveAspectRatio', 'xMinYMin')
+        .style('fill', 'none')
+        .style('pointer-events', 'all');
+    // .call(zoom);
+
+    let w = 500 - margin.left - margin.right;
+    let h = 250 - margin.top - margin.bottom;
+
+    let g = svg.append('g')
+        .attr('id', 'over')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    let zoom = d3.zoom()
+        .scaleExtent([1, 5])
+        .on('zoom', function () {
+            g.attr('transform', d3.event.transform);
+            let k = this.__zoom.k;
+            g.attr('r', 5 / k)
+                .attr('stroke-width', 1 / k);
+        });
+
+    let ov = countactivities(data.data);
+    // console.log(data);
+    // postcount
+    // usercount
+    let oarc = [];
+    let obrc = [];
+    let orc = [];
+    for (let i = 0; i < 7; i++) {
+        oarc.push(ov.A[0][i]);
+        obrc.push(ov.B[0][i]);
+        orc.push((ov.A[0][i] + ov.B[0][i]));
+    }
+    let allpostcount = data.summary[0][0] + data.summary[0][1];
+
+    let ovdata = [
+        [data.summary[0][0], data.summary[0][1], allpostcount], // postcount
+        [data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
+        [ov.A[1], ov.B[1], (ov.A[1] + ov.B[1])], // commentcount
+        [ov.A[2], ov.B[2], (ov.A[2] + ov.B[2])], // sharecount
+    ];
+
+    for (let i = 0; i < 7; i++) {
+        ovdata.push([oarc[i], obrc[i], orc[i]]); // reactioncount
+    }
+
+    console.log(ovdata);
+
+    let wx = w / ovdata.length;
+    let rectA = g.selectAll('g')
+        .append('g').attr('class', 'A')
+        .data(ovdata)
+        .enter().append('rect')
+        .attr('fill', '#aaa')
+        .attr('width', wx)
+        .attr('height', (d, i) => {
+            return (d[0] / d[2]) * h;
+        })
+        .attr('x', (d, i) => {
+            return i * wx;
+        })
+        .attr('y', 0);
+
+    let rectB = g.selectAll('g')
+        .append('g').attr('class', 'B')
+        .data(ovdata)
+        .enter().append('rect')
+        .attr('fill', '#333')
+        .attr('width', wx)
+        .attr('height', (d, i) => {
+            return (d[1] / d[2]) * h;
+        })
+        .attr('x', (d, i) => {
+            return i * wx;
+        })
+        .attr('y', (d) => {
+            return (d[0] / d[2]) * h;
+        });
+
+    /*
+    let darc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let dacc = 0;
+    let dasc = 0;
+    let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let dbcc = 0;
+    let dbsc = 0;
+
+    let garc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let gacc = 0;
+    let gasc = 0;
+    let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let gbcc = 0;
+    let gbsc = 0;
+
+    let arc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let acc = 0;
+    let asc = 0;
+    let brc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let bcc = 0;
+    let bsc = 0;*/
+}
+
+/**
+ * pageview
+ * @param {object} data - inputdata
+ */
+function pageview(data) {
+    // let width = document.querySelector('#page').offsetWidth;
+    let width = '100%';
+    let height = width;
+
+    let svg = d3.select('#page')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', '0 0 500 500')
+        .attr('preserveAspectRatio', 'xMinYMin')
+        .style('fill', 'none')
+        .style('pointer-events', 'all');
+    // .call(zoom);
+
+    let g = svg.append('g')
+        .attr('id', 'pagepmap');
+
+    let zoom = d3.zoom()
+        .scaleExtent([1, 5])
+        .on('zoom', function () {
+            g.attr('transform', d3.event.transform);
+            let k = this.__zoom.k;
+            g.attr('r', 5 / k)
+                .attr('stroke-width', 1 / k);
+        });
+}
+
+/*
+    var sl = sortlist.length;
+    for (var i = 0; i < sl; i++) {
+        var deglist = sortlist[i];
+        sortlist[i] = sortlength(deglist);
+    }*/
+/*
+function countactivities(data){
+    let posts = data[0];
+    let users = data[1];
+    let overlap = data[2];
+    let l=overlap.length;
+    for(let i=0;i<l;i++){
+        let degree = overlap[i];
+        let dl=degree.length;
+        for(let j=0;j<dl;j++){
+            let group=degree[j];
+            let gl = group.lenght;
+            for(let k=0;k<gl;k++){
+                let user = group[k];
+            }
+        }
+    }
+}*/
+
+/**
+ * get activitiy counts
+ * @param {object} data - inputdata
+ * @return {object} countvalue object
+ */
+function countactivities(data) {
+    let posts = data[0];
+    // let users = data[1];
+    let overlap = data[2];
+    let count = {};
+    let oarc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let oacc = 0;
+    let oasc = 0;
+    let obrc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let obcc = 0;
+    let obsc = 0;
+    let l = overlap.length;
+    let dtemp = [];
+    for (let i = 0; i < l; i++) {
+        let degree = overlap[i];
+        let deg = {};
+        let darc = [0, 0, 0, 0, 0, 0, 0, 0];
+        let dacc = 0;
+        let dasc = 0;
+        let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+        let dbcc = 0;
+        let dbsc = 0;
+        let dl = degree.length;
+        let gtemp = [];
+        for (let j = 0; j < dl; j++) {
+            let group = degree[j];
+            let g = {};
+            let garc = [0, 0, 0, 0, 0, 0, 0, 0];
+            let gacc = 0;
+            let gasc = 0;
+            let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+            let gbcc = 0;
+            let gbsc = 0;
+            let gl = group.length;
+            let utemp = [];
+            for (let k = 0; k < gl; k++) {
+                let user = group[k];
+                // user.id;
+                // user.name;
+                let arc = [0, 0, 0, 0, 0, 0, 0, 0];
+                let acc = 0;
+                let asc = 0;
+                let brc = [0, 0, 0, 0, 0, 0, 0, 0];
+                let bcc = 0;
+                let bsc = 0;
+                let pa = user.posts;
+                if (pa.A instanceof Array) {
+                    let al = pa.A.length;
+                    for (let a = 0; a < al; a++) {
+                        if (pa.A[a].commentcount !== 0) {
+                            acc += pa.A[a].commentcount;
+                        }
+                        if (pa.A[a].like !== 0) {
+                            let num = pa.A[a].like;
+                            arc[0]++;
+                            arc[num]++;
+                        }
+                        if (pa.A[a].share !== false) {
+                            asc++;
+                        }
+                    }
+                }
+                if (pa.B instanceof Array) {
+                    let bl = pa.B.length;
+                    for (let b = 0; b < bl; b++) {
+                        if (pa.B[b].commentcount !== 0) {
+                            bcc += pa.B[b].commentcount;
+                        }
+                        if (pa.B[b].like !== 0) {
+                            let num = pa.B[b].like;
+                            brc[0]++;
+                            brc[num]++;
+                        }
+                        if (pa.B[b].share !== false) {
+                            bsc++;
+                        }
+                    }
+                }
+                let temp = {
+                    'A': [arc, acc, asc],
+                    'B': [brc, bcc, bsc],
+                };
+                // console.log(temp);
+                utemp.push(temp);
+                for (let i = 0; i < 7; i++) {
+                    garc[i] += arc[i];
+                    gbrc[i] += brc[i];
+                }
+                gacc += acc;
+                gasc += asc;
+                gbcc += bcc;
+                gbsc += bsc;
+            }
+            g.A = [garc, gacc, gasc];
+            g.B = [gbrc, gbcc, gbsc];
+            g.user = utemp;
+            gtemp.push(g);
+            for (let i = 0; i < 7; i++) {
+                darc[i] += garc[i];
+                dbrc[i] += gbrc[i];
+            }
+            dacc += gacc;
+            dasc += gasc;
+            dbcc += gbcc;
+            dbsc += gbsc;
+        }
+        deg.A = [darc, dacc, dasc];
+        deg.B = [dbrc, dbcc, dbsc];
+        deg.group = gtemp;
+        dtemp.push(deg);
+        for (let i = 0; i < 7; i++) {
+            oarc[i] += darc[i];
+            obrc[i] += dbrc[i];
+        }
+        oacc += dacc;
+        oasc += dasc;
+        obcc += dbcc;
+        obsc += dbsc;
+    }
+    count.A = [oarc, oacc, oasc];
+    count.B = [obrc, obcc, obsc];
+    count.degree = dtemp;
+    return count;
 }
