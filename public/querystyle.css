@@ -144,8 +144,8 @@ body {
     background: lightgray;
     text-align: center;
     font-family: "Times New Roman", Times, serif;
-    margin-left: 5%;
-    margin-right: 5%;
+    margin-left: 2%;
+    margin-right: 2%;
 }
 
 fieldset {
@@ -185,36 +185,42 @@ td {
     margin: 0 0 0 0;
     border: 2px solid #CCC;
     display: grid;
-    grid-gap: 10px;
-    grid-template-columns: 0.02fr [col1] 0.24fr [col2] 0.24fr [col3] 0.24fr [col4] 0.24fr [colend] 0.02fr;
+    grid-gap: 5px;
+    grid-template-columns: [col1] 1fr [col2] 1fr [col3] 1fr [col4] 1fr [colend];
     grid-template-rows: [row1] auto [row2] auto [row3] auto [rowend];
 }
 
 .box {
     background-color: #444;
     color: #fff;
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 5px;
     font-size: 100%;
 }
 
 .menu {
-    padding: 10px;
+    padding: 5px;
     grid-column: col1 / colend;
 }
 
-.graph {
-    grid-column: col1 / col3;
+.overview {
+    grid-column: col1 / col2;
     grid-row: row2 / row3;
 }
 
-.subgraph {
-    grid-column: col3 / colend;
+.postview {
+    grid-column: col2 / col3;
+    grid-row: row2 / row3;
 }
 
-.table {
-    grid-column: col1 / colend;
+.detailview {
+    grid-column: col1 / col3;
     grid-row: row3 / rowend;
+}
+
+.userview {
+    grid-column: col3 / colend;
+    grid-row: row2 / rowend;
 }
 
 .query,

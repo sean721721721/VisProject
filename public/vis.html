@@ -2,14 +2,13 @@
     <script id="search-vis" type="text/x-handlebars-template">
         <div class="wrapper">
             <div class="box menu">
-                <form>
+                <!--form>
                     <fieldset>
                         <legend>Set t-SNE Parameters</legend>
                         <label for="x">epsilon:</label>
                         <input name="epsilon" id="epsilon" type="number" placeholder="epsilon" value="10"></input>
                         <label for="x">perplexity:</label>
                         <input name="perplexity" id="perplexity" type="number" placeholder="perplexity" value="50"></input>
-                        <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
                         <label for="x">iteration:</label>
                         <input name="iteration" id="iteration" type="number" placeholder="iteration" value="10"></input>
                     </fieldset>
@@ -53,17 +52,14 @@
                         <label for="z">Update:</label>
                         <input name="update" id="update" type="button" value="Update"></input>
                     </fieldset>
-                </form>
+                </form-->
             </div>
-            <div class="box graph">
+            <!--div class="box graph">
                 <h2>Scatter Plot</h2>
                 <div class="svg"></div>
-            </div>
-            <div class="box subgraph">
-                <h2>Abother Plot</h2>
-                <div class="svg"></div>
-            </div>
-            <div class="box table" id="table">
+            </div-->
+            <div class="box overview">
+                <h2>OverView</h2>
                 <h1>{{{query.co}}}結果：</h1>
                 <div>
                     <table class="query">
@@ -112,6 +108,16 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="over"></div>
+            </div>
+            <div class="box postview">
+                <h2>PageView</h2>
+                <div id="page"></div>
+            </div>
+            <div class="box detailview">
+                <div id="detail"></div>
+            </div>
+            <div class="box userview" id="table">
                 <div id="overlap"></div>
                 <div id="cooltable"></div>
             </div>
