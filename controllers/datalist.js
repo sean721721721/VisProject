@@ -452,10 +452,13 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
     var list = [];
     var l1 = qobj1.length;
     var l2 = qobj2.length;
+    var pagea =[];
+    var pageb =[];
     for (var i = 0; i < l1; i++) {
         var post = postobj(qobj1[i]);
-        list.push(post);
+        pagea.push(post);
     }
+    list.push(pagea);
     // for return single page query faster
     if (qobj1 !== qobj2) {
         for (var i = 0; i < l2; i++) {
@@ -469,11 +472,13 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
                 }
                 if (j === l1 && !find) {
                     var post = postobj(qobj2[i]);
-                    list.push(post);
+                    pageb.push(post);
                 }
             }
         }
+        list.push(pageb);
     }
+
     console.log("postlen: " + list.length);
     return list;
 }

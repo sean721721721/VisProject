@@ -357,72 +357,85 @@ function csv1(userlist) {
  */
 function csv2(files) {
     let string = 'post-id,post-message/attachment,user-id,comment-message,user-id,subcomment-message\n';
-    let data;
-    let comment;
-    let subcomment;
-    let commentlength;
-    let filelength = files.length;
-    for (let i = 0; i < filelength; i++) {
-        // let datalength = files[i].contents.data.length;
-        // console.log(userlist.length)
-        // for (let j = 0; j < datalength; j++) {
-        data = files[i]; // .contents.data[j];
-        // console.log(data.id)
-        let id = data.id;
-        string += id.toString();
-        string += ',';
-        string += '"';
-        if (data.message !== undefined) {
-            string += clearString(data.message);
-        } else if (data.attachments.description !== undefined) {
-            string += 'attachment description : ';
-            string += clearString(data.attachments.description);
-        } else {
-            string += 'attachment title : ';
-            string += clearString(data.attachments.title);
-        }
-        string += '"';
-        commentlength = data.comments.context.length;
-        if (commentlength !== 0) {
+    /**
+     * csv string
+     * @param {array} files - page
+     * @param {string} string - csv
+     * @return {string}
+     */
+    function page2csv(files, string) {
+        let data;
+        let comment;
+        let subcomment;
+        let commentlength;
+        let filelength = files.length;
+        for (let i = 0; i < filelength; i++) {
+            // let datalength = files[i].contents.data.length;
             // console.log(userlist.length)
-            for (let k = 0; k < commentlength; k++) {
-                comment = data.comments.context[k];
-                string += ',';
-                let id = comment.from.id;
-                string += id.toString();
-                string += ',';
-                string += '"';
-                string += clearString(comment.message);
-                string += '"';
-                string += ',';
-                subcomment = comment.comments;
-                if (subcomment !== undefined) {
-                    // console.log(i + " " + j + " " + k)
-                    let sublength = subcomment.length;
-                    for (let l = 0; l < sublength; l++) {
-                        string += ',';
-                        let id = subcomment[l].from.id;
-                        string += id.toString();
-                        // console.log(id.toString())
-                        string += ',';
-                        string += '"';
-                        string += clearString(subcomment[l].message);
-                        string += '"';
-                        string += '\n';
-                        if (l !== sublength - 1) {
-                            string += '\n,,,';
+            // for (let j = 0; j < datalength; j++) {
+            data = files[i]; // .contents.data[j];
+            // console.log(data.id)
+            let id = data.id;
+            string += id.toString();
+            string += ',';
+            string += '"';
+            if (data.message !== undefined) {
+                string += clearString(data.message);
+            } else if (data.attachments.description !== undefined) {
+                string += 'attachment description : ';
+                string += clearString(data.attachments.description);
+            } else {
+                string += 'attachment title : ';
+                string += clearString(data.attachments.title);
+            }
+            string += '"';
+            commentlength = data.comments.context.length;
+            if (commentlength !== 0) {
+                // console.log(userlist.length)
+                for (let k = 0; k < commentlength; k++) {
+                    comment = data.comments.context[k];
+                    string += ',';
+                    let id = comment.from.id;
+                    string += id.toString();
+                    string += ',';
+                    string += '"';
+                    string += clearString(comment.message);
+                    string += '"';
+                    string += ',';
+                    subcomment = comment.comments;
+                    if (subcomment !== undefined) {
+                        // console.log(i + " " + j + " " + k)
+                        let sublength = subcomment.length;
+                        for (let l = 0; l < sublength; l++) {
+                            string += ',';
+                            let id = subcomment[l].from.id;
+                            string += id.toString();
+                            // console.log(id.toString())
+                            string += ',';
+                            string += '"';
+                            string += clearString(subcomment[l].message);
+                            string += '"';
+                            string += '\n';
+                            if (l !== sublength - 1) {
+                                string += '\n,,,';
+                            }
                         }
+                    } else {
+                        string += '\n';
                     }
-                } else {
-                    string += '\n';
-                }
-                if (k != commentlength - 1) {
-                    string += '\n,';
+                    if (k != commentlength - 1) {
+                        string += '\n,';
+                    }
                 }
             }
+            string += '\n';
+            // }
         }
-        string += '\n';
-        // }
+        return string;
+    }
+    for (let i = 0; i < files.lengthl; i++) {
+        let page = files[i];
+        string = page2csv(page, string);
     }
     return string;
 };

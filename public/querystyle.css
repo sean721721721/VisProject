@@ -186,8 +186,8 @@ td {
     border: 2px solid #CCC;
     display: grid;
     grid-gap: 5px;
-    grid-template-columns: [col1] 1fr [col2] 1fr [col3] 1fr [col4] 1fr [colend];
-    grid-template-rows: [row1] auto [row2] auto [row3] auto [rowend];
+    grid-template-columns: 0.01fr [col1] 1fr [col2] 1fr [col3] 1fr [col4] 1fr [colend] 0.01fr;
+    grid-template-rows: 0.01fr [row1] auto [row2] auto [row3] auto [rowend] 0.01fr;
 }
 
 .box {
@@ -201,6 +201,7 @@ td {
 .menu {
     padding: 5px;
     grid-column: col1 / colend;
+    grid-row: row1 / row2;
 }
 
 .overview {
