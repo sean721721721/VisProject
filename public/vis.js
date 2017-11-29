@@ -1401,10 +1401,10 @@ function overview(data) {
 function pageview(data) {
     // data manipulate
     let pagedata = data.data[0];
+    let tm = {};
     let tmdata = [];
-    let page = {};
     for (let i = 0, l = pagedata.length; i < l; i++) {
-        let posts = pagedata[i];
+        let page = {};
         let post = {};
         let posttemp = [];
         let comment = {};
@@ -1416,6 +1416,7 @@ function pageview(data) {
         let sad = {};
         let angry = {};
         let share = {};
+        let posts = pagedata[i];
         for (let j = 0, l = posts.length; j < l; j++) {
             comment.name = 'comment';
             comment.size = posts[j].comments.summary;
@@ -1443,12 +1444,14 @@ function pageview(data) {
             post.children = temp;
             posttemp.push(post);
         }
-        let pi = 'page' + i;
+        let pi = 'page' + (i + 1);
         page.name = data.query[pi];
         page.children = posttemp;
         tmdata.push(page);
     }
-    console.log(tmdata);
+    tm.name = 'root';
+    tm.children = tmdata;
+    console.log(tm);
 
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
@@ -1486,14 +1489,14 @@ function pageview(data) {
     let format = d3.format(',d');
 
     let treemap = d3.treemap()
-        .tile(d3.treemapResquarify)
+        .tile(d3.treemapSquarify)
         .size([w, h])
-        .round(true)
+        .round(false)
         .paddingInner(1);
 
-    let root = d3.hierarchy(tmdata)
+    let root = d3.hierarchy(tm)
         .eachBefore(function (d) {
-            d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name;
+            d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
         })
         .sum(sumBySize)
         .sort(function (a, b) {
@@ -1502,7 +1505,7 @@ function pageview(data) {
 
     treemap(root);
 
-    let cell = svg.selectAll('g')
+    let cell = g.selectAll('g')
         .data(root.leaves())
         .enter().append('g')
         .attr('transform', function (d) {
