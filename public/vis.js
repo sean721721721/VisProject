@@ -56,7 +56,10 @@ function visMain(data) {
     });*/
     overlapvis(data.data);
     overview(data);
-    pageview(data);
+    // data manipulate
+    let pd = pagedata(data);
+    pageview(pd);
+    detailview(data, 'fuck');
     // console.log(data);
 }
 
@@ -1309,11 +1312,20 @@ function overview(data) {
     let width = '100%';
     let height = '50%';
     let margin = {
-        top: 20,
+        top: 30,
         right: 60,
         bottom: 30,
-        left: 40,
+        left: 60,
     };
+
+    let zoom = d3.zoom()
+        .scaleExtent([1, 5])
+        .on('zoom', function () {
+            g.attr('transform', d3.event.transform);
+            let k = this.__zoom.k;
+            g.attr('r', 5 / k)
+                .attr('stroke-width', 1 / k);
+        });
 
     let svg = d3.select('#over')
         .append('svg')
@@ -1332,15 +1344,6 @@ function overview(data) {
     let g = svg.append('g')
         .attr('id', 'over')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-    let zoom = d3.zoom()
-        .scaleExtent([1, 5])
-        .on('zoom', function () {
-            g.attr('transform', d3.event.transform);
-            let k = this.__zoom.k;
-            g.attr('r', 5 / k)
-                .attr('stroke-width', 1 / k);
-        });
 
     let rectA = g.selectAll('g')
         .append('g').attr('class', 'A')
@@ -1399,60 +1402,6 @@ function overview(data) {
  * @param {object} data - inputdata
  */
 function pageview(data) {
-    // data manipulate
-    let pagedata = data.data[0];
-    let tm = {};
-    let tmdata = [];
-    for (let i = 0, l = pagedata.length; i < l; i++) {
-        let page = {};
-        let post = {};
-        let posttemp = [];
-        let comment = {};
-        let reaction = {};
-        let like = {};
-        let love = {};
-        let haha = {};
-        let wow = {};
-        let sad = {};
-        let angry = {};
-        let share = {};
-        let posts = pagedata[i];
-        for (let j = 0, l = posts.length; j < l; j++) {
-            comment.name = 'comment';
-            comment.size = posts[j].comments.summary;
-            like.name = 'like';
-            like.size = posts[j].reactions.like;
-            love.name = 'love';
-            love.size = posts[j].reactions.love;
-            haha.name = 'haha';
-            haha.size = posts[j].reactions.haha;
-            wow.name = 'wow';
-            wow.size = posts[j].reactions.wow;
-            sad.name = 'sad';
-            sad.size = posts[j].reactions.sad;
-            angry.name = 'angry';
-            angry.size = posts[j].reactions.angry;
-            reaction.name = 'reaction';
-            reaction.children = [like, love, haha, wow, sad, angry];
-            share.name = 'share';
-            share.size = posts[j].shares;
-            let temp = [];
-            temp.push(comment);
-            temp.push(reaction);
-            temp.push(share);
-            post.name = posts[j].id;
-            post.children = temp;
-            posttemp.push(post);
-        }
-        let pi = 'page' + (i + 1);
-        page.name = data.query[pi];
-        page.children = posttemp;
-        tmdata.push(page);
-    }
-    tm.name = 'root';
-    tm.children = tmdata;
-    console.log(tm);
-
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
     let width = '100%';
@@ -1460,19 +1409,6 @@ function pageview(data) {
     let w = 500;
     let h = 500;
     // let wx = w / ovdata.length;
-    let svg = d3.select('#page')
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('viewBox', '0 0 500 500')
-        .attr('preserveAspectRatio', 'xMinYMin')
-        .style('fill', 'none')
-        .style('pointer-events', 'all');
-    // .call(zoom);
-
-    let g = svg.append('g')
-        .attr('id', 'pagepmap');
-
     let zoom = d3.zoom()
         .scaleExtent([1, 5])
         .on('zoom', function () {
@@ -1481,6 +1417,19 @@ function pageview(data) {
             g.attr('r', 5 / k)
                 .attr('stroke-width', 1 / k);
         });
+
+    let svg = d3.select('#page')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', '0 0 500 500')
+        .attr('preserveAspectRatio', 'xMinYMin')
+        .style('fill', 'none')
+        .style('pointer-events', 'all')
+        .call(zoom);
+
+    let g = svg.append('g')
+        .attr('id', 'pagepmap');
 
     let fader = function (color) {
         return d3.interpolateRgb(color, '#fff')(0.2);
@@ -1492,9 +1441,10 @@ function pageview(data) {
         .tile(d3.treemapSquarify)
         .size([w, h])
         .round(false)
-        .paddingInner(1);
+        // .paddingInner(1)
+        .paddingOuter(1);
 
-    let root = d3.hierarchy(tm)
+    let root = d3.hierarchy(data)
         .eachBefore(function (d) {
             d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
         })
@@ -1541,16 +1491,22 @@ function pageview(data) {
         })
         .selectAll('tspan')
         .data(function (d) {
-            return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+            // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+            let arr = d.data.id.split('.');
+            return arr[2];
         })
         .enter().append('tspan')
-        .attr('x', 4)
+        .attr('x', (d, i) => {
+            return 13 * i + 4;
+        })
         .attr('y', function (d, i) {
-            return 13 + i * 10;
+            return 13;
+            // return 13 + i * 10;
         })
         .text(function (d) {
             return d;
-        });
+        })
+        .attr('fill', '#fff');
 
     cell.append('title')
         .text(function (d) {
@@ -1621,6 +1577,101 @@ function countactivities(data){
         }
     }
 }*/
+
+function detailview(data, select) {
+    let rawTemplate = document.getElementById('detail-view').innerHTML;
+    let template = Handlebars.compile(rawTemplate);
+    let detail = document.querySelector('#detail');
+    let initdetail = detail.innerHTML;
+    let content = {};
+    let pagedata = data.data[0];
+    for (let i = 0, l = pagedata.length; i < l; i++) {
+        let page = pagedata[i];
+        for (let j = 0, l = page.length; j < l; j++) {
+            let post = page[j];
+            if (post.id === select) {
+                content = post;
+                j = l;
+            }
+        }
+    }
+    content.page=data.query.page1;
+    content.message=pagedata[0][0].message;
+    content.reactions={};
+    // content.reactions.total=pagedata[0][0][0].reactions;
+    content.reactions.like=pagedata[0][0].reactions.like;
+    content.reactions.love=pagedata[0][0].reactions.love;
+    content.reactions.haha=pagedata[0][0].reactions.haha;
+    content.reactions.wow=pagedata[0][0].reactions.wow;
+    content.reactions.sad=pagedata[0][0].reactions.sad;
+    content.reactions.angry=pagedata[0][0].reactions.angry;
+    console.log(content);
+    detail.innerHTML = initdetail;
+    let html = template(content);
+    detail.innerHTML += html;
+}
+
+/**
+ * get pagedata object
+ * @param {object} data - inputarray
+ * @return {object}
+ */
+function pagedata(data) {
+    let pagedata = data.data[0];
+    let tm = {};
+    let tmdata = [];
+    for (let i = 0, l = pagedata.length; i < l; i++) {
+        let page = {};
+        let posttemp = [];
+        let posts = pagedata[i];
+        for (let j = 0, l = posts.length; j < l; j++) {
+            let post = {};
+            let comment = {};
+            let reaction = {};
+            let like = {};
+            let love = {};
+            let haha = {};
+            let wow = {};
+            let sad = {};
+            let angry = {};
+            let share = {};
+            comment.name = 'comment';
+            comment.size = posts[j].comments.summary;
+            like.name = 'like';
+            like.size = posts[j].reactions.like;
+            love.name = 'love';
+            love.size = posts[j].reactions.love;
+            haha.name = 'haha';
+            haha.size = posts[j].reactions.haha;
+            wow.name = 'wow';
+            wow.size = posts[j].reactions.wow;
+            sad.name = 'sad';
+            sad.size = posts[j].reactions.sad;
+            angry.name = 'angry';
+            angry.size = posts[j].reactions.angry;
+            reaction.name = 'reaction';
+            reaction.children = [like, love, haha, wow, sad, angry];
+            share.name = 'share';
+            share.size = posts[j].shares;
+            let temp = [];
+            temp.push(comment);
+            temp.push(reaction);
+            temp.push(share);
+            // post.name = posts[j].id;
+            post.name = 'p' + (j + 1);
+            post.children = temp;
+            posttemp.push(post);
+        }
+        let pi = 'page' + (i + 1);
+        page.name = data.query[pi];
+        page.children = posttemp;
+        tmdata.push(page);
+    }
+    tm.name = 'root';
+    tm.children = tmdata;
+    console.log(tm);
+    return tm;
+};
 
 /**
  * get activitiy counts
