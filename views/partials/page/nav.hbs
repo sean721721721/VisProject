@@ -1,79 +1,176 @@
-<ul>
-    <li><a href="/">Home</a></li>
-    <!--li><a href="/echo/Hello">Echo: Hello</a></li-->
-</ul>
-<div "overflow-x:auto;">
-    <form action="/query" method="post" id="para">
-        <fieldset>
-            <legend>Set query Parameters</legend>
-            <label for="x">minlike:</label>
-            <input name="minlike" id="minlike" type="number" min="0" placeholder="minlike" value="0"></input>
-            <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
-            <label for="x">maxlike:</label>
-            <input name="maxlike" id="maxlike" type="number" min="0"></input>
-            <label for="x">mincomment:</label>
-            <input name="mincomment" id="mincomment" type="number" min="0" placeholder="mincomment" value="0"></input>
-            <label for="x">maxcomment:</label>
-            <input name="maxcomment" id="maxcomment" type="number" min="0"></input><label for="x">posttype:</label>
-            <input name="posttype" id="posttype" type="text" list="posttypelist"></input>
-            <datalist id="posttypelist">
-                <select multiple id="posttype" name="posttype">
-                    <option>status</option>
-                    <option>video</option>
-                    <option>link</option>
-                    <option>photo</option>
-                </select>
-            </datalist>
-        </fieldset>
-        <fieldset>
-            <legend>Query date1</legend>
-            <label for="x">pagename:</label>
-            <input name="pagename1" id="pagename1" type="text" list="pagenamelist"></input>
-            <datalist id="pagenamelist">
-                <select multiple id="pagename" name="pagename">
-                    <option>客台</option>
-                    <option>勞動之王</option>
-                    <option>古斌</option>
-                    <option>安唯綾</option>
-                    <option>張靜之</option>
-                    <option>黃騰浩</option>
-                </select>
-            </datalist>
-            <label for="x">since:</label>
-            <input type="date1" name="date1" id="date1" placeholder="date" value="2017-03-27"></input>
-            <label for="x">until:</label>
-            <input type="date2" name="date2" id="date2" placeholder="date" value="2017-04-27"></input>
-        </fieldset>
-        <fieldset>
-            <legend>Query date2</legend>
-            <label for="x">pagename:</label>
-            <input name="pagename2" id="pagename2" type="text" list="pagenamelist"></input>
-            <datalist id="pagenamelist">
-                <select multiple id="pagename" name="pagename">
-                    <option>客台</option>
-                    <option>勞動之王</option>
-                    <option>古斌</option>
-                    <option>安唯綾</option>
-                    <option>張靜之</option>
-                    <option>黃騰浩</option>
-                </select>
-            </datalist>
-            <label for="x">since:</label>
-            <input type="date3" name="date3" id="date3" placeholder="date" value="2017-03-27"></input>
-            <label for="x">until:</label>
-            <input type="date4" name="date4" id="date4" placeholder="date" value="2017-04-27"></input>
-        </fieldset>
-        <fieldset>
-            <legend>Get co-activity</legend>
-            <!--input name="co" id="coreaction" type="submit" value="Co reaction" onclick="getCR()"></input>
+<div class="wrapper">
+    <div class="box menu">
+        <ul>
+            <li>
+                <a href="/">Home</a>
+            </li>
+            <!--li><a href="/echo/Hello">Echo: Hello</a></li-->
+        </ul>
+        <div "overflow-x:auto;">
+            <form action="/query" method="post" id="para">
+                <fieldset>
+                    <legend>Set query Parameters</legend>
+                    <label for="x">minlike:</label>
+                    <input name="minlike" id="minlike" type="number" min="0" placeholder="minlike" value="0"></input>
+                    <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
+                    <label for="x">maxlike:</label>
+                    <input name="maxlike" id="maxlike" type="number" min="0"></input>
+                    <label for="x">mincomment:</label>
+                    <input name="mincomment" id="mincomment" type="number" min="0" placeholder="mincomment" value="0"></input>
+                    <label for="x">maxcomment:</label>
+                    <input name="maxcomment" id="maxcomment" type="number" min="0"></input>
+                    <label for="x">posttype:</label>
+                    <input name="posttype" id="posttype" type="text" list="posttypelist"></input>
+                    <datalist id="posttypelist">
+                        <select multiple id="posttype" name="posttype">
+                            <option>status</option>
+                            <option>video</option>
+                            <option>link</option>
+                            <option>photo</option>
+                        </select>
+                    </datalist>
+                </fieldset>
+                <fieldset>
+                    <legend>Query date1</legend>
+                    <label for="x">pagename:</label>
+                    <input name="pagename1" id="pagename1" type="text" list="pagenamelist"></input>
+                    <datalist id="pagenamelist">
+                        <select multiple id="pagename" name="pagename">
+                            <option>客台</option>
+                            <option>勞動之王</option>
+                            <option>古斌</option>
+                            <option>安唯綾</option>
+                            <option>張靜之</option>
+                            <option>黃騰浩</option>
+                        </select>
+                    </datalist>
+                    <label for="x">since:</label>
+                    <input type="date1" name="date1" id="date1" placeholder="date" value="2017-03-27"></input>
+                    <label for="x">until:</label>
+                    <input type="date2" name="date2" id="date2" placeholder="date" value="2017-04-27"></input>
+                </fieldset>
+                <fieldset>
+                    <legend>Query date2</legend>
+                    <label for="x">pagename:</label>
+                    <input name="pagename2" id="pagename2" type="text" list="pagenamelist"></input>
+                    <datalist id="pagenamelist">
+                        <select multiple id="pagename" name="pagename">
+                            <option>客台</option>
+                            <option>勞動之王</option>
+                            <option>古斌</option>
+                            <option>安唯綾</option>
+                            <option>張靜之</option>
+                            <option>黃騰浩</option>
+                        </select>
+                    </datalist>
+                    <label for="x">since:</label>
+                    <input type="date3" name="date3" id="date3" placeholder="date" value="2017-03-27"></input>
+                    <label for="x">until:</label>
+                    <input type="date4" name="date4" id="date4" placeholder="date" value="2017-04-27"></input>
+                </fieldset>
+                <fieldset>
+                    <legend>Get co-activity</legend>
+                    <!--input name="co" id="coreaction" type="submit" value="Co reaction" onclick="getCR()"></input>
             <input name="co" id="cocomment" type="submit" value="Co comment"></input>
             <input name="co" id="coshare" type="submit" value="Co share"></input-->
-            <button name="submit" type="button" onclick="getCR('Co reaction')">Co reaction</button>
-            <button name="submit" type="button" onclick="getCR('Co comment')">Co comment</button>
-            <button name="submit" type="button" onclick="getCR('Co share')">Co share</button>
-            <button name="submit" type="button" onclick="getCR('All')">All users</button>
-        </fieldset>
-    </form>
+                    <button name="submit" type="button" onclick="getCR('Co reaction')">Co reaction</button>
+                    <button name="submit" type="button" onclick="getCR('Co comment')">Co comment</button>
+                    <button name="submit" type="button" onclick="getCR('Co share')">Co share</button>
+                    <button name="submit" type="button" onclick="getCR('All')">All users</button>
+                </fieldset>
+            </form>
+        </div>
+        <!--form>
+                    <fieldset>
+                        <legend>Set t-SNE Parameters</legend>
+                        <label for="x">epsilon:</label>
+                        <input name="epsilon" id="epsilon" type="number" placeholder="epsilon" value="10"></input>
+                        <label for="x">perplexity:</label>
+                        <input name="perplexity" id="perplexity" type="number" placeholder="perplexity" value="50"></input>
+                        <label for="x">iteration:</label>
+                        <input name="iteration" id="iteration" type="number" placeholder="iteration" value="10"></input>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Choose Reaction Attributes</legend>
+                        <label for="x">like</label>
+                        <input name="like" id="like" type="checkbox" value="like" checked></input>
+                        <label for="x">haha</label>
+                        <input name="haha" id="haha" type="checkbox" value="haha" checked></input>
+                        <label for="x">wow</label>
+                        <input name="wow" id="wow" type="checkbox" value="wow" checked></input>
+                        <label for="x">sad</label>
+                        <input name="sad" id="sad" type="checkbox" value="sad" checked></input>
+                        <label for="x">angry</label>
+                        <input name="angry" id="angry" type="checkbox" value="angry" checked></input>
+                        <label for="x">thankful</label>
+                        <input name="thankful" id="thankful" type="checkbox" value="thankful" checked></input>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Choose Comment Properties</legend>
+                        <label for="y">NETWORKSIZE</label>
+                        <input name="Property" id="NETWORKSIZE" type="checkbox" value="NETWORKSIZE" checked></input>
+                        <label for="y">BETWEENNESS</label>
+                        <input name="Property" id="BETWEENNESS" type="checkbox" value="BETWEENNESS" checked></input>
+                        <label for="y">NBETWEENNESS</label>
+                        <input name="Property" id="NBETWEENNESS" type="checkbox" value="NBETWEENNESS" checked></input>
+                        <label for="y">DENSITY</label>
+                        <input name="Property" id="DENSITY" type="checkbox" value="DENSITY" checked></input>
+                        <label for="y">BROKERAGE</label>
+                        <input name="Property" id="BROKERAGE" type="checkbox" value="BROKERAGE" checked></input>
+                        <label for="y">NBROKERAGE</label>
+                        <input name="Property" id="NBROKERAGE" type="checkbox" value="NBROKERAGE" checked></input>
+                        <label for="y">TRANSITIVITY</label>
+                        <input name="Property" id="TRANSITIVITY" type="checkbox" value="TRANSITIVITY" checked></input>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Render</legend>
+                        <label for="z">Normalize</label>
+                        <input name="normalize" id="normalize" type="checkbox" value="normalize" checked></input>
+                        <input name="submit" id="submit" type="button" value="Submit"></input>
+                        <label for="z">Update:</label>
+                        <input name="update" id="update" type="button" value="Update"></input>
+                    </fieldset>
+                </form-->
+    </div>
+    <!--div class="box graph">
+                <h2>Scatter Plot</h2>
+                <div class="svg"></div>
+            </div-->
+    <div class="box overview">
+        <div id="template" class="slider__list"></div>
+        <div id="over"></div>
+    </div>
+    <div class="box postview">
+        <h2>PageView</h2>
+        <div id="page"></div>
+        <form>
+            <label>
+                <input type="radio" name="mode" value="sumBySize" checked> Size</label>
+            <label>
+                <input type="radio" name="mode" value="sumByCount"> Count</label>
+        </form>
+    </div>
+    <div class="box detailview">
+        <div id="detail">
+            <h2>detailview</h2>
+        </div>
+        <div class="pagination">
+            <a href="#">&laquo;</a>
+            <a href="#">1</a>
+            <a class="active" href="#">2</a>
+            <a href="#">3</a>
+            <a href="#">4</a>
+            <a href="#">5</a>
+            <a href="#">6</a>
+            <a href="#">&raquo;</a>
+        </div>
+    </div>
+    <div class="box userview" id="table">
+        <div id="overlap"></div>
+        <div id="cooltable"></div>
+    </div>
 </div>
-<div id="template" class="slider__list"></div>
+<div class="tooltip a"></div>
+<div class="tooltip b"></div>
+<div class="tooltip c"></div>
 <script src="/nav.js"></script>

@@ -1,134 +1,69 @@
 <template>
     <script id="search-vis" type="text/x-handlebars-template">
-        <div class="wrapper">
-            <div class="box menu">
-                <!--form>
-                    <fieldset>
-                        <legend>Set t-SNE Parameters</legend>
-                        <label for="x">epsilon:</label>
-                        <input name="epsilon" id="epsilon" type="number" placeholder="epsilon" value="10"></input>
-                        <label for="x">perplexity:</label>
-                        <input name="perplexity" id="perplexity" type="number" placeholder="perplexity" value="50"></input>
-                        <label for="x">iteration:</label>
-                        <input name="iteration" id="iteration" type="number" placeholder="iteration" value="10"></input>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Choose Reaction Attributes</legend>
-                        <label for="x">like</label>
-                        <input name="like" id="like" type="checkbox" value="like" checked></input>
-                        <label for="x">haha</label>
-                        <input name="haha" id="haha" type="checkbox" value="haha" checked></input>
-                        <label for="x">wow</label>
-                        <input name="wow" id="wow" type="checkbox" value="wow" checked></input>
-                        <label for="x">sad</label>
-                        <input name="sad" id="sad" type="checkbox" value="sad" checked></input>
-                        <label for="x">angry</label>
-                        <input name="angry" id="angry" type="checkbox" value="angry" checked></input>
-                        <label for="x">thankful</label>
-                        <input name="thankful" id="thankful" type="checkbox" value="thankful" checked></input>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Choose Comment Properties</legend>
-                        <label for="y">NETWORKSIZE</label>
-                        <input name="Property" id="NETWORKSIZE" type="checkbox" value="NETWORKSIZE" checked></input>
-                        <label for="y">BETWEENNESS</label>
-                        <input name="Property" id="BETWEENNESS" type="checkbox" value="BETWEENNESS" checked></input>
-                        <label for="y">NBETWEENNESS</label>
-                        <input name="Property" id="NBETWEENNESS" type="checkbox" value="NBETWEENNESS" checked></input>
-                        <label for="y">DENSITY</label>
-                        <input name="Property" id="DENSITY" type="checkbox" value="DENSITY" checked></input>
-                        <label for="y">BROKERAGE</label>
-                        <input name="Property" id="BROKERAGE" type="checkbox" value="BROKERAGE" checked></input>
-                        <label for="y">NBROKERAGE</label>
-                        <input name="Property" id="NBROKERAGE" type="checkbox" value="NBROKERAGE" checked></input>
-                        <label for="y">TRANSITIVITY</label>
-                        <input name="Property" id="TRANSITIVITY" type="checkbox" value="TRANSITIVITY" checked></input>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Render</legend>
-                        <label for="z">Normalize</label>
-                        <input name="normalize" id="normalize" type="checkbox" value="normalize" checked></input>
-                        <input name="submit" id="submit" type="button" value="Submit"></input>
-                        <label for="z">Update:</label>
-                        <input name="update" id="update" type="button" value="Update"></input>
-                    </fieldset>
-                </form-->
+        <div>
+            <h2>OverView</h2>
+            <h1>{{{query.co}}}結果：</h1>
+            <div>
+                <table class="query">
+                    <thead>
+                        <tr>
+                            <th>Page name</th>
+                            <th>from</th>
+                            <th>to</th>
+                            <th>貼文數</th>
+                            <th>使用者數</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>{{{query.page1}}}</th>
+                            <th>{{{query.time1}}}</th>
+                            <th>{{{query.time2}}}</th>
+                            <th>{{{summary.[0].[0]}}}</th>
+                            <th>{{{summary.[1].[0]}}}</th>
+                        </tr>
+                        <tr>
+                            <th>{{{query.page2}}}</th>
+                            <th>{{{query.time3}}}</th>
+                            <th>{{{query.time4}}}</th>
+                            <th>{{{summary.[0].[1]}}}</th>
+                            <th>{{{summary.[1].[1]}}}</th>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <!--div class="box graph">
-                <h2>Scatter Plot</h2>
-                <div class="svg"></div>
-            </div-->
-            <div class="box overview">
-                <h2>OverView</h2>
-                <h1>{{{query.co}}}結果：</h1>
-                <div>
-                    <table class="query">
-                        <thead>
-                            <tr>
-                                <th>Page name</th>
-                                <th>from</th>
-                                <th>to</th>
-                                <th>貼文數</th>
-                                <th>使用者數</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th>{{{query.page1}}}</th>
-                                <th>{{{query.time1}}}</th>
-                                <th>{{{query.time2}}}</th>
-                                <th>{{{summary.[0].[0]}}}</th>
-                                <th>{{{summary.[1].[0]}}}</th>
-                            </tr>
-                            <tr>
-                                <th>{{{query.page2}}}</th>
-                                <th>{{{query.time3}}}</th>
-                                <th>{{{query.time4}}}</th>
-                                <th>{{{summary.[0].[1]}}}</th>
-                                <th>{{{summary.[1].[1]}}}</th>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <table class="summary">
-                        <tbody>
-                            <tr>
-                                <th>所有貼文數:</th>
-                                <th>{{{data.[0].length}}}</th>
-                            </tr>
-                            <tr>
-                                <th>所有使用者數:</th>
-                                <th>{{{summary.[1].[2]}}}</th>
-                            </tr>
-                            <tr>
-                                <th>{{{query.co}}}使用者數:</th>
-                                <th>{{{data.[1].length}}}</th>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div id="over"></div>
-            </div>
-            <div class="box postview">
-                <h2>PageView</h2>
-                <div id="page"></div>
-                <form>
-                        <label><input type="radio" name="mode" value="sumBySize" checked> Size</label>
-                        <label><input type="radio" name="mode" value="sumByCount"> Count</label>
-                      </form>
-            </div>
-            <div class="box detailview">
-                <div id="detail"></div>
-            </div>
-            <div class="box userview" id="table">
-                <div id="overlap"></div>
-                <div id="cooltable"></div>
+            <div>
+                <table class="summary">
+                    <tbody>
+                        <tr>
+                            <th>所有貼文數:</th>
+                            <th>{{{data.[0].length}}}</th>
+                        </tr>
+                        <tr>
+                            <th>所有使用者數:</th>
+                            <th>{{{summary.[1].[2]}}}</th>
+                        </tr>
+                        <tr>
+                            <th>{{{query.co}}}使用者數:</th>
+                            <th>{{{data.[1].length}}}</th>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="tooltip a"></div>
-        <div class="tooltip b"></div>
-        <div class="tooltip c"></div>
     </script>
     <script src="/vis.js"></script>
+    <script id="detail-view" type="text/x-handlebars-template">
+        <div>
+            <p>{{{page}}}</p>
+            <p>{{{message}}}</p>
+            <p>
+                <img src="img/like.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.like}}}
+                <img src="img/love.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.love}}}
+                <img src="img/haha.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.haha}}}
+                <img src="img/wow.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.wow}}}
+                <img src="img/sad.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.sad}}}
+                <img src="img/angry.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.angry}}} </p>
+        </div>
+    </script>
 </template>
