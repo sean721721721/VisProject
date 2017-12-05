@@ -1,7 +1,6 @@
 <template>
     <script id="search-vis" type="text/x-handlebars-template">
         <div>
-            <h2>OverView</h2>
             <h1>{{{query.co}}}結果：</h1>
             <div>
                 <table class="query">
@@ -37,7 +36,7 @@
                     <tbody>
                         <tr>
                             <th>所有貼文數:</th>
-                            <th>{{{data.[0].length}}}</th>
+                            <th>{{{summary.[0].[2]}}}</th>
                         </tr>
                         <tr>
                             <th>所有使用者數:</th>
@@ -55,7 +54,7 @@
     <script src="/vis.js"></script>
     <script id="detail-view" type="text/x-handlebars-template">
         <div>
-            <p>{{{page}}}</p>
+            <p>{{{page}}} {{{post}}}</p>
             <p>{{{message}}}</p>
             <p>
                 <img src="img/like.jpg" class="img-circle" style="width:16px;height:16px">:{{{reactions.like}}}

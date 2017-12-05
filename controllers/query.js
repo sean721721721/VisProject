@@ -299,7 +299,7 @@ var callback = function callback(req, res) {
                         title: 'query',
                         query: req.params,
                         summary: [
-                            [result[0].length, result[1].length],
+                            [result[0].length, result[1].length, result[0].length + result[1].length],
                             [ul1.length, ul2.length, userlist.length]
                         ],
                         data: [postlist, oldata, sortdata],
