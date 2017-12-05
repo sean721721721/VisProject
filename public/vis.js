@@ -58,8 +58,7 @@ function visMain(data) {
     overview(data);
     // data manipulate
     let pd = pagedata(data);
-    pageview(pd);
-    detailview(data, 'fuck');
+    pageview(data, pd);
     // console.log(data);
 }
 
@@ -1400,8 +1399,9 @@ function overview(data) {
 /**
  * pageview
  * @param {object} data - inputdata
+ * @param {object} pagedata - pagedata
  */
-function pageview(data) {
+function pageview(data, pagedata) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
     let width = '100%';
@@ -1431,10 +1431,6 @@ function pageview(data) {
     let g = svg.append('g')
         .attr('id', 'pagepmap');
 
-    let fader = function (color) {
-        return d3.interpolateRgb(color, '#fff')(0.2);
-    };
-    let color = d3.scaleOrdinal(d3.schemeCategory20.map(fader));
     let format = d3.format(',d');
 
     let treemap = d3.treemap()
@@ -1444,9 +1440,19 @@ function pageview(data) {
         // .paddingInner(1)
         .paddingOuter(1);
 
-    let root = d3.hierarchy(data)
+    let n = 100;
+    let root = d3.hierarchy(pagedata)
         .eachBefore(function (d) {
             d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
+            let page = d.data.id.split('.')[1];
+            let post = d.data.id.split('.')[2];
+            d.data.page = page === undefined ? 0 : page === pagedata.children[0].name ? 1 : 2;
+            d.data.post = post === undefined ? 0 : post.match(/\d{1,}/);
+            d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
+            // console.log(d.data.post[0]);
+            if (d.data.post[0] > n) {
+                n = d.data.post[0];
+            }
         })
         .sum(sumBySize)
         .sort(function (a, b) {
@@ -1463,6 +1469,10 @@ function pageview(data) {
         });
 
     cell.append('rect')
+        .data(root.leaves())
+        .attr('class', (d) => {
+            return 'depth' + d.depth;
+        })
         .attr('id', function (d) {
             return d.data.id;
         })
@@ -1473,7 +1483,34 @@ function pageview(data) {
             return d.y1 - d.y0;
         })
         .attr('fill', function (d) {
-            return color(d.parent.data.id);
+            return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+        })
+        .on('click', (d) => {
+            console.log(d);
+            let pagedata = data.data[0];
+            // d.data.id.split('.');
+            let select = d.data.id.split('.');
+            let page = select[1];
+            let post = select[2];
+            let i = page === data.query.page1 ? 0 : 1;
+            let j = parseInt(post.match(/\d{1,}/)[0]) - 1;
+            // console.log(i, j);
+            let id = pagedata[i][j].id;
+            detailview(data, d.data.id.split('.'));
+            let s = d3.selectAll('.user')
+                .attr('fill', (d) => {
+                    for (let i = 0, l = d.posts.A.length; i < l; i++) {
+                        if (d.posts.A[i].id === id) {
+                            return '#000';
+                        }
+                    }
+                    for (let i = 0, l = d.posts.B.length; i < l; i++) {
+                        if (d.posts.B[i].id === id) {
+                            return '#000';
+                        }
+                    }
+                });
+            // console.log(s._groups);
         });
 
     cell.append('clipPath')
@@ -1481,7 +1518,7 @@ function pageview(data) {
             return 'clip-' + d.data.id;
         })
         .append('use')
-        .attr('xlink:href', function (d) {
+        .attr('href', function (d) {
             return '#' + d.data.id;
         });
 
@@ -1492,12 +1529,15 @@ function pageview(data) {
         .selectAll('tspan')
         .data(function (d) {
             // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+            // console.log(d);
             let arr = d.data.id.split('.');
-            return arr[2];
+            // console.log(d, arr);
+            return d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
         })
         .enter().append('tspan')
         .attr('x', (d, i) => {
-            return 13 * i + 4;
+            // console.log(d);
+            return 9 * i + 4;
         })
         .attr('y', function (d, i) {
             return 13;
@@ -1508,11 +1548,14 @@ function pageview(data) {
         })
         .attr('fill', '#fff');
 
+    /* rect.selectAll('.depth2')
+        .moveToFront();*/
+
     cell.append('title')
         .text(function (d) {
             return d.data.id + '\n' + format(d.value);
         });
-
+    /*
     d3.selectAll('input')
         .data([sumBySize, sumByCount], function (d) {
             return d ? d.name : this.value;
@@ -1546,7 +1589,7 @@ function pageview(data) {
 
     function sumByCount(d) {
         return d.children ? 0 : 1;
-    }
+    }*/
 
     function sumBySize(d) {
         return d.size;
@@ -1585,26 +1628,24 @@ function detailview(data, select) {
     let initdetail = detail.innerHTML;
     let content = {};
     let pagedata = data.data[0];
-    for (let i = 0, l = pagedata.length; i < l; i++) {
-        let page = pagedata[i];
-        for (let j = 0, l = page.length; j < l; j++) {
-            let post = page[j];
-            if (post.id === select) {
-                content = post;
-                j = l;
-            }
-        }
-    }
-    content.page=data.query.page1;
-    content.message=pagedata[0][0].message;
-    content.reactions={};
+    // d.data.id.split('.');
+    let page = select[1];
+    let post = select[2];
+    let i = page === data.query.page1 ? 0 : 1;
+    let j = parseInt(post.match(/\d{1,}/)[0]) - 1;
+    // console.log(i, j);
+    content.page = data.query.page1;
+    content.post = post;
+    content.message = pagedata[i][j].message;
+    content.reactions = {};
     // content.reactions.total=pagedata[0][0][0].reactions;
-    content.reactions.like=pagedata[0][0].reactions.like;
-    content.reactions.love=pagedata[0][0].reactions.love;
-    content.reactions.haha=pagedata[0][0].reactions.haha;
-    content.reactions.wow=pagedata[0][0].reactions.wow;
-    content.reactions.sad=pagedata[0][0].reactions.sad;
-    content.reactions.angry=pagedata[0][0].reactions.angry;
+    content.reactions.like = pagedata[i][j].reactions.like;
+    content.reactions.love = pagedata[i][j].reactions.love;
+    content.reactions.haha = pagedata[i][j].reactions.haha;
+    content.reactions.wow = pagedata[i][j].reactions.wow;
+    content.reactions.sad = pagedata[i][j].reactions.sad;
+    content.reactions.angry = pagedata[i][j].reactions.angry;
+    content.comments = pagedata[i][j].comments;
     console.log(content);
     detail.innerHTML = initdetail;
     let html = template(content);
@@ -1802,3 +1843,35 @@ function countactivities(data) {
     count.degree = dtemp;
     return count;
 }
+
+/**
+ * cubehelix color
+ * @param {number} c - maxh
+ * @param {number} h - h
+ * @param {number} s -
+ * @param {number} l -
+ * @param {number} o -
+ * @return {color}
+ */
+function chcolor(c, h, s, l, o) {
+    let parah = d3.scaleLinear().domain([0, c]).range([0, 360]);
+    let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
+    let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
+    // console.log(parah(h), paras(s), paral(l));
+    return d3.cubehelix(parah(h), paras(s), paral(l), o);
+};
+
+// https://github.com/wbkd/d3-extended
+d3.selection.prototype.moveToFront = function () {
+    return this.each(function () {
+        this.parentNode.appendChild(this);
+    });
+};
+d3.selection.prototype.moveToBack = function () {
+    return this.each(function () {
+        let firstChild = this.parentNode.firstChild;
+        if (firstChild) {
+            this.parentNode.insertBefore(this, firstChild);
+        }
+    });
+};
