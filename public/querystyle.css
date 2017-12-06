@@ -181,13 +181,13 @@ td {
 
 /* grid setting */
 
-.wrapper {
+.grid1 {
     margin: 0 0 0 0;
     border: 2px solid #CCC;
     display: grid;
     grid-gap: 1px;
-    grid-template-columns: 0.01fr [col1] 1fr [col2] 1fr [col3] 1fr [col4] 1fr [colend] 0.01fr;
-    grid-template-rows: 0.01fr [row1] auto [row2] auto [row3] auto [rowend] 0.01fr;
+    grid-template-columns: [col1] 0.5fr [col2] 0.5fr [colend];
+    grid-template-rows: [row1] auto [row2] auto [rowend];
 }
 
 .box {
@@ -198,6 +198,17 @@ td {
     font-size: 100%;
 }
 
+.grid2{
+    background-color: lightgray;
+    margin: 0 0 0 0;
+    display: grid;
+    grid-gap: 1px;
+    grid-column: col1 / col2;
+    grid-row: row2 / rowend;
+    grid-template-columns: [scol1] 0.5fr [scol2] 0.5fr [scolend];
+    grid-template-rows: [srow1] fit-content(50%) [srow2] fit-content(50%) [srowend];
+}
+
 .menu {
     padding: 5px;
     grid-column: col1 / colend;
@@ -205,35 +216,36 @@ td {
 }
 
 .overview {
-    grid-column: col1 / col2;
-    grid-row: row2 / row3;
+    grid-column: scol1 / scol2;
+    grid-row: srow1 / srow2;
 }
 
 .postview {
-    grid-column: col2 / col3;
-    grid-row: row2 / row3;
+    grid-column: scol2 / scolend;
+    grid-row: srow1 / srow2;
 }
 
 .detailview {
-    grid-column: col1 / col3;
-    grid-row: row3 / rowend;
+    grid-column: scol1 / scolend;
+    grid-row: srow2 / srowend;
 }
 
 .userview {
-    grid-column: col3 / colend;
+    grid-column: col2 / colend;
     grid-row: row2 / rowend;
 }
 
 .query,
 .summary {
     margin: 5px;
-    margin-left: 20%;
-    margin-right: 20%;
-    width: 60%;
+    margin-left: 5%;
+    margin-right: 5%;
+    width: 90%;
     border: 1px solid;
 }
 
 .detailview {
+    overflow-y: scroll;
     color: #444;
     background-color: white;
     border: 5px solid #444;
