@@ -1409,14 +1409,14 @@ function pageview(data, pagedata) {
     let w = 500;
     let h = 500;
     // let wx = w / ovdata.length;
-    let zoom = d3.zoom()
+    /* let zoom = d3.zoom()
         .scaleExtent([1, 5])
         .on('zoom', function () {
             g.attr('transform', d3.event.transform);
             let k = this.__zoom.k;
             g.attr('r', 5 / k)
                 .attr('stroke-width', 1 / k);
-        });
+        });*/
 
     let svg = d3.select('#page')
         .append('svg')
@@ -1425,8 +1425,8 @@ function pageview(data, pagedata) {
         .attr('viewBox', '0 0 500 500')
         .attr('preserveAspectRatio', 'xMinYMin')
         .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .call(zoom);
+        .style('pointer-events', 'all');
+    // .call(zoom);
 
     let g = svg.append('g')
         .attr('id', 'pagepmap');
@@ -1459,6 +1459,9 @@ function pageview(data, pagedata) {
             return b.height - a.height || b.value - a.value;
         });
 
+    let focus = root;
+    let view;
+
     treemap(root);
 
     let cell = g.selectAll('g')
@@ -1468,7 +1471,7 @@ function pageview(data, pagedata) {
             return 'translate(' + d.x0 + ',' + d.y0 + ')';
         });
 
-    cell.append('rect')
+    let rect = cell.append('rect')
         .data(root.leaves())
         .attr('class', (d) => {
             return 'depth' + d.depth;
@@ -1510,6 +1513,8 @@ function pageview(data, pagedata) {
                         }
                     }
                 });
+            if (focus !== d) zoom(d);
+            else zoom(root);
             // console.log(s._groups);
         });
 
@@ -1555,6 +1560,16 @@ function pageview(data, pagedata) {
         .text(function (d) {
             return d.data.id + '\n' + format(d.value);
         });
+
+    function getr(d) {
+        let focus = d;
+        let x = focus.x1 - focus.x0;
+        let y = focus.y1 - focus.y0;
+        let r = Math.sqrt(x * y);
+        return r;
+    }
+    console.log(root);
+    zoomTo([root.x0, root.y0, getr(root)]);
     /*
     d3.selectAll('input')
         .data([sumBySize, sumByCount], function (d) {
@@ -1593,6 +1608,53 @@ function pageview(data, pagedata) {
 
     function sumBySize(d) {
         return d.size;
+    }
+
+    function zoom(d) {
+        let focus0 = focus;
+        focus = d;
+        // console.log(view);
+        let x = focus.x1 - focus.x0;
+        let y = focus.y1 - focus.y0;
+        let r = x === w && y === w ? w : x > y ? 2 * x : 2 * y;
+        d3.transition()
+            .duration(d3.event.altKey ? 7500 : 750)
+            .tween('zoom', (d) => {
+                let i = d3.interpolateZoom(view, [focus.x0, focus.y0, r]);
+                return function (t) {
+                    zoomTo(i(t));
+                };
+            });
+
+        /* transition.selectAll('text')
+            .filter(function (d) {
+                return d.parent === focus || this.style.display === 'inline';
+            })
+            .style('fill-opacity', function (d) {
+                return d.parent === focus ? 1 : 0;
+            })
+            .on('start', function (d) {
+                if (d.parent === focus) this.style.display = 'inline';
+            })
+            .on('end', function (d) {
+                if (d.parent !== focus) this.style.display = 'none';
+            });*/
+    }
+
+    function zoomTo(v) {
+        let k = w / v[2];
+        view = v;
+        // console.log(v);
+        cell.attr('transform', function (d) {
+            // console.log(d);
+            return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
+        });
+        rect.attr('width', function (d) {
+                return (d.x1 - d.x0) * k;
+            })
+            .attr('height', function (d) {
+                return (d.y1 - d.y0) * k;
+            });
     }
 }
 
