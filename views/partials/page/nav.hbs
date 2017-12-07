@@ -1,4 +1,4 @@
-<div class="grid1">
+<div class="grid">
     <div class="box menu">
         <ul>
             <li>
@@ -136,39 +136,38 @@
                 <h2>Scatter Plot</h2>
                 <div class="svg"></div>
             </div-->
-    <div class="grid2"><div class="box overview">
-        <h2>OverView</h2>
-        <div id="template" class="slider__list"></div>
-        <div id="over"></div>
-    </div>
-    <div class="box postview">
-        <h2>PageView</h2>
-        <div id="page"></div>
-        <form>
-            <label>
-                <input type="radio" name="mode" value="treemap" checked> Treemap</label>
-            <label>
-                <input type="radio" name="mode" value="pack"> Circle Packing</label>
-        </form>
-    </div>
-    <div class="box detailview">
-        <h2>detailview</h2>
-        <div id="detail">
+    <div class="grid1">
+        <div class="grid2">
+            <div class="box overview">
+                <h2>OverView</h2>
+                <div id="template" class="slider__list"></div>
+                <div id="over"></div>
+            </div>
+            <div class="box postview">
+                <h2>PageView</h2>
+                <div id="page"></div>
+                <form>
+                    <label>
+                        <input type="radio" name="mode" value="treemap" checked> Treemap</label>
+                    <label>
+                        <input type="radio" name="mode" value="pack"> Circle Packing</label>
+                </form>
+            </div>
+            <div class="box detailview">
+                <h2>detailview</h2>
+                <div id="detail">
+                </div>
+                <div class="pagination">
+                    <a href="#" class="previous round">&#8249;</a>
+                    <a href="#" class="next round">&#8250;</a>
+                </div>
+            </div>
         </div>
-        <div class="pagination">
-            <a href="#">&laquo;</a>
-            <a href="#">1</a>
-            <a class="active" href="#">2</a>
-            <a href="#">3</a>
-            <a href="#">4</a>
-            <a href="#">5</a>
-            <a href="#">6</a>
-            <a href="#">&raquo;</a>
+        <div class="box userview" id="table">
+            <h2>Userview</h2>
+            <div id="overlap"></div>
+            <div id="cooltable"></div>
         </div>
-    </div></div>
-    <div class="box userview" id="table">
-        <div id="overlap"></div>
-        <div id="cooltable"></div>
     </div>
 </div>
 <div class="tooltip a"></div>

@@ -181,13 +181,13 @@ td {
 
 /* grid setting */
 
-.grid1 {
+.grid {
     margin: 0 0 0 0;
     border: 2px solid #CCC;
+    height: 95vh;
     display: grid;
     grid-gap: 1px;
-    grid-template-columns: [col1] 0.5fr [col2] 0.5fr [colend];
-    grid-template-rows: [row1] auto [row2] auto [rowend];
+    grid-template-rows: [grow1] auto [grow2] minmax(1px, 90vh) [growend];
 }
 
 .box {
@@ -198,24 +198,36 @@ td {
     font-size: 100%;
 }
 
-.grid2{
+.menu {
+    padding: 5px;
+    grid-row: grow1 / grow2;
+}
+
+.grid1 {
+    margin: 0 0 0 0;
+    border: 2px solid #CCC;
+    display: grid;
+    grid-gap: 1px;
+    grid-row: grow2 / growend;
+    grid-template-columns: [col1] 0.56fr [col2] 0.44fr [colend];
+}
+
+.userview {
+    grid-column: col2 / colend;
+}
+
+.grid2 {
     background-color: lightgray;
     margin: 0 0 0 0;
     display: grid;
     grid-gap: 1px;
     grid-column: col1 / col2;
-    grid-row: row2 / rowend;
     grid-template-columns: [scol1] 0.5fr [scol2] 0.5fr [scolend];
-    grid-template-rows: [srow1] fit-content(50%) [srow2] fit-content(50%) [srowend];
-}
-
-.menu {
-    padding: 5px;
-    grid-column: col1 / colend;
-    grid-row: row1 / row2;
+    grid-template-rows: [srow1] minmax(auto, 0.5fr) [srow2] minmax(auto, 0.5fr) [srowend];
 }
 
 .overview {
+    overflow-y: auto;
     grid-column: scol1 / scol2;
     grid-row: srow1 / srow2;
 }
@@ -226,29 +238,20 @@ td {
 }
 
 .detailview {
+    overflow-y: auto;
+    color: #444;
+    background-color: white;
+    border: 5px solid #444;
     grid-column: scol1 / scolend;
     grid-row: srow2 / srowend;
-}
-
-.userview {
-    grid-column: col2 / colend;
-    grid-row: row2 / rowend;
 }
 
 .query,
 .summary {
     margin: 5px;
-    margin-left: 5%;
-    margin-right: 5%;
-    width: 90%;
+    margin-left: 5px;
+    margin-right: 5px;
     border: 1px solid;
-}
-
-.detailview {
-    overflow-y: scroll;
-    color: #444;
-    background-color: white;
-    border: 5px solid #444;
 }
 
 tr,
@@ -262,21 +265,29 @@ td {
 
 /*****************************************************/
 
-.pagination a {
-    color: black;
-    float: left;
-    padding: 8px 16px;
+a {
     text-decoration: none;
-    transition: background-color .3s;
+    display: inline-block;
+    padding: 8px 16px;
 }
 
-.pagination a.active {
+a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.previous {
+    background-color: #f1f1f1;
+    color: black;
+}
+
+.next {
     background-color: #4CAF50;
     color: white;
 }
 
-.pagination a:hover:not(.active) {
-    background-color: #ddd;
+.round {
+    border-radius: 50%;
 }
 
 

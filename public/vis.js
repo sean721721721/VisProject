@@ -887,8 +887,8 @@ function liketype(typenum) {
  */
 function overlapvis(data) {
     // let width = document.querySelector('#overlap').offsetWidth;
-    let width = '100%';
-    let height = width;
+    let height = '100%';
+    let width = height;
     let cellSize1 = 50;
     let cellSize2 = 40;
     let cellSize3 = 30;
@@ -1404,8 +1404,8 @@ function overview(data) {
 function pageview(data, pagedata) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
-    let width = '100%';
-    let height = width;
+    let height = '100%';
+    let width = height;
     let w = 500;
     let h = 500;
     // let wx = w / ovdata.length;
@@ -1687,7 +1687,7 @@ function detailview(data, select) {
     let rawTemplate = document.getElementById('detail-view').innerHTML;
     let template = Handlebars.compile(rawTemplate);
     let detail = document.querySelector('#detail');
-    let initdetail = detail.innerHTML;
+    let initdetail = '';
     let content = {};
     let pagedata = data.data[0];
     // d.data.id.split('.');
