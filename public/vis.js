@@ -1719,6 +1719,11 @@ function countactivities(data){
     }
 }*/
 
+/**
+ * showcomments in detail
+ * @param {object} data -
+ * @param {array} select -
+ */
 function detailview(data, select) {
     let rawTemplate = document.getElementById('detail-view').innerHTML;
     let template = Handlebars.compile(rawTemplate);

@@ -1,78 +1,89 @@
 <div class="grid">
     <div class="box menu">
-        <ul>
-            <li>
-                <a href="/">Home</a>
-            </li>
-            <!--li><a href="/echo/Hello">Echo: Hello</a></li-->
-        </ul>
-        <div "overflow-x:auto;">
+        <div class="tab">
+            <button class="tablinks"><a href="/">Reset</a></button>
+            <button class="tablinks" onclick="openTab(event, 'Parameters')">Parameters</button>
+            <button class="tablinks" onclick="openTab(event, 'Page1')">Page1</button>
+            <button class="tablinks" onclick="openTab(event, 'Page2')">Page2</button>
+            <button class="tablinks" onclick="openTab(event, 'Submit')">Submit</button>
+        </div>
+        <div id="Parameters" class="tabcontent">
+            <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
+            <fieldset>
+                <legend>Set query Parameters</legend>
+                <label for="x">minlike:</label>
+                <input name="minlike" id="minlike" type="number" min="0" placeholder="minlike" value="0"></input>
+                <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
+                <label for="x">maxlike:</label>
+                <input name="maxlike" id="maxlike" type="number" min="0"></input>
+                <label for="x">mincomment:</label>
+                <input name="mincomment" id="mincomment" type="number" min="0" placeholder="mincomment" value="0"></input>
+                <label for="x">maxcomment:</label>
+                <input name="maxcomment" id="maxcomment" type="number" min="0"></input>
+                <label for="x">posttype:</label>
+                <input name="posttype" id="posttype" type="text" list="posttypelist"></input>
+                <datalist id="posttypelist">
+                    <select multiple id="posttype" name="posttype">
+                        <option>status</option>
+                        <option>video</option>
+                        <option>link</option>
+                        <option>photo</option>
+                    </select>
+                </datalist>
+            </fieldset>
+        </div>
+        <div id="Page1" class="tabcontent">
+            <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
+            <fieldset>
+                <legend>Query date1</legend>
+                <label for="x">pagename:</label>
+                <input name="pagename1" id="pagename1" type="text" list="pagenamelist"></input>
+                <datalist id="pagenamelist">
+                    <select multiple id="pagename" name="pagename">
+                        <option>客台</option>
+                        <option>勞動之王</option>
+                        <option>古斌</option>
+                        <option>安唯綾</option>
+                        <option>張靜之</option>
+                        <option>黃騰浩</option>
+                    </select>
+                </datalist>
+                <label for="x">since:</label>
+                <input type="date1" name="date1" id="date1" placeholder="date" value="2017-03-27"></input>
+                <label for="x">until:</label>
+                <input type="date2" name="date2" id="date2" placeholder="date" value="2017-04-27"></input>
+            </fieldset>
+        </div>
+        <div id="Page2" class="tabcontent">
+            <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
+            <fieldset>
+                <legend>Query date2</legend>
+                <label for="x">pagename:</label>
+                <input name="pagename2" id="pagename2" type="text" list="pagenamelist"></input>
+                <datalist id="pagenamelist">
+                    <select multiple id="pagename" name="pagename">
+                        <option>客台</option>
+                        <option>勞動之王</option>
+                        <option>古斌</option>
+                        <option>安唯綾</option>
+                        <option>張靜之</option>
+                        <option>黃騰浩</option>
+                    </select>
+                </datalist>
+                <label for="x">since:</label>
+                <input type="date3" name="date3" id="date3" placeholder="date" value="2017-03-27"></input>
+                <label for="x">until:</label>
+                <input type="date4" name="date4" id="date4" placeholder="date" value="2017-04-27"></input>
+            </fieldset>
+        </div>
+        <div id="Submit" class="tabcontent">
+            <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
             <form action="/query" method="post" id="para">
-                <fieldset>
-                    <legend>Set query Parameters</legend>
-                    <label for="x">minlike:</label>
-                    <input name="minlike" id="minlike" type="number" min="0" placeholder="minlike" value="0"></input>
-                    <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
-                    <label for="x">maxlike:</label>
-                    <input name="maxlike" id="maxlike" type="number" min="0"></input>
-                    <label for="x">mincomment:</label>
-                    <input name="mincomment" id="mincomment" type="number" min="0" placeholder="mincomment" value="0"></input>
-                    <label for="x">maxcomment:</label>
-                    <input name="maxcomment" id="maxcomment" type="number" min="0"></input>
-                    <label for="x">posttype:</label>
-                    <input name="posttype" id="posttype" type="text" list="posttypelist"></input>
-                    <datalist id="posttypelist">
-                        <select multiple id="posttype" name="posttype">
-                            <option>status</option>
-                            <option>video</option>
-                            <option>link</option>
-                            <option>photo</option>
-                        </select>
-                    </datalist>
-                </fieldset>
-                <fieldset>
-                    <legend>Query date1</legend>
-                    <label for="x">pagename:</label>
-                    <input name="pagename1" id="pagename1" type="text" list="pagenamelist"></input>
-                    <datalist id="pagenamelist">
-                        <select multiple id="pagename" name="pagename">
-                            <option>客台</option>
-                            <option>勞動之王</option>
-                            <option>古斌</option>
-                            <option>安唯綾</option>
-                            <option>張靜之</option>
-                            <option>黃騰浩</option>
-                        </select>
-                    </datalist>
-                    <label for="x">since:</label>
-                    <input type="date1" name="date1" id="date1" placeholder="date" value="2017-03-27"></input>
-                    <label for="x">until:</label>
-                    <input type="date2" name="date2" id="date2" placeholder="date" value="2017-04-27"></input>
-                </fieldset>
-                <fieldset>
-                    <legend>Query date2</legend>
-                    <label for="x">pagename:</label>
-                    <input name="pagename2" id="pagename2" type="text" list="pagenamelist"></input>
-                    <datalist id="pagenamelist">
-                        <select multiple id="pagename" name="pagename">
-                            <option>客台</option>
-                            <option>勞動之王</option>
-                            <option>古斌</option>
-                            <option>安唯綾</option>
-                            <option>張靜之</option>
-                            <option>黃騰浩</option>
-                        </select>
-                    </datalist>
-                    <label for="x">since:</label>
-                    <input type="date3" name="date3" id="date3" placeholder="date" value="2017-03-27"></input>
-                    <label for="x">until:</label>
-                    <input type="date4" name="date4" id="date4" placeholder="date" value="2017-04-27"></input>
-                </fieldset>
                 <fieldset>
                     <legend>Get co-activity</legend>
                     <!--input name="co" id="coreaction" type="submit" value="Co reaction" onclick="getCR()"></input>
-            <input name="co" id="cocomment" type="submit" value="Co comment"></input>
-            <input name="co" id="coshare" type="submit" value="Co share"></input-->
+                    <input name="co" id="cocomment" type="submit" value="Co comment"></input>
+                    <input name="co" id="coshare" type="submit" value="Co share"></input-->
                     <button name="submit" type="button" onclick="getCR('Co reaction')">Co reaction</button>
                     <button name="submit" type="button" onclick="getCR('Co comment')">Co comment</button>
                     <button name="submit" type="button" onclick="getCR('Co share')">Co share</button>
