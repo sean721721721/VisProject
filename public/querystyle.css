@@ -178,6 +178,14 @@ td {
     font: 15px sans-serif;
 }
 
+#csv {
+    display: inline-block;
+}
+
+#detail {
+    text-align: left;
+}
+
 
 /* grid setting */
 
@@ -213,6 +221,7 @@ td {
 }
 
 .userview {
+    overflow-y: auto;
     grid-column: col2 / colend;
 }
 
@@ -246,6 +255,15 @@ td {
     grid-row: srow2 / srowend;
 }
 
+.detailview p {
+    padding: 5px;
+}
+
+.dvicon {
+    width: 16px;
+    height: 16px;
+}
+
 .query,
 .summary {
     margin: 5px;
@@ -264,6 +282,9 @@ td {
 
 
 /*****************************************************/
+
+
+/*next and previous botton*/
 
 a {
     text-decoration: none;
@@ -288,6 +309,50 @@ a:hover {
 
 .round {
     border-radius: 50%;
+}
+
+
+/*****************************************************/
+
+
+/*accordion*/
+
+button.accordion {
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 1px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    transition: 0.4s;
+}
+
+button.accordion.active,
+button.accordion:hover {
+    background-color: #ccc;
+}
+
+button.accordion:after {
+    content: '\002B';
+    color: #777;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+}
+
+button.accordion.active:after {
+    content: "\2212";
+}
+
+div.panel {
+    padding: 0 18px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
 }
 
 

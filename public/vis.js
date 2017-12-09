@@ -54,7 +54,7 @@ function visMain(data) {
             update(tsne1, tsne2, data[1], width, init);
         }
     });*/
-    overlapvis(data.data);
+    overlapvis(data);
     overview(data);
     // data manipulate
     let pd = pagedata(data);
@@ -889,10 +889,6 @@ function overlapvis(data) {
     // let width = document.querySelector('#overlap').offsetWidth;
     let height = '100%';
     let width = height;
-    let cellSize1 = 50;
-    let cellSize2 = 40;
-    let cellSize3 = 30;
-    let initx = 1000 * 0.1;
     let color = d3.scaleQuantize()
         .domain([0, 10])
         .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
@@ -904,9 +900,41 @@ function overlapvis(data) {
         .on('zoom', function () {
             g.attr('transform', d3.event.transform);
             let k = this.__zoom.k;
-            g.attr('r', 5 / k)
-                .attr('stroke-width', 1 / k);
+            g.attr('stroke-width', 1 / k);
         });
+    /*
+        function zoom(d) {
+            let focus0 = focus;
+            focus = d;
+            // console.log(view);
+            let x = focus.x1 - focus.x0;
+            let y = focus.y1 - focus.y0;
+            let r = x === w && y === w ? w : x > y ? 2 * x : 2 * y;
+            d3.transition()
+                .duration(d3.event.altKey ? 7500 : 750)
+                .tween('zoom', (d) => {
+                    let i = d3.interpolateZoom(view, [focus.x0, focus.y0, r]);
+                    return function (t) {
+                        zoomTo(i(t));
+                    };
+                });
+        }
+
+        function zoomTo(v) {
+            let k = w / v[2];
+            view = v;
+            // console.log(v);
+            cell.attr('transform', function (d) {
+                // console.log(d);
+                return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
+            });
+            rect.attr('width', function (d) {
+                    return (d.x1 - d.x0) * k;
+                })
+                .attr('height', function (d) {
+                    return (d.y1 - d.y0) * k;
+                });
+        }*/
 
     let svg = d3.select('#overlap')
         .append('svg')
@@ -921,11 +949,19 @@ function overlapvis(data) {
     let g = svg.append('g')
         .attr('id', 'overlapmap');
 
-    let posts = data[0];
-    let users = data[1];
-    let overlap = data[2];
+    let posts = data.data[0];
+    let users = data.data[1];
+    let overlap = data.data[2];
 
-    let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
+    // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
+    let nextline = parseInt(Math.sqrt(2 * data.summary[1][2]), 10) - 1;
+    let ratio = (1000 * 0.95) / (nextline * 50);
+    let cellSize1 = 50 * ratio;
+    let cellSize2 = 40 * ratio;
+    let cellSize3 = 30 * ratio;
+
+    let initx = 1000 * 0.025 + cellSize1 / 2;
+    let inity = initx / 2;
 
     // construct degree y checklist
     let degylist = [];
@@ -1030,7 +1066,7 @@ function overlapvis(data) {
             return cellSize1 * degylist[i];
         })
         .attr('x', initx)
-        .attr('y', 0);
+        .attr('y', inity);
 
     let degcounts = overlap.length;
     let botton = rect.append('rect')
@@ -1043,7 +1079,7 @@ function overlapvis(data) {
             return cellSize1 * degylist[i];
         })
         .attr('x', initx - cellSize1)
-        .attr('y', 0)
+        .attr('y', inity)
         .on('click', function (d, k) {
             d3.event.preventDefault();
             degylist = modify(degylist, d, k);
@@ -1061,7 +1097,7 @@ function overlapvis(data) {
                     return cellSize1 * degylist[i];
                 });
             text.attr('y', (d, i) => {
-                return (cellSize1 * degylist[i]) / 2;
+                return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
             });
 
             for (let i = 0; i < degcounts; i++) {
@@ -1100,7 +1136,7 @@ function overlapvis(data) {
                                     return result;
                                 }
                             }
-                            return usery(degylist[i], k);
+                            return usery(degylist[i], k) + inity;
                         });
                 }
             }
@@ -1109,7 +1145,7 @@ function overlapvis(data) {
     let text = rect.append('text')
         .attr('x', initx - cellSize1)
         .attr('y', (d, i) => {
-            return (cellSize1 * degylist[i]) / 2;
+            return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
         })
         // .attr('dy', '.35em')
         .attr('fill', '#aaa')
@@ -1158,7 +1194,7 @@ function overlapvis(data) {
                 return h * cellSize1 - (cellSize1 - cellSize2);
             })
             .attr('x', 0)
-            .attr('y', 0);
+            .attr('y', inity);
 
         let gcount = degree.length;
         for (let j = 0; j < gcount; j++) {
@@ -1182,7 +1218,7 @@ function overlapvis(data) {
                     .attr('y', (d, k) => {
                         let offsety = parseInt(k / nextline, 10);
                         result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                        return result;
+                        return result + inity;
                     });
             }
         }
@@ -1698,6 +1734,7 @@ function detailview(data, select) {
     // console.log(i, j);
     content.page = data.query.page1;
     content.post = post;
+    content.id = pagedata[i][j].id;
     content.message = pagedata[i][j].message;
     content.reactions = {};
     // content.reactions.total=pagedata[0][0][0].reactions;
@@ -1707,11 +1744,86 @@ function detailview(data, select) {
     content.reactions.wow = pagedata[i][j].reactions.wow;
     content.reactions.sad = pagedata[i][j].reactions.sad;
     content.reactions.angry = pagedata[i][j].reactions.angry;
-    content.comments = pagedata[i][j].comments;
-    console.log(content);
+    content.commentcount = pagedata[i][j].comments.summary;
+    content.comments = pagedata[i][j].comments.context;
+    content.shares = pagedata[i][j].shares;
+    console.log('detail', content);
     detail.innerHTML = initdetail;
     let html = template(content);
     detail.innerHTML += html;
+    if (pagedata[i][j].comments.summary !== 0) {
+        commentdetail(pagedata[i][j].comments.context);
+    }
+
+    // accordion
+    let acc = document.getElementsByClassName('accordion');
+    for (let i = 0; i < acc.length; i++) {
+        acc[i].onclick = function () {
+            this.classList.toggle('active');
+            let panel = this.nextElementSibling;
+            let paccordion = this.parentElement.parentElement;
+            console.log(paccordion);
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + 'px';
+                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
+            }
+        };
+    }
+}
+
+/**
+ * get comment instance by index
+ * @param {array} data - comment
+ */
+function commentdetail(data) {
+    let rawTemplate = document.getElementById('comments-detail').innerHTML;
+    let template = Handlebars.compile(rawTemplate);
+    let cdetail = document.querySelector('#comment');
+    let init = '';
+    cdetail.innerHTML = init;
+    let content = {};
+    for (let ci = 0, l = data.length; ci < l; ci++) {
+        let comment = data[ci];
+        content.time = comment.created_time;
+        content.from = comment.from.name;
+        content.message = comment.message === '' ? 'no text' : comment.message;
+        content.commentcount = comment.comment_count;
+        content.comment = comment.comments;
+        console.log('comment', content);
+        let html = template(content);
+        cdetail.innerHTML += html;
+        if (comment.comments.length !== 0) {
+            subcommentdetail(comment.comments);
+        }
+    }
+}
+
+/**
+ * get comment instance by index
+ * @param {array} data - subcomment
+ */
+function subcommentdetail(data) {
+    let rawTemplate = document.getElementById('subcomments-detail').innerHTML;
+    let template = Handlebars.compile(rawTemplate);
+    let scdetail = document.querySelector('#subcomment');
+    let init = '';
+    scdetail.innerHTML = init;
+    let content = {};
+    let l = data.length;
+    console.log(l);
+    for (let sci = 0, l = data.length; sci < l; sci++) {
+        let subcomment = data[sci];
+        console.log(subcomment);
+        content.time = subcomment.created_time;
+        content.from = subcomment.from.name;
+        content.message = subcomment.message === '' ? 'no text' : subcomment.message;
+        console.log('subcomment', content);
+        let html = template(content);
+        scdetail.innerHTML += html;
+    }
 }
 
 /**

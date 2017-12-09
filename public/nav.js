@@ -220,9 +220,9 @@ function download(data) {
     });
     let url1 = URL.createObjectURL(blob1);
     if (data.query.page1 === data.query.page2) {
-        html = html + '<h1>csv1<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '_1.csv" href = "' + url1 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:16px;height:16px">' + '</h1></a>';
+        html = html + '<h1 id="csv">csv1<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '_1.csv" href = "' + url1 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:32px;height:32px">' + '</a></h1>';
     } else {
-        html = html + '<h1>csv1<a download = "' + data.query.page1 + '_' + data.query.page2 + '_' + data.query.time1 + '_' + data.query.time2 + '_1.csv" href = "' + url1 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:16px;height:16px">' + '</h1></a>';
+        html = html + '<h1 id="csv">csv1<a download = "' + data.query.page1 + '_' + data.query.page2 + '_' + data.query.time1 + '_' + data.query.time2 + '_1.csv" href = "' + url1 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:32px;height:32px">' + '</a></h1>';
     }
     let csvstr2 = csv2(data.data[0]);
     let blob2 = new Blob([csvstr2], {
@@ -230,9 +230,9 @@ function download(data) {
     });
     let url2 = URL.createObjectURL(blob2);
     if (data.query.page1 === data.query.page2) {
-        html = html + '<h1>csv2<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '_2.csv" href = "' + url2 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:16px;height:16px">' + '</h1></a>';
+        html = html + '<h1 id="csv">csv2<a download = "' + data.query.page1 + '_' + data.query.time1 + '_' + data.query.time2 + '_2.csv" href = "' + url2 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:32px;height:32px">' + '</a></h1>';
     } else {
-        html = html + '<h1>csv2<a download = "' + data.query.page1 + '_' + data.query.page2 + '_' + data.query.time1 + '_' + data.query.time2 + '_2.csv" href = "' + url2 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:16px;height:16px">' + '</h1></a>';
+        html = html + '<h1 id="csv">csv2<a download = "' + data.query.page1 + '_' + data.query.page2 + '_' + data.query.time1 + '_' + data.query.time2 + '_2.csv" href = "' + url2 + '">' + '<img src="img/download.jpg" class="img-circle" style="width:32px;height:32px">' + '</a></h1>';
     }
     html += '</div>';
     return html;
