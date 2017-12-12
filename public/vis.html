@@ -51,20 +51,19 @@
             </div>
         </div>
     </script>
-    <script src="/vis.js"></script>
     <script id="detail-view" type="text/x-handlebars-template">
         <div>
             <p>{{{page}}} {{{post}}} {{{toURL id}}}</p>
             <p>{{{message}}}</p>
             <p>
-               <img src="img/like.jpg" class="dvicon"> {{{reactions.like}}}
-               / <img src="img/love.jpg" class="dvicon"> {{{reactions.love}}}
-               / <img src="img/haha.jpg" class="dvicon"> {{{reactions.haha}}}
-               / <img src="img/wow.jpg" class="dvicon"> {{{reactions.wow}}}
-               / <img src="img/sad.jpg" class="dvicon"> {{{reactions.sad}}}
-               / <img src="img/angry.jpg" class="dvicon"> {{{reactions.angry}}}
-               / <img src="img/comment.jpg" class="dvicon"> {{{commentcount}}}
-               / <img src="img/share.jpg" class="dvicon"> {{{shares}}}
+                <img src="img/like.jpg" class="dvicon"> {{{reactions.like}}} /
+                <img src="img/love.jpg" class="dvicon"> {{{reactions.love}}} /
+                <img src="img/haha.jpg" class="dvicon"> {{{reactions.haha}}} /
+                <img src="img/wow.jpg" class="dvicon"> {{{reactions.wow}}} /
+                <img src="img/sad.jpg" class="dvicon"> {{{reactions.sad}}} /
+                <img src="img/angry.jpg" class="dvicon"> {{{reactions.angry}}} /
+                <img src="img/comment.jpg" class="dvicon"> {{{commentcount}}} /
+                <img src="img/share.jpg" class="dvicon"> {{{shares}}}
             </p>
             <div id="comment"></div>
         </div>
@@ -73,8 +72,9 @@
         <button class="accordion">{{{time}}} by: {{{from}}}</button>
         <div class="panel">
             <p>{{{message}}}</p>
-            <p><img src="img/comment.jpg" class="dvicon"> :{{{commentcount}}}</p>
-            <div id="subcomment"></div>
+            <p>
+                <img src="img/comment.jpg" class="dvicon"> :{{{commentcount}}}</p>
+            <div id={{{divid}}}></div>
         </div>
     </script>
     <script id="subcomments-detail" type="text/x-handlebars-template">

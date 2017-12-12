@@ -1,11 +1,14 @@
 <div class="grid">
     <div class="box menu">
         <div class="tab">
-            <button class="tablinks"><a href="/">Reset</a></button>
+            <button class="tablinks">
+                <a href="/">Reset</a>
+            </button>
             <button class="tablinks" onclick="openTab(event, 'Parameters')">Parameters</button>
             <button class="tablinks" onclick="openTab(event, 'Page1')">Page1</button>
             <button class="tablinks" onclick="openTab(event, 'Page2')">Page2</button>
             <button class="tablinks" onclick="openTab(event, 'Submit')">Submit</button>
+            <button class="tablinks" onclick="openTab(event, 'Download')">Download</button>
         </div>
         <div id="Parameters" class="tabcontent">
             <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
@@ -90,6 +93,10 @@
                     <button name="submit" type="button" onclick="getCR('All')">All users</button>
                 </fieldset>
             </form>
+        </div>
+        <div id="Download" class="tabcontent">
+            <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
+            <div id="csv"></div>
         </div>
         <!--form>
                     <fieldset>
@@ -185,3 +192,5 @@
 <div class="tooltip b"></div>
 <div class="tooltip c"></div>
 <script src="/nav.js"></script>
+<script src="/data.js"></script>
+<script src="/vis.js"></script>

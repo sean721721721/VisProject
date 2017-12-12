@@ -1148,6 +1148,7 @@ function overlapvis(data) {
             return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
         })
         // .attr('dy', '.35em')
+        .attr('font-size', 50 * ratio)
         .attr('fill', '#aaa')
         .attr('stroke', '#f00')
         .text((d) => {
@@ -1339,8 +1340,8 @@ function overview(data) {
     for (let i = 0; i < 7; i++) {
         ovdata.push([oarc[i], obrc[i], orc[i]]); // reactioncount
     }
-
-    console.log(ovdata);
+    let axis = ['post', 'user', 'comment', 'share', 'like', 'love', 'haha', 'wow', 'sad', 'angry'];
+    console.log('ovdata', ovdata);
 
     // graph draw
     // let width = document.querySelector('#over').offsetWidth;
@@ -1376,6 +1377,11 @@ function overview(data) {
     let h = 250 - margin.top - margin.bottom;
     let wx = w / ovdata.length;
 
+    let x = d3.scaleBand()
+        .rangeRound([0, w])
+        .padding(0.1)
+        .align(0.1);
+
     let g = svg.append('g')
         .attr('id', 'over')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -1409,6 +1415,15 @@ function overview(data) {
         .attr('y', (d) => {
             return (d[0] / d[2]) * h;
         });
+
+    let xaxis = g.selectAll('g')
+        .append('g')
+        .data(axis)
+        .enter().append('g')
+        .attr('class', 'axis axis--x')
+        .attr('transform', 'translate(0,' + h + ')')
+        .call(d3.axisBottom(x));
+
     /*
     let darc = [0, 0, 0, 0, 0, 0, 0, 0];
     let dacc = 0;
@@ -1509,23 +1524,25 @@ function pageview(data, pagedata) {
 
     let rect = cell.append('rect')
         .data(root.leaves())
+        .datum(function (d) {
+            d.width = d.x1 - d.x0;
+            d.height = d.y1 - d.y0;
+            // console.log(d);
+            return d;
+        })
         .attr('class', (d) => {
             return 'depth' + d.depth;
         })
         .attr('id', function (d) {
             return d.data.id;
         })
-        .attr('width', function (d) {
-            return d.x1 - d.x0;
-        })
-        .attr('height', function (d) {
-            return d.y1 - d.y0;
-        })
+        .attr('width', (d) => d.width)
+        .attr('height', (d) => d.height)
         .attr('fill', function (d) {
             return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
         })
         .on('click', (d) => {
-            console.log(d);
+            console.log('click', d);
             let pagedata = data.data[0];
             // d.data.id.split('.');
             let select = d.data.id.split('.');
@@ -1563,29 +1580,29 @@ function pageview(data, pagedata) {
             return '#' + d.data.id;
         });
 
-    cell.append('text')
+    let text = cell.append('text')
         .attr('clip-path', function (d) {
             return 'url(#clip-' + d.data.id + ')';
         })
-        .selectAll('tspan')
-        .data(function (d) {
-            // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+        .datum(function (d) {
+            d.size = Math.sqrt(d.value);
+            let arr = d.data.id.split('.');
+            d.text = d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
             // console.log(d);
+            return d;
+        })
+        /* .selectAll('tspan')*/
+        /*.data(function (d) {
+            // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+            console.log(d);
             let arr = d.data.id.split('.');
             // console.log(d, arr);
             return d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
-        })
-        .enter().append('tspan')
-        .attr('x', (d, i) => {
-            // console.log(d);
-            return 9 * i + 4;
-        })
-        .attr('y', function (d, i) {
-            return 13;
-            // return 13 + i * 10;
-        })
+        })*/
+        /*.enter().append('tspan')*/
         .text(function (d) {
-            return d;
+            return d.text;
+            // return d;
         })
         .attr('fill', '#fff');
 
@@ -1604,7 +1621,7 @@ function pageview(data, pagedata) {
         let r = Math.sqrt(x * y);
         return r;
     }
-    console.log(root);
+    console.log('root', root);
     zoomTo([root.x0, root.y0, getr(root)]);
     /*
     d3.selectAll('input')
@@ -1686,10 +1703,21 @@ function pageview(data, pagedata) {
             return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
         });
         rect.attr('width', function (d) {
-                return (d.x1 - d.x0) * k;
+                return d.width * k;
             })
             .attr('height', function (d) {
-                return (d.y1 - d.y0) * k;
+                return d.height * k;
+            });
+        text.attr('font-size', (d) => {
+                return d.size * k;
+            })
+            .attr('x', (d, i) => {
+                return d.size * k;
+                // return 9 * i + 4;
+            })
+            .attr('y', function (d, i) {
+                return d.size * k;
+                // return 13 + i * 10;
             });
     }
 }
@@ -1767,7 +1795,7 @@ function detailview(data, select) {
             this.classList.toggle('active');
             let panel = this.nextElementSibling;
             let paccordion = this.parentElement.parentElement;
-            console.log(paccordion);
+            // console.log(paccordion);
             if (panel.style.maxHeight) {
                 panel.style.maxHeight = null;
                 paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
@@ -1797,11 +1825,13 @@ function commentdetail(data) {
         content.message = comment.message === '' ? 'no text' : comment.message;
         content.commentcount = comment.comment_count;
         content.comment = comment.comments;
-        console.log('comment', content);
+        content.divid = '"subcomment' + ci + '"';
+        // console.log('comment', content);
         let html = template(content);
         cdetail.innerHTML += html;
         if (comment.comments.length !== 0) {
-            subcommentdetail(comment.comments);
+            let id = 'subcomment' + ci;
+            subcommentdetail(comment.comments, id);
         }
     }
 }
@@ -1809,23 +1839,23 @@ function commentdetail(data) {
 /**
  * get comment instance by index
  * @param {array} data - subcomment
+ * @param {string} id - to querySelector
  */
-function subcommentdetail(data) {
+function subcommentdetail(data, id) {
     let rawTemplate = document.getElementById('subcomments-detail').innerHTML;
     let template = Handlebars.compile(rawTemplate);
-    let scdetail = document.querySelector('#subcomment');
+    let scdetail = document.querySelector('#' + id);
     let init = '';
     scdetail.innerHTML = init;
     let content = {};
     let l = data.length;
-    console.log(l);
+    // console.log(l);
     for (let sci = 0, l = data.length; sci < l; sci++) {
         let subcomment = data[sci];
-        console.log(subcomment);
         content.time = subcomment.created_time;
         content.from = subcomment.from.name;
         content.message = subcomment.message === '' ? 'no text' : subcomment.message;
-        console.log('subcomment', content);
+        // console.log('subcomment', content);
         let html = template(content);
         scdetail.innerHTML += html;
     }
@@ -1889,7 +1919,7 @@ function pagedata(data) {
     }
     tm.name = 'root';
     tm.children = tmdata;
-    console.log(tm);
+    console.log('pagedata', tm);
     return tm;
 };
 
