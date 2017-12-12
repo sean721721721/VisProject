@@ -79,7 +79,7 @@ var ualist = function ualist(files) {
                     post["like"] = post_liketype(post, reaction);
                     post["commentcount"] = 0;
                     post["share"] = false;
-                    post["ctime"] = [];
+                    post["clist"] = [];
                     //console.log(post)
                     user = {};
                     user["id"] = reaction.id;
@@ -205,9 +205,6 @@ function comment_count(files, userlist) {
 function comment_countdb(files, userlist) {
     var data, comment, user, post, commentlength;
     var filelength = files.length;
-    var listlength = userlist.length;
-    var findid = false;
-    var findpost = false;
     for (var i = 0; i < filelength; i++) {
         data = files[i];
         if (data.comments.context !== undefined) {
@@ -216,56 +213,68 @@ function comment_countdb(files, userlist) {
                 //console.log(userlist.length)
                 for (var k = 0; k < commentlength; k++) {
                     comment = data.comments.context[k];
-                    findid = false;
-                    for (var a = 0; a < listlength; a++) {
-                        if (comment.from.id == userlist[a].id) {
-                            findid = true;
-                            //console.log("find")
-                            var length = userlist[a].posts.length;
-                            //console.log(length)
-                            findpost = false;
-                            for (var b = 0; b < length; b++) {
-                                if (data.id == userlist[a].posts[b].id) {
-                                    findpost = true;
-                                    //console.log("find")
-                                    userlist[a].posts[b].commentcount++;
-                                    userlist[a].posts[b].ctime.push(data.created_time);
-                                    b = length;
-                                }
-                            }
-                            if (!findpost) {
-                                //console.log("no post!")
-                                post = {
-                                    "id": data.id,
-                                    "like": 0,
-                                    "commentcount": 1,
-                                    "share": false,
-                                    "ctime": [data.created_time],
-                                }
-                                userlist[a].posts.push(post);
-                            }
-                        }
-                    }
-                    if (!findid) {
-                        //console.log("no user!")
-                        post = {
-                            "id": data.id,
-                            "like": 0,
-                            "commentcount": 1,
-                            "share": false,
-                            "ctime": [data.created_time],
-                        }
-                        user = {
-                            "id": comment.from.id,
-                            "name": comment.from.name,
-                            "posts": []
-                        }
-                        user.posts.push(post)
-                        userlist.push(user)
+                    commentcount(data, comment, userlist);
+                    var subcommentlen = comment.length;
+                    // for subcomment
+                    for (var x = 0; x < subcommentlen; x++) {
+                        var subcomment = comment[x];
+                        commentcount(data, subcomment, userlist);
                     }
                 }
             }
         }
+    }
+}
+
+// commentcount and adjust userlist obkect
+function commentcount(data, comment, userlist) {
+    let findid = false;
+    var listlength = userlist.length;
+    for (var a = 0; a < listlength; a++) {
+        if (comment.from.id == userlist[a].id) {
+            findid = true;
+            //console.log("find")
+            var length = userlist[a].posts.length;
+            //console.log(length)
+            let findpost = false;
+            for (var b = 0; b < length; b++) {
+                if (data.id == userlist[a].posts[b].id) {
+                    findpost = true;
+                    //console.log("find")
+                    userlist[a].posts[b].commentcount++;
+                    userlist[a].posts[b].clist.push(comment);
+                    b = length;
+                }
+            }
+            if (!findpost) {
+                //console.log("no post!")
+                post = {
+                    "id": data.id,
+                    "like": 0,
+                    "commentcount": 1,
+                    "share": false,
+                    "clist": [comment],
+                }
+                userlist[a].posts.push(post);
+            }
+        }
+    }
+    if (!findid) {
+        //console.log("no user!")
+        post = {
+            "id": data.id,
+            "like": 0,
+            "commentcount": 1,
+            "share": false,
+            "clist": [comment],
+        }
+        user = {
+            "id": comment.from.id,
+            "name": comment.from.name,
+            "posts": []
+        }
+        user.posts.push(post)
+        userlist.push(user)
     }
 }
 
@@ -452,8 +461,8 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
     var list = [];
     var l1 = qobj1.length;
     var l2 = qobj2.length;
-    var pagea =[];
-    var pageb =[];
+    var pagea = [];
+    var pageb = [];
     for (var i = 0; i < l1; i++) {
         var post = postobj(qobj1[i]);
         pagea.push(post);
