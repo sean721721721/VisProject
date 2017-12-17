@@ -670,30 +670,85 @@ var sortdegree = function sortdegree(olrlist) {
         return deg;
     }
 
-    function pushlist(list, item) {
+    function pushlist(obj, item) {
+        // console.log(item);
+        var degA = item[0].posts.A.length;
+        var degB = item[0].posts.B.length;
         var temp = [item];
-        //console.log(list);
-        list.push(temp);
+        if (degA === 0 || degB === 0) { // if item's deg eqaul 0
+            if (degA === 0) {
+                obj.O.push([]);
+                obj.A.push([]);
+                obj.B.push(temp);
+            } else {
+                obj.O.push([]);
+                obj.A.push(temp);
+                obj.B.push([]);
+            }
+        }else{
+            obj.O.push(temp);
+            obj.A.push([]);
+            obj.B.push([]);
+        }
     }
 
-    function sort(list, item) {
+    function sort(obj, item, index) {
+        function makelist(list, post, ipost) {
+            var degi = post.length;
+            for (var a = 0; a < degi;) { // compare list[i][0] and item 's postsA
+                for (var b = 0; b < deg; b++) {
+                    if (post[a].id === ipost[b].id) {
+                        a++;
+                        b = deg;
+                    } else {
+                        if (b === deg - 1) {
+                            a = degi + 1;
+                        }
+                    }
+                }
+            }
+            if (a === degi) { // if eqaul
+                if (list[i].length > 0) {
+                    list[i].push(item);
+                    //console.log(list[i].length);
+                } else {
+                    var temp = [list[i]];
+                    temp.push(item);
+                    list[i] = temp;
+                }
+                eqdeg = true;
+            } else { // if not
+                list.push([item]);
+            }
+        }
+
+        var list = obj.O[index];
         var deg = item.posts.A.length;
+        var degB = item.posts.B.length;
         var temp = [];
         var eqdeg = false;
+        if (deg === 0 || degB === 0) { // if item's deg eqaul 0
+            if (deg === 0) {
+                list = obj.B[index];
+            } else {
+                list = obj.A[index];
+            }
+        }
+        //console.log(list);
         var l = list.length;
-        if (l > 0) {
-            for (var i = 0; i < l; i++) {
+        /*if (l > 0) { //if list is not empty
+            for (var i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
                 var degi = list[i][0].posts.A.length;
-                if (deg === degi) {
+                if (deg === degi) { // if find
                     var post = list[i][0].posts.A;
                     var ipost = item.posts.A;
-                    if (deg === 0) {
-                        var deg = item.posts.B.length;
+                    if (deg === 0) { // if item's deg eqaul 0
+                        var deg = degB;
                         degi = list[i][0].posts.B.length;
                         post = list[i][0].posts.B;
                         ipost = item.posts.B;
                     }
-                    for (var a = 0; a < degi;) {
+                    for (var a = 0; a < degi;) { // compare list[i][0] and item 's postsA
                         for (var b = 0; b < deg; b++) {
                             if (post[a].id === ipost[b].id) {
                                 a++;
@@ -705,7 +760,7 @@ var sortdegree = function sortdegree(olrlist) {
                             }
                         }
                     }
-                    if (a === degi) {
+                    if (a === degi) { // if eqaul
                         if (list[i].length > 0) {
                             list[i].push(item);
                             //console.log(list[i].length);
@@ -715,26 +770,62 @@ var sortdegree = function sortdegree(olrlist) {
                             list[i] = temp;
                         }
                         eqdeg = true;
-                    } else {
+                    } else { // if not
                         list.push([item]);
                     }
                     i = l;
-                } else if (deg > degi) {
+                } else if (deg > degi) { // push item in list to creat new list[deg]
                     if (!eqdeg && i === (l - 1)) {
                         list.push([item]);
                     }
-                } else {
+                } else { // insert item in specific list[i]
                     list.splice(i, 0, [item]);
                     i = l;
                 }
             }
-        } else {
+        } else { //if list is empty
+            list.push([item]);
+        }*/
+        if (l > 0) { //if list is not empty
+            for (var i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
+                var degi = list[i][0].posts.A.length;
+                if (deg === degi) { // if find
+                    var post = list[i][0].posts.A;
+                    var ipost = item.posts.A;
+                    if (deg === 0 || degB === 0) { // if item's deg eqaul 0
+                        if (deg === 0) {
+                            deg = degB;
+                            degi = list[i][0].posts.B.length;
+                            post = list[i][0].posts.B;
+                            ipost = item.posts.B;
+                            makelist(list, post, ipost)
+                        } else {
+                            makelist(list, post, ipost)
+                        }
+                        i = l;
+                    } else {
+                        makelist(list, post, ipost);
+                        i = l;
+                    }
+                } else if (deg > degi) { // push item in list to creat new list[deg]
+                    if (!eqdeg && i === (l - 1)) {
+                        list.push([item]);
+                    }
+                } else { // insert item in specific list[i]
+                    list.splice(i, 0, [item]);
+                    i = l;
+                }
+            }
+        } else { //if list is empty
             list.push([item]);
         }
-        return list;
     }
 
-    var sortlist = [];
+    //var sortlist = [];
+    var sortobj = {};
+    sortobj.A = [];
+    sortobj.B = [];
+    sortobj.O = [];
     var degree = [];
     var len = olrlist.length;
     for (var i = 0; i < len; i++) {
@@ -746,13 +837,13 @@ var sortdegree = function sortdegree(olrlist) {
                 if (degree[d] === deg) {
                     finddeg = true;
                     //sortlist[d].push(olrlist[i]);
-                    sort(sortlist[d], olrlist[i]);
+                    sort(sortobj, olrlist[i], d);
                     d = l;
                 } else if (degree[d] < deg) {
                     // degree
                     if (!finddeg && d === l - 1) {
                         degree.push(deg);
-                        pushlist(sortlist, [olrlist[i]]);
+                        pushlist(sortobj, [olrlist[i]]);
                     }
                 } else {
                     //console.log(d + " : " + l + " | " + degree[d] + ">" + deg);
@@ -760,20 +851,36 @@ var sortdegree = function sortdegree(olrlist) {
                     //console.log(degree);
                     var list = [olrlist[i]];
                     //console.log(list);
-                    sortlist.splice(d, 0, [list]);
+                    var degA = list[0].posts.A.length;
+                    var degB = list[0].posts.B.length;
+                    if (degA === 0 || degB === 0) { // if item's deg eqaul 0
+                        if (deg === 0) {
+                            sortobj.O.splice(d, 0, []);
+                            sortobj.A.splice(d, 0, []);
+                            sortobj.B.splice(d, 0, [list]);
+                        } else {
+                            sortobj.O.splice(d, 0, []);
+                            sortobj.A.splice(d, 0, [list]);
+                            sortobj.B.splice(d, 0, []);
+                        }
+                    } else {
+                        sortobj.O.splice(d, 0, [list]);
+                        sortobj.A.splice(d, 0, []);
+                        sortobj.B.splice(d, 0, []);
+                    }
                     //console.log(getdeg(sortlist[d][0])+" "+deg);
                     d = l;
                 }
             }
         } else {
             degree.push(deg);
-            pushlist(sortlist, [olrlist[i]]);
+            pushlist(sortobj, [olrlist[i]]);
             //console.log(degree);
         }
         //console.log(degree);
     }
     //console.log(degree.length === sortlist.length);
-    return sortlist;
+    return sortobj;
 }
 
 var exports = module.exports = {};
