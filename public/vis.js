@@ -951,7 +951,12 @@ function overlapvis(data) {
 
     let posts = data.data[0];
     let users = data.data[1];
-    let overlap = data.data[2];
+    let overlap = [];
+    for (let i = 0, l = data.data[2].O.length; i < l; i++) {
+        if (data.data[2].O[i].length > 0) {
+            overlap.push(data.data[2].O[i]);
+        }
+    }
 
     // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
     let nextline = parseInt(Math.sqrt(2 * data.summary[1][2]), 10) - 1;
@@ -1324,17 +1329,22 @@ function overview(data) {
     let obrc = [];
     let orc = [];
     for (let i = 0; i < 7; i++) {
-        oarc.push(ov.A[0][i]);
-        obrc.push(ov.B[0][i]);
-        orc.push((ov.A[0][i] + ov.B[0][i]));
+        let ova = ov.O.A[0][i] + ov.A.A[0][i] + ov.B.A[0][i];
+        let ovb = ov.O.B[0][i] + ov.A.B[0][i] + ov.B.B[0][i];
+        oarc.push(ova);
+        obrc.push(ovb);
+        orc.push(ova + ovb);
     }
     let allpostcount = data.summary[0][0] + data.summary[0][1];
-
+    let ca = ov.O.A[1] + ov.A.A[1] + ov.B.A[1];
+    let cb = ov.O.B[1] + ov.A.B[1] + ov.B.B[1];
+    let sa = ov.O.A[2] + ov.A.A[2] + ov.B.A[2];
+    let sb = ov.O.B[2] + ov.A.B[2] + ov.B.B[2];
     let ovdata = [
         [data.summary[0][0], data.summary[0][1], allpostcount], // postcount
         [data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
-        [ov.A[1], ov.B[1], (ov.A[1] + ov.B[1])], // commentcount
-        [ov.A[2], ov.B[2], (ov.A[2] + ov.B[2])], // sharecount
+        [ca, cb, ca + cb], // commentcount
+        [sa, sb, sa + sb], // sharecount
     ];
 
     for (let i = 0; i < 7; i++) {
@@ -1792,6 +1802,9 @@ function detailview(data, select) {
     let acc = document.getElementsByClassName('accordion');
     for (let i = 0; i < acc.length; i++) {
         acc[i].onclick = function () {
+            let el = document.getElementsByClassName('detailview')[0];
+            let st = el.scrollTop;
+            console.log(st);
             this.classList.toggle('active');
             let panel = this.nextElementSibling;
             let paccordion = this.parentElement.parentElement;
@@ -1803,6 +1816,32 @@ function detailview(data, select) {
                 panel.style.maxHeight = panel.scrollHeight + 'px';
                 paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
             }
+            document.getElementsByClassName('detailview')[0].scrollTop = st;
+            console.log(document.getElementsByClassName('detailview')[0].scrollTop);
+        };
+    }
+    let subacc = document.getElementsByClassName('subaccordion');
+    for (let i = 0; i < subacc.length; i++) {
+        subacc[i].onclick = function () {
+            let el = document.getElementsByClassName('detailview')[0];
+            let st = el.scrollTop;
+            console.log(st);
+            this.classList.toggle('active');
+            let panel = this.nextElementSibling;
+            let paccordion = this.parentElement.parentElement;
+            let pre = paccordion.parentElement.parentElement;
+            // console.log(paccordion);
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
+                    pre.style.maxHeight = (pre.scrollHeight - panel.scrollHeight) + 'px';
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + 'px';
+                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
+                    pre.style.maxHeight = (pre.scrollHeight + panel.scrollHeight) + 'px';
+            }
+            document.getElementsByClassName('detailview')[0].scrollTop = st;
+            console.log(document.getElementsByClassName('detailview')[0].scrollTop);
         };
     }
 }
@@ -1848,7 +1887,6 @@ function subcommentdetail(data, id) {
     let init = '';
     scdetail.innerHTML = init;
     let content = {};
-    let l = data.length;
     // console.log(l);
     for (let sci = 0, l = data.length; sci < l; sci++) {
         let subcomment = data[sci];
@@ -1929,128 +1967,140 @@ function pagedata(data) {
  * @return {object} countvalue object
  */
 function countactivities(data) {
-    let posts = data[0];
-    // let users = data[1];
-    let overlap = data[2];
-    let count = {};
-    let oarc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let oacc = 0;
-    let oasc = 0;
-    let obrc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let obcc = 0;
-    let obsc = 0;
-    let l = overlap.length;
-    let dtemp = [];
-    for (let i = 0; i < l; i++) {
-        let degree = overlap[i];
-        let deg = {};
-        let darc = [0, 0, 0, 0, 0, 0, 0, 0];
-        let dacc = 0;
-        let dasc = 0;
-        let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
-        let dbcc = 0;
-        let dbsc = 0;
-        let dl = degree.length;
-        let gtemp = [];
-        for (let j = 0; j < dl; j++) {
-            let group = degree[j];
-            let g = {};
-            let garc = [0, 0, 0, 0, 0, 0, 0, 0];
-            let gacc = 0;
-            let gasc = 0;
-            let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
-            let gbcc = 0;
-            let gbsc = 0;
-            let gl = group.length;
-            let utemp = [];
-            for (let k = 0; k < gl; k++) {
-                let user = group[k];
-                // user.id;
-                // user.name;
-                let arc = [0, 0, 0, 0, 0, 0, 0, 0];
-                let acc = 0;
-                let asc = 0;
-                let brc = [0, 0, 0, 0, 0, 0, 0, 0];
-                let bcc = 0;
-                let bsc = 0;
-                let pa = user.posts;
-                if (pa.A instanceof Array) {
-                    let al = pa.A.length;
-                    for (let a = 0; a < al; a++) {
-                        if (pa.A[a].commentcount !== 0) {
-                            acc += pa.A[a].commentcount;
-                        }
-                        if (pa.A[a].like !== 0) {
-                            let num = pa.A[a].like;
-                            arc[0]++;
-                            arc[num]++;
-                        }
-                        if (pa.A[a].share !== false) {
-                            asc++;
-                        }
-                    }
-                }
-                if (pa.B instanceof Array) {
-                    let bl = pa.B.length;
-                    for (let b = 0; b < bl; b++) {
-                        if (pa.B[b].commentcount !== 0) {
-                            bcc += pa.B[b].commentcount;
-                        }
-                        if (pa.B[b].like !== 0) {
-                            let num = pa.B[b].like;
-                            brc[0]++;
-                            brc[num]++;
-                        }
-                        if (pa.B[b].share !== false) {
-                            bsc++;
+    // let posts = data[0];
+    // let users = data[1];let overlap = data[2].O;
+    /**
+     * get subdata activities count
+     * @param {object} sub - subdata A/B/O
+     * @return {obj}
+     */
+    function subcount(sub) {
+        let count = {};
+        let oarc = [0, 0, 0, 0, 0, 0, 0, 0];
+        let oacc = 0;
+        let oasc = 0;
+        let obrc = [0, 0, 0, 0, 0, 0, 0, 0];
+        let obcc = 0;
+        let obsc = 0;
+        let l = sub.length;
+        let dtemp = [];
+        for (let i = 0; i < l; i++) {
+            let degree = sub[i];
+            let deg = {};
+            let darc = [0, 0, 0, 0, 0, 0, 0, 0];
+            let dacc = 0;
+            let dasc = 0;
+            let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+            let dbcc = 0;
+            let dbsc = 0;
+            let dl = degree.length;
+            let gtemp = [];
+            for (let j = 0; j < dl; j++) {
+                let group = degree[j];
+                let g = {};
+                let garc = [0, 0, 0, 0, 0, 0, 0, 0];
+                let gacc = 0;
+                let gasc = 0;
+                let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+                let gbcc = 0;
+                let gbsc = 0;
+                let gl = group.length;
+                let utemp = [];
+                for (let k = 0; k < gl; k++) {
+                    let user = group[k];
+                    // user.id;
+                    // user.name;
+                    let arc = [0, 0, 0, 0, 0, 0, 0, 0];
+                    let acc = 0;
+                    let asc = 0;
+                    let brc = [0, 0, 0, 0, 0, 0, 0, 0];
+                    let bcc = 0;
+                    let bsc = 0;
+                    let pa = user.posts;
+                    if (pa.A instanceof Array) {
+                        let al = pa.A.length;
+                        for (let a = 0; a < al; a++) {
+                            if (pa.A[a].commentcount !== 0) {
+                                acc += pa.A[a].commentcount;
+                            }
+                            if (pa.A[a].like !== 0) {
+                                let num = pa.A[a].like;
+                                arc[0]++;
+                                arc[num]++;
+                            }
+                            if (pa.A[a].share !== false) {
+                                asc++;
+                            }
                         }
                     }
+                    if (pa.B instanceof Array) {
+                        let bl = pa.B.length;
+                        for (let b = 0; b < bl; b++) {
+                            if (pa.B[b].commentcount !== 0) {
+                                bcc += pa.B[b].commentcount;
+                            }
+                            if (pa.B[b].like !== 0) {
+                                let num = pa.B[b].like;
+                                brc[0]++;
+                                brc[num]++;
+                            }
+                            if (pa.B[b].share !== false) {
+                                bsc++;
+                            }
+                        }
+                    }
+                    let temp = {
+                        'A': [arc, acc, asc],
+                        'B': [brc, bcc, bsc],
+                    };
+                    // console.log(temp);
+                    utemp.push(temp);
+                    for (let i = 0; i < 7; i++) {
+                        garc[i] += arc[i];
+                        gbrc[i] += brc[i];
+                    }
+                    gacc += acc;
+                    gasc += asc;
+                    gbcc += bcc;
+                    gbsc += bsc;
                 }
-                let temp = {
-                    'A': [arc, acc, asc],
-                    'B': [brc, bcc, bsc],
-                };
-                // console.log(temp);
-                utemp.push(temp);
+                g.A = [garc, gacc, gasc];
+                g.B = [gbrc, gbcc, gbsc];
+                g.user = utemp;
+                gtemp.push(g);
                 for (let i = 0; i < 7; i++) {
-                    garc[i] += arc[i];
-                    gbrc[i] += brc[i];
+                    darc[i] += garc[i];
+                    dbrc[i] += gbrc[i];
                 }
-                gacc += acc;
-                gasc += asc;
-                gbcc += bcc;
-                gbsc += bsc;
+                dacc += gacc;
+                dasc += gasc;
+                dbcc += gbcc;
+                dbsc += gbsc;
             }
-            g.A = [garc, gacc, gasc];
-            g.B = [gbrc, gbcc, gbsc];
-            g.user = utemp;
-            gtemp.push(g);
+            deg.A = [darc, dacc, dasc];
+            deg.B = [dbrc, dbcc, dbsc];
+            deg.group = gtemp;
+            dtemp.push(deg);
             for (let i = 0; i < 7; i++) {
-                darc[i] += garc[i];
-                dbrc[i] += gbrc[i];
+                oarc[i] += darc[i];
+                obrc[i] += dbrc[i];
             }
-            dacc += gacc;
-            dasc += gasc;
-            dbcc += gbcc;
-            dbsc += gbsc;
+            oacc += dacc;
+            oasc += dasc;
+            obcc += dbcc;
+            obsc += dbsc;
         }
-        deg.A = [darc, dacc, dasc];
-        deg.B = [dbrc, dbcc, dbsc];
-        deg.group = gtemp;
-        dtemp.push(deg);
-        for (let i = 0; i < 7; i++) {
-            oarc[i] += darc[i];
-            obrc[i] += dbrc[i];
-        }
-        oacc += dacc;
-        oasc += dasc;
-        obcc += dbcc;
-        obsc += dbsc;
+        count.A = [oarc, oacc, oasc];
+        count.B = [obrc, obcc, obsc];
+        count.degree = dtemp;
+        return count;
     }
-    count.A = [oarc, oacc, oasc];
-    count.B = [obrc, obcc, obsc];
-    count.degree = dtemp;
-    return count;
+
+    let result = {};
+    result.O = subcount(data[2].O);
+    result.A = subcount(data[2].A);
+    result.B = subcount(data[2].B);
+    return result;
 }
 
 /**

@@ -73,12 +73,13 @@
         <div class="panel">
             <p>{{{message}}}</p>
             <p>
-                <img src="img/comment.jpg" class="dvicon"> :{{{commentcount}}}</p>
+                <img src="img/comment.jpg" class="dvicon"> :{{{commentcount}}}
+            </p>
             <div id={{{divid}}}></div>
         </div>
     </script>
     <script id="subcomments-detail" type="text/x-handlebars-template">
-        <button class="accordion">{{{time}}} by: {{{from}}}</button>
+        <button class="subaccordion">{{{time}}} by: {{{from}}}</button>
         <div class="panel">
             <p>{{{message}}}</p>
         </div>
