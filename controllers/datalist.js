@@ -685,7 +685,7 @@ var sortdegree = function sortdegree(olrlist) {
                 obj.A.push(temp);
                 obj.B.push([]);
             }
-        }else{
+        } else {
             obj.O.push(temp);
             obj.A.push([]);
             obj.B.push([]);
@@ -792,26 +792,13 @@ var sortdegree = function sortdegree(olrlist) {
                 if (deg === degi) { // if find
                     var post = list[i][0].posts.A;
                     var ipost = item.posts.A;
-                    if (deg === 0 || degB === 0) { // if item's deg eqaul 0
-                        if (deg === 0) {
-                            deg = degB;
-                            degi = list[i][0].posts.B.length;
-                            post = list[i][0].posts.B;
-                            ipost = item.posts.B;
-                            makelist(list, post, ipost)
-                        } else {
-                            makelist(list, post, ipost)
-                        }
-                        i = l;
-                    } else {
-                        makelist(list, post, ipost);
-                        i = l;
-                    }
+                    makelist(list, post, ipost);
+                    i = l;
                 } else if (deg > degi) { // push item in list to creat new list[deg]
                     if (!eqdeg && i === (l - 1)) {
                         list.push([item]);
                     }
-                } else { // insert item in specific list[i]
+                } else { // insert item in new list[i]
                     list.splice(i, 0, [item]);
                     i = l;
                 }
