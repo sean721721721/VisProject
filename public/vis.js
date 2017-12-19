@@ -952,21 +952,23 @@ function overlapvis(data) {
     let posts = data.data[0];
     let users = data.data[1];
     let overlap = [];
+    let oucount = 0;
     for (let i = 0, l = data.data[2].O.length; i < l; i++) {
         if (data.data[2].O[i].length > 0) {
+            oucount += data.data[2].O[i].length;
             overlap.push(data.data[2].O[i]);
         }
     }
 
     // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
-    let nextline = parseInt(Math.sqrt(2 * data.summary[1][2]), 10) - 1;
+    let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 1 : overlap.length + 1;
     let ratio = (1000 * 0.95) / (nextline * 50);
     let cellSize1 = 50 * ratio;
     let cellSize2 = 40 * ratio;
     let cellSize3 = 30 * ratio;
 
-    let initx = 1000 * 0.025 + cellSize1 / 2;
-    let inity = initx / 2;
+    let initx = 1000 * 0.025 + cellSize1 * 2;
+    let inity = 1000 * 0.025;
 
     // construct degree y checklist
     let degylist = [];
@@ -1079,11 +1081,11 @@ function overlapvis(data) {
         .attr('fill', '#aaa')
         .attr('stroke', '#f00')
         .attr('opacity', 1)
-        .attr('width', cellSize1)
+        .attr('width', cellSize1 * 2)
         .attr('height', (d, i) => {
             return cellSize1 * degylist[i];
         })
-        .attr('x', initx - cellSize1)
+        .attr('x', initx - cellSize1 * 2)
         .attr('y', inity)
         .on('click', function (d, k) {
             d3.event.preventDefault();
@@ -1148,7 +1150,7 @@ function overlapvis(data) {
         });
 
     let text = rect.append('text')
-        .attr('x', initx - cellSize1)
+        .attr('x', initx - cellSize1 * 2)
         .attr('y', (d, i) => {
             return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
         })
@@ -1255,7 +1257,8 @@ function overlapvis(data) {
         })
         .on('click', function (d) {
             d3.event.preventDefault();
-            status(d);
+            // status(d);
+            detailuser(data, d);
         });
 
     // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
@@ -1350,7 +1353,7 @@ function overview(data) {
     for (let i = 0; i < 7; i++) {
         ovdata.push([oarc[i], obrc[i], orc[i]]); // reactioncount
     }
-    let axis = ['post', 'user', 'comment', 'share', 'like', 'love', 'haha', 'wow', 'sad', 'angry'];
+    let axis = ['post', 'user', 'comment', 'share', 'reaction', 'like', 'love', 'haha', 'wow', 'sad', 'angry'];
     console.log('ovdata', ovdata);
 
     // graph draw
@@ -1359,9 +1362,9 @@ function overview(data) {
     let height = '50%';
     let margin = {
         top: 30,
-        right: 60,
+        right: 25,
         bottom: 30,
-        left: 60,
+        left: 35,
     };
 
     let zoom = d3.zoom()
@@ -1388,13 +1391,20 @@ function overview(data) {
     let wx = w / ovdata.length;
 
     let x = d3.scaleBand()
-        .rangeRound([0, w])
-        .padding(0.1)
-        .align(0.1);
+        .domain(axis)
+        .rangeRound([0, w]);
+    // .padding(0.1)
+    // .align(0.1);
+
+    let y = d3.scaleLinear()
+        .domain([0, 1])
+        .range([0, h]);
 
     let g = svg.append('g')
         .attr('id', 'over')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    let tooltip2 = d3.select('body').select('.b');
 
     let rectA = g.selectAll('g')
         .append('g').attr('class', 'A')
@@ -1408,7 +1418,25 @@ function overview(data) {
         .attr('x', (d, i) => {
             return i * wx;
         })
-        .attr('y', 0);
+        .attr('y', 0)
+        .on('mouseover', function (d, i) {
+            d3.event.preventDefault();
+            tooltip2.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip2.html('Page= ' + data.query.page1 + '<br/>' +
+                    'Activities Type = ' + axis[i] + '<br/>' +
+                    'Activities Count = ' + d[0] + '<br/>' +
+                    'Activities % = ' + d[0] / d[2] * 100 + '%')
+                .style('left', (d3.event.pageX + 5) + 'px')
+                .style('top', (d3.event.pageY - 30) + 'px');
+        })
+        .on('mouseout', function (d) {
+            d3.event.preventDefault();
+            tooltip2.transition()
+                .duration(500)
+                .style('opacity', 0);
+        });
 
     let rectB = g.selectAll('g')
         .append('g').attr('class', 'B')
@@ -1424,16 +1452,42 @@ function overview(data) {
         })
         .attr('y', (d) => {
             return (d[0] / d[2]) * h;
+        }).on('mouseover', function (d, i) {
+            d3.event.preventDefault();
+            tooltip2.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip2.html('Page= ' + data.query.page2 + '<br/>' +
+                    'Activities Type = ' + axis[i] + '<br/>' +
+                    'Activities Count = ' + d[1] + '<br/>' +
+                    'Activities % = ' + d[1] / d[2] * 100 + '%')
+                .style('left', (d3.event.pageX + 5) + 'px')
+                .style('top', (d3.event.pageY - 30) + 'px');
+        })
+        .on('mouseout', function (d) {
+            d3.event.preventDefault();
+            tooltip2.transition()
+                .duration(500)
+                .style('opacity', 0);
         });
 
-    let xaxis = g.selectAll('g')
-        .append('g')
-        .data(axis)
-        .enter().append('g')
+    let xaxis = g.append('g')
         .attr('class', 'axis axis--x')
         .attr('transform', 'translate(0,' + h + ')')
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x).tickValues(axis));
 
+    let yaxis = g.append('g')
+        .attr('class', 'axis axis--y')
+        .attr('transform', 'translate(0, 0)')
+        .call(d3.axisLeft(y).ticks(10, '%'));
+
+    let line = g.append('line')
+        .attr('class', 'line')
+        .attr('x1', 0)
+        .attr('y1', y(0.5))
+        .attr('x2', w + 10)
+        .attr('y2', y(0.5))
+        .attr('stroke', 'lightblue');
     /*
     let darc = [0, 0, 0, 0, 0, 0, 0, 0];
     let dacc = 0;
@@ -1602,14 +1656,14 @@ function pageview(data, pagedata) {
             return d;
         })
         /* .selectAll('tspan')*/
-        /*.data(function (d) {
+        /* .data(function (d) {
             // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
             console.log(d);
             let arr = d.data.id.split('.');
             // console.log(d, arr);
             return d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
         })*/
-        /*.enter().append('tspan')*/
+        /* .enter().append('tspan')*/
         .text(function (d) {
             return d.text;
             // return d;
@@ -1758,12 +1812,64 @@ function countactivities(data){
 }*/
 
 /**
+ * add button paccordion
+ */
+function paccordion() { // accordion
+    let acc = document.getElementsByClassName('accordion');
+    for (let i = 0; i < acc.length; i++) {
+        acc[i].onclick = function () {
+            // let el = document.getElementsByClassName('detailview')[0];
+            // let st = el.scrollTop;
+            // console.log(st);
+            this.classList.toggle('active');
+            let panel = this.nextElementSibling;
+            let divc = this.parentElement;
+            let paccordion = this.parentElement.parentElement;
+            // console.log(paccordion);
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
+                divc.style.maxHeight = (divc.scrollHeight - panel.scrollHeight) + 'px';
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + 'px';
+                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
+                divc.style.maxHeight = (divc.scrollHeight + panel.scrollHeight) + 'px';
+            }
+            // document.getElementsByClassName('detailview')[0].scrollTop = st;
+            // console.log(document.getElementsByClassName('detailview')[0].scrollTop);
+        };
+    }
+    let subacc = document.getElementsByClassName('subaccordion');
+    for (let i = 0; i < subacc.length; i++) {
+        subacc[i].onclick = function () {
+            this.classList.toggle('active');
+            let panel = this.nextElementSibling;
+            let paccordion = this.parentElement.parentElement;
+            let divc = paccordion.parentElement;
+            let pre = paccordion.parentElement.parentElement;
+            // console.log(paccordion);
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
+                divc.style.maxHeight = (divc.scrollHeight - panel.scrollHeight) + 'px';
+                pre.style.maxHeight = (pre.scrollHeight - panel.scrollHeight) + 'px';
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + 'px';
+                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
+                divc.style.maxHeight = (divc.scrollHeight + panel.scrollHeight) + 'px';
+                pre.style.maxHeight = (pre.scrollHeight + panel.scrollHeight) + 'px';
+            }
+        };
+    }
+}
+
+/**
  * showcomments in detail
  * @param {object} data -
  * @param {array} select -
  */
 function detailview(data, select) {
-    let rawTemplate = document.getElementById('detail-view').innerHTML;
+    let rawTemplate = document.getElementById('detailpost-view').innerHTML;
     let template = Handlebars.compile(rawTemplate);
     let detail = document.querySelector('#detail');
     let initdetail = '';
@@ -1797,53 +1903,7 @@ function detailview(data, select) {
     if (pagedata[i][j].comments.summary !== 0) {
         commentdetail(pagedata[i][j].comments.context);
     }
-
-    // accordion
-    let acc = document.getElementsByClassName('accordion');
-    for (let i = 0; i < acc.length; i++) {
-        acc[i].onclick = function () {
-            let el = document.getElementsByClassName('detailview')[0];
-            let st = el.scrollTop;
-            console.log(st);
-            this.classList.toggle('active');
-            let panel = this.nextElementSibling;
-            let paccordion = this.parentElement.parentElement;
-            // console.log(paccordion);
-            if (panel.style.maxHeight) {
-                panel.style.maxHeight = null;
-                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
-            } else {
-                panel.style.maxHeight = panel.scrollHeight + 'px';
-                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
-            }
-            document.getElementsByClassName('detailview')[0].scrollTop = st;
-            console.log(document.getElementsByClassName('detailview')[0].scrollTop);
-        };
-    }
-    let subacc = document.getElementsByClassName('subaccordion');
-    for (let i = 0; i < subacc.length; i++) {
-        subacc[i].onclick = function () {
-            let el = document.getElementsByClassName('detailview')[0];
-            let st = el.scrollTop;
-            console.log(st);
-            this.classList.toggle('active');
-            let panel = this.nextElementSibling;
-            let paccordion = this.parentElement.parentElement;
-            let pre = paccordion.parentElement.parentElement;
-            // console.log(paccordion);
-            if (panel.style.maxHeight) {
-                panel.style.maxHeight = null;
-                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
-                    pre.style.maxHeight = (pre.scrollHeight - panel.scrollHeight) + 'px';
-            } else {
-                panel.style.maxHeight = panel.scrollHeight + 'px';
-                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
-                    pre.style.maxHeight = (pre.scrollHeight + panel.scrollHeight) + 'px';
-            }
-            document.getElementsByClassName('detailview')[0].scrollTop = st;
-            console.log(document.getElementsByClassName('detailview')[0].scrollTop);
-        };
-    }
+    paccordion();
 }
 
 /**
@@ -1897,6 +1957,29 @@ function subcommentdetail(data, id) {
         let html = template(content);
         scdetail.innerHTML += html;
     }
+}
+
+/**
+ * make detailuser
+ * @param {object} data - for data.query
+ * @param {object} point - user point
+ */
+function detailuser(data, point) {
+    let rawTemplate = document.getElementById('detailuser-view').innerHTML;
+    let template = Handlebars.compile(rawTemplate);
+    let detail = document.querySelector('#detail');
+    let initdetail = '';
+    let content = point;
+    content.page1 = data.query.page1;
+    content.page2 = data.query.page2;
+    content.activities1 = point.posts.A.length;
+    content.activities2 = point.posts.B.length;
+    content.summary = point.posts.A.length + point.posts.B.length;
+    console.log('detail', content);
+    detail.innerHTML = initdetail;
+    let html = template(content);
+    detail.innerHTML += html;
+    paccordion();
 }
 
 /**
@@ -1976,6 +2059,7 @@ function countactivities(data) {
      */
     function subcount(sub) {
         let count = {};
+        // sum, like, love, haha, wow, sad, angry, others
         let oarc = [0, 0, 0, 0, 0, 0, 0, 0];
         let oacc = 0;
         let oasc = 0;

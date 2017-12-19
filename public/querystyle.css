@@ -89,6 +89,10 @@ video {
     vertical-align: baseline;
 }
 
+* {
+    box-sizing: border-box
+}
+
 
 /* HTML5 display-role reset for older browsers */
 
@@ -292,7 +296,7 @@ div.tab button.active {
     grid-gap: 1px;
     grid-column: col1 / col2;
     grid-template-columns: [scol1] 0.5fr [scol2] 0.5fr [scolend];
-    grid-template-rows: [srow1] minmax(auto, 0.5fr) [srow2] minmax(30vh, 0.5fr) [srowend];
+    grid-template-rows: [srow1] minmax(auto, 1fr) [srow2] minmax(30vh, 30vh) [srowend];
 }
 
 .overview {
@@ -418,6 +422,20 @@ div.panel {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.2s ease-out;
+}
+
+#pageA {
+    display: inline-block;
+    float: left;
+    border: 1px solid #ccc;
+    width: 50%;
+}
+
+#pageB {
+    display: inline-block;
+    float: left;
+    border: 1px solid #ccc;
+    width: 50%;
 }
 
 
