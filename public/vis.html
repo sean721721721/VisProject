@@ -9,8 +9,8 @@
                             <th>Page name</th>
                             <th>from</th>
                             <th>to</th>
-                            <th>貼文數</th>
-                            <th>使用者數</th>
+                            <!--th>貼文數</th>
+                            <th>使用者數</th-->
                         </tr>
                     </thead>
                     <tbody>
@@ -18,20 +18,20 @@
                             <th>{{{query.page1}}}</th>
                             <th>{{{query.time1}}}</th>
                             <th>{{{query.time2}}}</th>
-                            <th>{{{summary.[0].[0]}}}</th>
-                            <th>{{{summary.[1].[0]}}}</th>
+                            <!--th>{{{summary.[0].[0]}}}</th>
+                            <th>{{{summary.[1].[0]}}}</th-->
                         </tr>
                         <tr>
                             <th>{{{query.page2}}}</th>
                             <th>{{{query.time3}}}</th>
                             <th>{{{query.time4}}}</th>
-                            <th>{{{summary.[0].[1]}}}</th>
-                            <th>{{{summary.[1].[1]}}}</th>
+                            <!--th>{{{summary.[0].[1]}}}</th>
+                            <th>{{{summary.[1].[1]}}}</th-->
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div>
+            <!--div>
                 <table class="summary">
                     <tbody>
                         <tr>
@@ -48,7 +48,7 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </div-->
         </div>
     </script>
     <script id="detailpost-view" type="text/x-handlebars-template">
@@ -93,13 +93,13 @@
             <div>
                 <div id="pageA">
                     {{#each posts.A}}
-                    <button class="accordion pageA">{{{id}}}</button>
+                    <button class="accordion pageA">p{{{num}}} : 
+                        <img src="img/like.jpg" class="dvicon"> {{like}} /
+                        <img src="img/comment.jpg" class="dvicon"> {{commentcount}} /
+                        <img src="img/share.jpg" class="dvicon"> {{share}}
+                    </button>
                     <div class="panel">
-                        <p>
-                            <img src="img/like.jpg" class="dvicon"> {{like}} /
-                            <img src="img/comment.jpg" class="dvicon"> {{commentcount}} /
-                            <img src="img/share.jpg" class="dvicon"> {{share}}
-                        </p>
+                        <p>{{{toURL id}}}</p>
                         {{#each clist}}
                         <div>
                             <button class="subaccordion commentA">created_time: {{{created_time}}}</button>
@@ -117,13 +117,13 @@
                 </div>
                 <div id="pageB">
                     {{#each posts.B}}
-                    <button class="accordion pageB">{{{id}}}</button>
+                    <button class="accordion pageB">p{{{num}}} : 
+                        <img src="img/like.jpg" class="dvicon"> {{like}} /
+                        <img src="img/comment.jpg" class="dvicon"> {{commentcount}} /
+                        <img src="img/share.jpg" class="dvicon"> {{share}}
+                    </button>
                     <div class="panel">
-                        <p>
-                            <img src="img/like.jpg" class="dvicon"> {{like}} /
-                            <img src="img/comment.jpg" class="dvicon"> {{commentcount}} /
-                            <img src="img/share.jpg" class="dvicon"> {{share}}
-                        </p>
+                        <p>{{{toURL id}}}</p>
                         {{#each clist}}
                         <div>
                             <button class="subaccordion commentB">created_time:{{{created_time}}}</button>

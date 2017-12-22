@@ -250,6 +250,20 @@ div.tab button.active {
     text-align: left;
 }
 
+.selective {
+    fill: black;
+    stroke: white;
+}
+
+.selectext {
+    fill: white;
+}
+
+rect:hover {
+    fill-opacity: 0.8;
+    stroke: white;
+}
+
 
 /* grid setting */
 
@@ -350,10 +364,10 @@ td {
 
 /*next and previous botton*/
 
-.pagination a {
+.pagination .detail {
     text-decoration: none;
     display: inline-block;
-    padding: 8px 16px;
+    padding: 4px 8px;
 }
 
 a:hover {

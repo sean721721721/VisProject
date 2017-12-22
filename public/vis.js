@@ -57,9 +57,11 @@ function visMain(data) {
     overlapvis(data);
     overview(data);
     // data manipulate
+    let select = {};
+    select.post = [];
+    select.ci = 0;
     let pd = pagedata(data);
-    pageview(data, pd);
-    // console.log(data);
+    pageview(data, pd, select);
 }
 
 
@@ -1258,6 +1260,8 @@ function overlapvis(data) {
         .on('click', function (d) {
             d3.event.preventDefault();
             // status(d);
+            console.log(d);
+            activepost(data, d);
             detailuser(data, d);
         });
 
@@ -1411,6 +1415,7 @@ function overview(data) {
         .data(ovdata)
         .enter().append('rect')
         .attr('fill', '#aaa')
+        .attr('stroke', 'white 5px')
         .attr('width', wx)
         .attr('height', (d, i) => {
             return (d[0] / d[2]) * h;
@@ -1443,6 +1448,7 @@ function overview(data) {
         .data(ovdata)
         .enter().append('rect')
         .attr('fill', '#333')
+        .attr('stroke', 'white 5px')
         .attr('width', wx)
         .attr('height', (d, i) => {
             return (d[1] / d[2]) * h;
@@ -1488,35 +1494,15 @@ function overview(data) {
         .attr('x2', w + 10)
         .attr('y2', y(0.5))
         .attr('stroke', 'lightblue');
-    /*
-    let darc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let dacc = 0;
-    let dasc = 0;
-    let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let dbcc = 0;
-    let dbsc = 0;
-
-    let garc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let gacc = 0;
-    let gasc = 0;
-    let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let gbcc = 0;
-    let gbsc = 0;
-
-    let arc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let acc = 0;
-    let asc = 0;
-    let brc = [0, 0, 0, 0, 0, 0, 0, 0];
-    let bcc = 0;
-    let bsc = 0;*/
 }
 
 /**
  * pageview
  * @param {object} data - inputdata
  * @param {object} pagedata - pagedata
+ * @param {array} select - record selectpost and ci
  */
-function pageview(data, pagedata) {
+function pageview(data, pagedata, select) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
     let height = '100%';
@@ -1524,14 +1510,14 @@ function pageview(data, pagedata) {
     let w = 500;
     let h = 500;
     // let wx = w / ovdata.length;
-    /* let zoom = d3.zoom()
+    let zoom = d3.zoom()
         .scaleExtent([1, 5])
         .on('zoom', function () {
             g.attr('transform', d3.event.transform);
             let k = this.__zoom.k;
             g.attr('r', 5 / k)
                 .attr('stroke-width', 1 / k);
-        });*/
+        });
 
     let svg = d3.select('#page')
         .append('svg')
@@ -1540,8 +1526,8 @@ function pageview(data, pagedata) {
         .attr('viewBox', '0 0 500 500')
         .attr('preserveAspectRatio', 'xMinYMin')
         .style('fill', 'none')
-        .style('pointer-events', 'all');
-    // .call(zoom);
+        .style('pointer-events', 'all')
+        .call(zoom);
 
     let g = svg.append('g')
         .attr('id', 'pagepmap');
@@ -1552,8 +1538,8 @@ function pageview(data, pagedata) {
         .tile(d3.treemapSquarify)
         .size([w, h])
         .round(false)
-        // .paddingInner(1)
-        .paddingOuter(1);
+        .paddingInner(1);
+    // .paddingOuter(1);
 
     let n = 100;
     let root = d3.hierarchy(pagedata)
@@ -1580,43 +1566,79 @@ function pageview(data, pagedata) {
     treemap(root);
 
     let cell = g.selectAll('g')
-        .data(root.leaves())
+        .data(root.descendants())
         .enter().append('g')
+        .attr('class', (d) => {
+            return 'page' + d.data.page + ' p' + d.data.post + ' depth' + d.depth;
+        })
         .attr('transform', function (d) {
             return 'translate(' + d.x0 + ',' + d.y0 + ')';
         });
 
     let rect = cell.append('rect')
-        .data(root.leaves())
+        // .data(root.leaves())
         .datum(function (d) {
             d.width = d.x1 - d.x0;
             d.height = d.y1 - d.y0;
             // console.log(d);
             return d;
         })
-        .attr('class', (d) => {
-            return 'depth' + d.depth;
-        })
         .attr('id', function (d) {
             return d.data.id;
         })
         .attr('width', (d) => d.width)
         .attr('height', (d) => d.height)
-        .attr('fill', function (d) {
-            return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+        .attr('stroke', (d) => {
+            if (d.depth >= 2) {
+                return '#000';
+            }
+        })
+        .attr('stroke-dasharray', (d) => {
+            if (d.depth > 2) {
+                return 1, 1;
+            }
+        }).attr('fill', function (d) {
+            if (d === d.leaves()[0]) {
+                return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+            } else {
+                return null;
+            }
         })
         .on('click', (d) => {
+            d3.event.preventDefault();
             console.log('click', d);
+            selectivepost(d.data.page, d.data.post);
             let pagedata = data.data[0];
             // d.data.id.split('.');
-            let select = d.data.id.split('.');
-            let page = select[1];
-            let post = select[2];
-            let i = page === data.query.page1 ? 0 : 1;
-            let j = parseInt(post.match(/\d{1,}/)[0]) - 1;
+            let selectobj = {};
+            let idarray = d.data.id.split('.');
+            selectobj.page = idarray[1];
+            selectobj.post = idarray[2];
+            if (select.post.length !== 0) {
+                for (let i = 0, l = select.post.length; i < l;) {
+                    if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
+                        select.post.splice(i, 1);
+                        select.ci = i - 1 > 0 ? i - 1 : 0;
+                        i = l + 1;
+                    } else {
+                        i++;
+                    }
+                    if (i === l) {
+                        select.post.push(selectobj);
+                        select.ci = l;
+                    }
+                }
+            } else {
+                select.post.push(selectobj);
+            }
+            console.log(select.post);
+            detailview(data, select);
+            // detailview(data, d.data.id.split('.'));
+            // for userview
+            let i = selectobj.page === data.query.page1 ? 0 : 1;
+            let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
             // console.log(i, j);
             let id = pagedata[i][j].id;
-            detailview(data, d.data.id.split('.'));
             let s = d3.selectAll('.user')
                 .attr('fill', (d) => {
                     for (let i = 0, l = d.posts.A.length; i < l; i++) {
@@ -1630,8 +1652,8 @@ function pageview(data, pagedata) {
                         }
                     }
                 });
-            if (focus !== d) zoom(d);
-            else zoom(root);
+            /* if (focus !== d) zoom(d);
+            else zoom(root);*/
             // console.log(s._groups);
         });
 
@@ -1668,7 +1690,18 @@ function pageview(data, pagedata) {
             return d.text;
             // return d;
         })
-        .attr('fill', '#fff');
+        .attr('font-size', (d) => {
+            return d.size;
+        })
+        .attr('x', (d, i) => {
+            return d.size;
+            // return 9 * i + 4;
+        })
+        .attr('y', function (d, i) {
+            return d.size;
+            // return 13 + i * 10;
+        })
+        .attr('fill', '#000');
 
     /* rect.selectAll('.depth2')
         .moveToFront();*/
@@ -1686,7 +1719,7 @@ function pageview(data, pagedata) {
         return r;
     }
     console.log('root', root);
-    zoomTo([root.x0, root.y0, getr(root)]);
+    // zoomTo([root.x0, root.y0, getr(root)]);
     /*
     d3.selectAll('input')
         .data([sumBySize, sumByCount], function (d) {
@@ -1727,7 +1760,7 @@ function pageview(data, pagedata) {
         return d.size;
     }
 
-    function zoom(d) {
+    /*function zoom(d) {
         let focus0 = focus;
         focus = d;
         // console.log(view);
@@ -1742,20 +1775,6 @@ function pageview(data, pagedata) {
                     zoomTo(i(t));
                 };
             });
-
-        /* transition.selectAll('text')
-            .filter(function (d) {
-                return d.parent === focus || this.style.display === 'inline';
-            })
-            .style('fill-opacity', function (d) {
-                return d.parent === focus ? 1 : 0;
-            })
-            .on('start', function (d) {
-                if (d.parent === focus) this.style.display = 'inline';
-            })
-            .on('end', function (d) {
-                if (d.parent !== focus) this.style.display = 'none';
-            });*/
     }
 
     function zoomTo(v) {
@@ -1783,7 +1802,7 @@ function pageview(data, pagedata) {
                 return d.size * k;
                 // return 13 + i * 10;
             });
-    }
+    }*/
 }
 
 /*
@@ -1864,11 +1883,44 @@ function paccordion() { // accordion
 }
 
 /**
+ * next post detail
+ * @param {object} data -
+ * @param {array} select -
+ * @param {number} count -
+ */
+function nextpost(data, select, count) {
+    if (select.post.length > 1) {
+        select.ci = (select.ci + count) % select.post.length;
+        if (select.ci < 0) {
+            select.ci = select.post.length + select.ci;
+        }
+    }
+    postdetail(data, select);
+    // console.log(select.ci);
+}
+
+/**
  * showcomments in detail
  * @param {object} data -
  * @param {array} select -
  */
 function detailview(data, select) {
+    postdetail(data, select);
+    document.querySelector('.next').onclick = function () {
+        nextpost(data, select, 1);
+    };
+    document.querySelector('.previous').onclick = function () {
+        nextpost(data, select, -1);
+    };
+    // console.log(select.ci);
+}
+
+/**
+ * render postdetail
+ * @param {object} data -
+ * @param {array} select -
+ */
+function postdetail(data, select) {
     let rawTemplate = document.getElementById('detailpost-view').innerHTML;
     let template = Handlebars.compile(rawTemplate);
     let detail = document.querySelector('#detail');
@@ -1876,34 +1928,38 @@ function detailview(data, select) {
     let content = {};
     let pagedata = data.data[0];
     // d.data.id.split('.');
-    let page = select[1];
-    let post = select[2];
-    let i = page === data.query.page1 ? 0 : 1;
-    let j = parseInt(post.match(/\d{1,}/)[0]) - 1;
-    // console.log(i, j);
-    content.page = data.query.page1;
-    content.post = post;
-    content.id = pagedata[i][j].id;
-    content.message = pagedata[i][j].message;
-    content.reactions = {};
-    // content.reactions.total=pagedata[0][0][0].reactions;
-    content.reactions.like = pagedata[i][j].reactions.like;
-    content.reactions.love = pagedata[i][j].reactions.love;
-    content.reactions.haha = pagedata[i][j].reactions.haha;
-    content.reactions.wow = pagedata[i][j].reactions.wow;
-    content.reactions.sad = pagedata[i][j].reactions.sad;
-    content.reactions.angry = pagedata[i][j].reactions.angry;
-    content.commentcount = pagedata[i][j].comments.summary;
-    content.comments = pagedata[i][j].comments.context;
-    content.shares = pagedata[i][j].shares;
-    console.log('detail', content);
-    detail.innerHTML = initdetail;
-    let html = template(content);
-    detail.innerHTML += html;
-    if (pagedata[i][j].comments.summary !== 0) {
-        commentdetail(pagedata[i][j].comments.context);
+    let index = select.ci;
+    // console.log(index);
+    if (select.post[index] !== undefined) {
+        let page = select.post[index].page;
+        let post = select.post[index].post;
+        let i = page === data.query.page1 ? 0 : 1;
+        let j = parseInt(post.match(/\d{1,}/)[0]) - 1;
+        // console.log(i, j);
+        content.page = data.query.page1;
+        content.post = post;
+        content.id = pagedata[i][j].id;
+        content.message = pagedata[i][j].message;
+        content.reactions = {};
+        // content.reactions.total=pagedata[0][0][0].reactions;
+        content.reactions.like = pagedata[i][j].reactions.like;
+        content.reactions.love = pagedata[i][j].reactions.love;
+        content.reactions.haha = pagedata[i][j].reactions.haha;
+        content.reactions.wow = pagedata[i][j].reactions.wow;
+        content.reactions.sad = pagedata[i][j].reactions.sad;
+        content.reactions.angry = pagedata[i][j].reactions.angry;
+        content.commentcount = pagedata[i][j].comments.summary;
+        content.comments = pagedata[i][j].comments.context;
+        content.shares = pagedata[i][j].shares;
+        console.log('detail', content);
+        detail.innerHTML = initdetail;
+        let html = template(content);
+        detail.innerHTML += html;
+        if (pagedata[i][j].comments.summary !== 0) {
+            commentdetail(pagedata[i][j].comments.context);
+        }
+        paccordion();
     }
-    paccordion();
 }
 
 /**
@@ -1957,6 +2013,58 @@ function subcommentdetail(data, id) {
         let html = template(content);
         scdetail.innerHTML += html;
     }
+}
+
+/**
+ * show user active post
+ * @param {object} data -
+ * @param {object} user - click user
+ */
+function activepost(data, user) {
+    function postidtonum(data, page, postid) {
+        let pagedata = data.data[0][page];
+        for (let i = 0, la = pagedata.length; i < la; i++) {
+            if (pagedata[i].id === postid) {
+                return i + 1;
+            }
+        }
+    }
+
+    let result = [
+        [],
+        [],
+    ];
+    for (let i = 0, l = user.posts.A.length; i < l; i++) {
+        let id = user.posts.A[i].id;
+        let postnum = postidtonum(data, 0, id);
+        user.posts.A[i].num =postnum;
+        result[0].push(postnum);
+        selectivepost(1, postnum);
+    }
+    for (let i = 0, l = user.posts.B.length; i < l; i++) {
+        let id = user.posts.B[i].id;
+        let postnum = postidtonum(data, 1, id);
+        user.posts.B[i].num =postnum;
+        result[1].push(postnum);
+        selectivepost(2, postnum);
+    }
+    console.log(result);
+}
+
+/**
+ * selectivepost highlight
+ * @param {number} page - pagenum
+ * @param {number} post - postnum
+ */
+function selectivepost(page, post) {
+    let sel = d3.selectAll('.page' + page + '.p' + post);
+    let rect = sel.select('rect')._groups[0];
+    let text = sel.select('text')._groups[0];
+    // console.log(rect, text);
+    for (let i = 2, l = rect.length; i < l; i++) {
+        rect[i].classList.toggle('selective');
+    }
+    text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text
 }
 
 /**

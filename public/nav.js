@@ -470,7 +470,9 @@ function clearString(s) {
  * @param {string} tabName -
  */
 function openTab(evt, tabName) {
-    let i, tabcontent, tablinks;
+    let i;
+    let tabcontent;
+    let tablinks;
     tabcontent = document.getElementsByClassName('tabcontent');
     for (i = 0; i < tabcontent.length; i++) {
         tabcontent[i].style.display = 'none';
