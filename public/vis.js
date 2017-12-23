@@ -54,12 +54,16 @@ function visMain(data) {
             update(tsne1, tsne2, data[1], width, init);
         }
     });*/
-    overlapvis(data);
-    overview(data);
-    // data manipulate
     let select = {};
     select.post = [];
-    select.ci = 0;
+    select.user = [];
+    select.ci = {
+        'post': 0,
+        'user': 0,
+    };
+    overlapvis(data, select);
+    overview(data);
+    // data manipulate
     let pd = pagedata(data);
     pageview(data, pd, select);
 }
@@ -886,8 +890,9 @@ function liketype(typenum) {
 /**
  * overlap vis
  * @param {object} data - inputdata
+ * @param {object} select - selectobj
  */
-function overlapvis(data) {
+function overlapvis(data, select) {
     // let width = document.querySelector('#overlap').offsetWidth;
     let height = '100%';
     let width = height;
@@ -1259,10 +1264,46 @@ function overlapvis(data) {
         })
         .on('click', function (d) {
             d3.event.preventDefault();
+            // console.log(d, this);
+            /* let i = selectobj.page === data.query.page1 ? 0 : 1;
+            let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
+            // console.log(i, j);*/
+            let la = d.posts.A.length;
+            let lb = d.posts.B.length;
+            let deg = la + lb;
+            let selectobj = d;
+            if (select.user.length !== 0) {
+                for (let i = 0, l = select.user.length; i < l;) {
+                    if (select.user[i].id === selectobj.id) {
+                        select.user.splice(i, 1);
+                        select.ci.user = i - 1 > 0 ? i - 1 : 0;
+                        i = l + 1;
+                    } else {
+                        i++;
+                    }
+                    if (i === l) {
+                        select.user.push(selectobj);
+                        select.ci.user = l;
+                    }
+                }
+            } else {
+                select.user.push(selectobj);
+            }
+            console.log(select.user);
+            d3.selectAll('.user')
+                .attr('fill', (d) => {
+                    let rcolor = color(Math.sqrt(d.posts.A.length));
+                    for (let i = 0, l = select.user.length; i < l; i++) {
+                        if (d.id === select.user[i].id) {
+                            rcolor = '#000';
+                        }
+                    }
+                    return rcolor;
+                });
             // status(d);
-            console.log(d);
+            console.log('#degree' + deg.toString());
             activepost(data, d);
-            detailuser(data, d);
+            userdetailview(data, select);
         });
 
     // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
@@ -1610,6 +1651,7 @@ function pageview(data, pagedata, select) {
             selectivepost(d.data.page, d.data.post);
             let pagedata = data.data[0];
             // d.data.id.split('.');
+            // select postobj manipulate
             let selectobj = {};
             let idarray = d.data.id.split('.');
             selectobj.page = idarray[1];
@@ -1618,21 +1660,21 @@ function pageview(data, pagedata, select) {
                 for (let i = 0, l = select.post.length; i < l;) {
                     if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
                         select.post.splice(i, 1);
-                        select.ci = i - 1 > 0 ? i - 1 : 0;
+                        select.ci.post = i - 1 > 0 ? i - 1 : 0;
                         i = l + 1;
                     } else {
                         i++;
                     }
                     if (i === l) {
                         select.post.push(selectobj);
-                        select.ci = l;
+                        select.ci.post = l;
                     }
                 }
             } else {
                 select.post.push(selectobj);
             }
             console.log(select.post);
-            detailview(data, select);
+            postdetailview(data, select);
             // detailview(data, d.data.id.split('.'));
             // for userview
             let i = selectobj.page === data.query.page1 ? 0 : 1;
@@ -1890,13 +1932,13 @@ function paccordion() { // accordion
  */
 function nextpost(data, select, count) {
     if (select.post.length > 1) {
-        select.ci = (select.ci + count) % select.post.length;
-        if (select.ci < 0) {
-            select.ci = select.post.length + select.ci;
+        select.ci.post = (select.ci.post + count) % select.post.length;
+        if (select.ci.post < 0) {
+            select.ci.post = select.post.length + select.ci.post;
         }
     }
     postdetail(data, select);
-    // console.log(select.ci);
+    // console.log(select.ci.post);
 }
 
 /**
@@ -1904,7 +1946,7 @@ function nextpost(data, select, count) {
  * @param {object} data -
  * @param {array} select -
  */
-function detailview(data, select) {
+function postdetailview(data, select) {
     postdetail(data, select);
     document.querySelector('.next').onclick = function () {
         nextpost(data, select, 1);
@@ -1912,7 +1954,7 @@ function detailview(data, select) {
     document.querySelector('.previous').onclick = function () {
         nextpost(data, select, -1);
     };
-    // console.log(select.ci);
+    // console.log(select.ci.post);
 }
 
 /**
@@ -1928,7 +1970,7 @@ function postdetail(data, select) {
     let content = {};
     let pagedata = data.data[0];
     // d.data.id.split('.');
-    let index = select.ci;
+    let index = select.ci.post;
     // console.log(index);
     if (select.post[index] !== undefined) {
         let page = select.post[index].page;
@@ -2037,14 +2079,14 @@ function activepost(data, user) {
     for (let i = 0, l = user.posts.A.length; i < l; i++) {
         let id = user.posts.A[i].id;
         let postnum = postidtonum(data, 0, id);
-        user.posts.A[i].num =postnum;
+        user.posts.A[i].num = postnum;
         result[0].push(postnum);
         selectivepost(1, postnum);
     }
     for (let i = 0, l = user.posts.B.length; i < l; i++) {
         let id = user.posts.B[i].id;
         let postnum = postidtonum(data, 1, id);
-        user.posts.B[i].num =postnum;
+        user.posts.B[i].num = postnum;
         result[1].push(postnum);
         selectivepost(2, postnum);
     }
@@ -2060,7 +2102,7 @@ function selectivepost(page, post) {
     let sel = d3.selectAll('.page' + page + '.p' + post);
     let rect = sel.select('rect')._groups[0];
     let text = sel.select('text')._groups[0];
-    // console.log(rect, text);
+    console.log(rect[2], text);
     for (let i = 2, l = rect.length; i < l; i++) {
         rect[i].classList.toggle('selective');
     }
@@ -2068,26 +2110,63 @@ function selectivepost(page, post) {
 }
 
 /**
+ * next user detail
+ * @param {object} data -
+ * @param {array} select -
+ * @param {number} count -
+ */
+function nextuser(data, select, count) {
+    if (select.user.length > 1) {
+        select.ci.user = (select.ci.user + count) % select.user.length;
+        if (select.ci.user < 0) {
+            select.ci.user = select.user.length + select.ci.user;
+        }
+    }
+    userdetail(data, select);
+    // console.log(select.ci.post);
+}
+
+/**
+ * showcomments in detail
+ * @param {object} data -
+ * @param {array} select -
+ */
+function userdetailview(data, select) {
+    userdetail(data, select);
+    document.querySelector('.next').onclick = function () {
+        nextuser(data, select, 1);
+    };
+    document.querySelector('.previous').onclick = function () {
+        nextuser(data, select, -1);
+    };
+    // console.log(select.ci.post);
+}
+
+/**
  * make detailuser
  * @param {object} data - for data.query
- * @param {object} point - user point
+ * @param {object} select - select user
  */
-function detailuser(data, point) {
+function userdetail(data, select) {
     let rawTemplate = document.getElementById('detailuser-view').innerHTML;
     let template = Handlebars.compile(rawTemplate);
     let detail = document.querySelector('#detail');
     let initdetail = '';
-    let content = point;
-    content.page1 = data.query.page1;
-    content.page2 = data.query.page2;
-    content.activities1 = point.posts.A.length;
-    content.activities2 = point.posts.B.length;
-    content.summary = point.posts.A.length + point.posts.B.length;
-    console.log('detail', content);
-    detail.innerHTML = initdetail;
-    let html = template(content);
-    detail.innerHTML += html;
-    paccordion();
+    let index = select.ci.user;
+    if (select.user[index] !== undefined) {
+        let point = select.user[index];
+        let content = point;
+        content.page1 = data.query.page1;
+        content.page2 = data.query.page2;
+        content.activities1 = point.posts.A.length;
+        content.activities2 = point.posts.B.length;
+        content.summary = point.posts.A.length + point.posts.B.length;
+        console.log('detail', content);
+        detail.innerHTML = initdetail;
+        let html = template(content);
+        detail.innerHTML += html;
+        paccordion();
+    }
 }
 
 /**
