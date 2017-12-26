@@ -61,6 +61,10 @@ function visMain(data) {
         'post': 0,
         'user': 0,
     };
+    select.actpost = [
+        [],
+        [],
+    ];
     overlapvis(data, select);
     overview(data);
     // data manipulate
@@ -1268,6 +1272,23 @@ function overlapvis(data, select) {
             /* let i = selectobj.page === data.query.page1 ? 0 : 1;
             let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
             // console.log(i, j);*/
+            let preselect = {};
+            let user = [];
+            let actpost = [
+                [],
+                [],
+            ];
+            for (let i = 0, l = select.user.length; i < l; i++) {
+                user.push(select.user[i]);
+            }
+            for (let i = 0, l = select.actpost.length; i < l; i++) {
+                for (let j = 0, l = select.actpost[i].length; j < l; j++) {
+                    let post = select.actpost[i][j];
+                    actpost[i].push(post);
+                }
+            }
+            preselect.user = user;
+            preselect.actpost = actpost;
             let la = d.posts.A.length;
             let lb = d.posts.B.length;
             let deg = la + lb;
@@ -1290,6 +1311,7 @@ function overlapvis(data, select) {
                 select.user.push(selectobj);
             }
             console.log(select.user);
+            // user color update
             d3.selectAll('.user')
                 .attr('fill', (d) => {
                     let rcolor = color(Math.sqrt(d.posts.A.length));
@@ -1302,7 +1324,8 @@ function overlapvis(data, select) {
                 });
             // status(d);
             console.log('#degree' + deg.toString());
-            activepost(data, d);
+            // activepost(data, preselect, select);
+            select.actpost = activepost(data, preselect, select);
             userdetailview(data, select);
         });
 
@@ -1389,16 +1412,17 @@ function overview(data) {
     let sa = ov.O.A[2] + ov.A.A[2] + ov.B.A[2];
     let sb = ov.O.B[2] + ov.A.B[2] + ov.B.B[2];
     let ovdata = [
-        [data.summary[0][0], data.summary[0][1], allpostcount], // postcount
-        [data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
-        [ca, cb, ca + cb], // commentcount
-        [sa, sb, sa + sb], // sharecount
+        ['post', data.summary[0][0], data.summary[0][1], allpostcount], // postcount
+        ['user', data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
+        ['comment', ca, cb, ca + cb], // commentcount
+        ['share', sa, sb, sa + sb], // sharecount
     ];
 
-    for (let i = 0; i < 7; i++) {
-        ovdata.push([oarc[i], obrc[i], orc[i]]); // reactioncount
-    }
     let axis = ['post', 'user', 'comment', 'share', 'reaction', 'like', 'love', 'haha', 'wow', 'sad', 'angry'];
+    for (let i = 0; i < 7; i++) {
+        let j = i + 4;
+        ovdata.push([axis[j], oarc[i], obrc[i], orc[i]]); // reactioncount
+    }
     console.log('ovdata', ovdata);
 
     // graph draw
@@ -1435,11 +1459,23 @@ function overview(data) {
     let h = 250 - margin.top - margin.bottom;
     let wx = w / ovdata.length;
 
+    let axisname = ovdata.map((d) => {
+        return d[0];
+    });
+
+    let axissum = ovdata.map((d) => {
+        return d[3];
+    });
+
     let x = d3.scaleBand()
-        .domain(axis)
+        .domain(axisname)
         .rangeRound([0, w]);
     // .padding(0.1)
     // .align(0.1);
+
+    let xtop = d3.scaleBand()
+        .domain(axissum)
+        .rangeRound([0, w]);
 
     let y = d3.scaleLinear()
         .domain([0, 1])
@@ -1459,7 +1495,7 @@ function overview(data) {
         .attr('stroke', 'white 5px')
         .attr('width', wx)
         .attr('height', (d, i) => {
-            return (d[0] / d[2]) * h;
+            return (d[1] / d[3]) * h;
         })
         .attr('x', (d, i) => {
             return i * wx;
@@ -1472,8 +1508,8 @@ function overview(data) {
                 .style('opacity', .9);
             tooltip2.html('Page= ' + data.query.page1 + '<br/>' +
                     'Activities Type = ' + axis[i] + '<br/>' +
-                    'Activities Count = ' + d[0] + '<br/>' +
-                    'Activities % = ' + d[0] / d[2] * 100 + '%')
+                    'Activities Count = ' + d[1] + '<br/>' +
+                    'Activities % = ' + d[1] / d[3] * 100 + '%')
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
@@ -1492,22 +1528,22 @@ function overview(data) {
         .attr('stroke', 'white 5px')
         .attr('width', wx)
         .attr('height', (d, i) => {
-            return (d[1] / d[2]) * h;
+            return (d[2] / d[3]) * h;
         })
         .attr('x', (d, i) => {
             return i * wx;
         })
         .attr('y', (d) => {
-            return (d[0] / d[2]) * h;
+            return (d[1] / d[3]) * h;
         }).on('mouseover', function (d, i) {
             d3.event.preventDefault();
             tooltip2.transition()
                 .duration(200)
                 .style('opacity', .9);
             tooltip2.html('Page= ' + data.query.page2 + '<br/>' +
-                    'Activities Type = ' + axis[i] + '<br/>' +
-                    'Activities Count = ' + d[1] + '<br/>' +
-                    'Activities % = ' + d[1] / d[2] * 100 + '%')
+                    'Type = ' + axis[i] + '<br/>' +
+                    'Count = ' + d[2] + '<br/>' +
+                    '% = ' + d[2] / d[3] * 100 + '%')
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
@@ -1522,6 +1558,11 @@ function overview(data) {
         .attr('class', 'axis axis--x')
         .attr('transform', 'translate(0,' + h + ')')
         .call(d3.axisBottom(x).tickValues(axis));
+
+    let x2axis = g.append('g')
+        .attr('class', 'axis axis--x')
+        .attr('transform', 'translate(0,0)')
+        .call(d3.axisTop(xtop).tickValues(axissum));
 
     let yaxis = g.append('g')
         .attr('class', 'axis axis--y')
@@ -1677,22 +1718,34 @@ function pageview(data, pagedata, select) {
             postdetailview(data, select);
             // detailview(data, d.data.id.split('.'));
             // for userview
-            let i = selectobj.page === data.query.page1 ? 0 : 1;
-            let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
-            // console.log(i, j);
-            let id = pagedata[i][j].id;
             let s = d3.selectAll('.user')
                 .attr('fill', (d) => {
+                    let rcolor;
                     for (let i = 0, l = d.posts.A.length; i < l; i++) {
-                        if (d.posts.A[i].id === id) {
-                            return '#000';
+                        for (let j = 0, l = select.post.length; j < l; j++) {
+                            let x = select.post[j].page === data.query.page1 ? 0 : 1;
+                            let y = parseInt(select.post[j].post.match(/\d{1,}/)[0]) - 1;
+                            console.log(x, y);
+                            let id = pagedata[x][y].id;
+                            if (d.posts.A[i].id === id) {
+                                rcolor = '#000';
+                                a = l;
+                            }
                         }
                     }
                     for (let i = 0, l = d.posts.B.length; i < l; i++) {
-                        if (d.posts.B[i].id === id) {
-                            return '#000';
+                        for (let j = 0, l = select.post.length; j < l; j++) {
+                            let x = select.post[j].page === data.query.page1 ? 0 : 1;
+                            let y = parseInt(select.post[j].post.match(/\d{1,}/)[0]) - 1;
+                            console.log(x, y);
+                            let id = pagedata[x][y].id;
+                            if (d.posts.B[i].id === id) {
+                                rcolor = '#000';
+                                a = l;
+                            }
                         }
                     }
+                    return rcolor;
                 });
             /* if (focus !== d) zoom(d);
             else zoom(root);*/
@@ -2060,9 +2113,11 @@ function subcommentdetail(data, id) {
 /**
  * show user active post
  * @param {object} data -
- * @param {object} user - click user
+ * @param {object} preselect - pre
+ * @param {object} postselect - post
+ * @return {array}
  */
-function activepost(data, user) {
+function activepost(data, preselect, postselect) {
     function postidtonum(data, page, postid) {
         let pagedata = data.data[0][page];
         for (let i = 0, la = pagedata.length; i < la; i++) {
@@ -2071,12 +2126,151 @@ function activepost(data, user) {
             }
         }
     }
+    let result = preselect.actpost;
+    console.log(preselect, postselect);
+    let presl = preselect.user.length;
+    let postsl = postselect.user.length;
+    console.log(presl, postsl);
+    if (postsl > presl) {
+        for (let i = 0; i < postsl; i++) {
+            console.log(postselect.user[i]);
+            for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
+                let id = postselect.user[i].posts.A[j].id;
+                if (result[0].length > 0) {
+                    for (let x = 0, l = result[0].length; x < l;) {
+                        if (result[0][x] === id) {
+                            // result[0].splice(j, 1);
+                            /* let postnum = postidtonum(data, 0, id);
+                            selectivepost(1, postnum);*/
+                            x = l + 1;
+                        } else {
+                            x++;
+                        }
+                        if (x === l) {
+                            result[0].push(id);
+                            let postnum = postidtonum(data, 0, id);
+                            selectivepost(1, postnum);
+                        }
+                    }
+                } else {
+                    result[0].push(id);
+                    let postnum = postidtonum(data, 0, id);
+                    selectivepost(1, postnum);
+                }
+            }
+            for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
+                let id = postselect.user[i].posts.B[j].id;
+                if (result[1].length > 0) {
+                    for (let x = 0, l = result[1].length; x < l;) {
+                        if (result[1][x] === id) {
+                            // result[1].splice(j, 1);
+                            /* let postnum = postidtonum(data, 0, id);
+                            selectivepost(1, postnum);*/
+                            x = l + 1;
+                        } else {
+                            x++;
+                        }
+                        if (x === l) {
+                            result[1].push(id);
+                            let postnum = postidtonum(data, 1, id);
+                            selectivepost(2, postnum);
+                        }
+                    }
+                } else {
+                    result[1].push(id);
+                    let postnum = postidtonum(data, 1, id);
+                    selectivepost(2, postnum);
+                }
+            }
+        }
+    } else {
+        result = [
+            [],
+            [],
+        ];
+        for (let i = 0; i < postsl; i++) {
+            for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
+                let id = postselect.user[i].posts.A[j].id;
+                if (result[0].length > 0) {
+                    for (let x = 0, l = result[0].length; x < l;) {
+                        if (result[0][x] === id) {
+                            x = l + 1;
+                        } else {
+                            x++;
+                        }
+                        if (x === l) {
+                            result[0].push(id);
+                        }
+                    }
+                } else {
+                    result[0].push(id);
+                }
+            }
+            for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
+                let id = postselect.user[i].posts.B[j].id;
+                if (result[1].length > 0) {
+                    for (let x = 0, l = result[1].length; x < l;) {
+                        if (result[1][x] === id) {
+                            x = l + 1;
+                        } else {
+                            x++;
+                        }
+                        if (x === l) {
+                            result[1].push(id);
+                        }
+                    }
+                } else {
+                    result[1].push(id);
+                }
+            }
+        }
+        for (let i = 0; i < presl; i++) {
+            for (let j = 0, ual = preselect.user[i].posts.A.length; j < ual; j++) {
+                let id = preselect.user[i].posts.A[j].id;
+                if (result[0].length > 0) {
+                    for (let x = 0, l = result[0].length; x < l;) {
+                        if (result[0][x] === id) {
+                            /* let postnum = postidtonum(data, 0, id);
+                            selectivepost(1, postnum);*/
+                            x = l + 1;
+                        } else {
+                            x++;
+                        }
+                        if (x === l) {
+                            let postnum = postidtonum(data, 0, id);
+                            selectivepost(1, postnum);
+                        }
+                    }
+                } else {
+                    let postnum = postidtonum(data, 0, id);
+                    selectivepost(1, postnum);
+                }
+            }
+            for (let j = 0, ubl = preselect.user[i].posts.B.length; j < ubl; j++) {
+                let id = preselect.user[i].posts.B[j].id;
+                if (result[1].length > 0) {
+                    for (let x = 0, l = result[1].length; x < l;) {
+                        if (result[1][x] === id) {
+                            /* let postnum = postidtonum(data, 0, id);
+                            selectivepost(1, postnum);*/
+                            x = l + 1;
+                        } else {
+                            x++;
+                        }
+                        if (x === l) {
+                            let postnum = postidtonum(data, 1, id);
+                            selectivepost(2, postnum);
+                        }
+                    }
+                } else {
+                    let postnum = postidtonum(data, 1, id);
+                    selectivepost(2, postnum);
+                }
+            }
+        }
+    }
 
-    let result = [
-        [],
-        [],
-    ];
-    for (let i = 0, l = user.posts.A.length; i < l; i++) {
+    /* for (let i = 0, l = user.posts.A.length; i < l; i++) {
         let id = user.posts.A[i].id;
         let postnum = postidtonum(data, 0, id);
         user.posts.A[i].num = postnum;
@@ -2089,8 +2283,9 @@ function activepost(data, user) {
         user.posts.B[i].num = postnum;
         result[1].push(postnum);
         selectivepost(2, postnum);
-    }
+    }*/
     console.log(result);
+    return result;
 }
 
 /**
@@ -2102,7 +2297,7 @@ function selectivepost(page, post) {
     let sel = d3.selectAll('.page' + page + '.p' + post);
     let rect = sel.select('rect')._groups[0];
     let text = sel.select('text')._groups[0];
-    console.log(rect[2], text);
+    // console.log(rect[2], text);
     for (let i = 2, l = rect.length; i < l; i++) {
         rect[i].classList.toggle('selective');
     }
