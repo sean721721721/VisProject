@@ -246,6 +246,10 @@ div.tab button.active {
     display: inline-block;
 }
 
+#select {
+    text-align: left;
+}
+
 #detail {
     text-align: left;
 }
