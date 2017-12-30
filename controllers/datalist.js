@@ -1,4 +1,5 @@
 /* eslint-disable */
+var jb = require('./text.js');
 //for csv
 var user_list = function user_list(files) {
     var userlist = [];
@@ -467,7 +468,10 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
         var post = postobj(qobj1[i]);
         pagea.push(post);
     }
-    list.push(pagea);
+    pagea = jb.cut(pagea, function () {
+        list.push(pagea);
+        // console.log(pagea);
+    });
     // for return single page query faster
     if (qobj1 !== qobj2) {
         for (var i = 0; i < l2; i++) {
@@ -485,10 +489,13 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
                 }
             }
         }
-        list.push(pageb);
+        pageb = jb.cut(pageb, function () {
+            list.push(pageb);
+            // console.log(pageb);
+        });
     }
 
-    console.log("postlen: " + list.length);
+    console.log("postlen: " + (list[0].length + list[1].length));
     return list;
 }
 

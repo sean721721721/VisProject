@@ -1,6 +1,5 @@
 /* eslint-disable */
 var fs = require('fs');
-var readFiles = require('../server/readfile.js');
 /*var MongoClient = require('mongodb').MongoClient,*/
 var assert = require('assert');
 var mongoose = require('mongoose');
