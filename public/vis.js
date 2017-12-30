@@ -14,507 +14,11 @@ function visMain(data) {
         [],
         [],
     ];
-    overlapvis(data, select);
+    userview(data, select);
     overview(data, select);
     // data manipulate
     let pd = pagedata(data);
     pageview(data, pd, select);
-}
-
-/**
- * overlap vis
- * @param {object} data - inputdata
- * @param {object} select - selectobj
- */
-function overlapvis(data, select) {
-    // let width = document.querySelector('#overlap').offsetWidth;
-    let height = '100%';
-    let width = height;
-    let color = d3.scaleQuantize()
-        .domain([0, 10])
-        .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
-            '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
-        ]);
-
-    let zoom = d3.zoom()
-        .scaleExtent([1 / 10, 10])
-        .on('zoom', function () {
-            g.attr('transform', d3.event.transform);
-            let k = this.__zoom.k;
-            g.attr('stroke-width', 1 / k);
-        });
-    /*
-        function zoom(d) {
-            let focus0 = focus;
-            focus = d;
-            // console.log(view);
-            let x = focus.x1 - focus.x0;
-            let y = focus.y1 - focus.y0;
-            let r = x === w && y === w ? w : x > y ? 2 * x : 2 * y;
-            d3.transition()
-                .duration(d3.event.altKey ? 7500 : 750)
-                .tween('zoom', (d) => {
-                    let i = d3.interpolateZoom(view, [focus.x0, focus.y0, r]);
-                    return function (t) {
-                        zoomTo(i(t));
-                    };
-                });
-        }
-
-        function zoomTo(v) {
-            let k = w / v[2];
-            view = v;
-            // console.log(v);
-            cell.attr('transform', function (d) {
-                // console.log(d);
-                return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
-            });
-            rect.attr('width', function (d) {
-                    return (d.x1 - d.x0) * k;
-                })
-                .attr('height', function (d) {
-                    return (d.y1 - d.y0) * k;
-                });
-        }*/
-
-    let svg = d3.select('#overlap')
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('viewBox', '0 0 1000 1000')
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-        .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .call(zoom);
-
-    let g = svg.append('g')
-        .attr('id', 'overlapmap');
-
-    let posts = data.data[0];
-    let users = data.data[1];
-    let overlap = [];
-    let oucount = 0;
-    for (let i = 0, l = data.data[2].O.length; i < l; i++) {
-        if (data.data[2].O[i].length > 0) {
-            oucount += data.data[2].O[i].length;
-            overlap.push(data.data[2].O[i]);
-        }
-    }
-
-    // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
-    let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 1 : overlap.length + 1;
-    let ratio = (1000 * 0.95) / (nextline * 50);
-    let cellSize1 = 50 * ratio;
-    let cellSize2 = 40 * ratio;
-    let cellSize3 = 30 * ratio;
-
-    let initx = 1000 * 0.025 + cellSize1 * 2;
-    let inity = 1000 * 0.025;
-
-    // construct degree y checklist
-    let degylist = [];
-    for (let i = 0; i < overlap.length; i++) {
-        let deg = overlap[i];
-        let count = 0;
-        for (let j = 0; j < deg.length; j++) {
-            let group = deg[j];
-            count += group.length;
-        }
-        degylist.push(parseInt(count / nextline, 10) + 1);
-    }
-
-    // usercount in degree[i] list
-    let uclist = [];
-    for (let i = 0; i < overlap.length; i++) {
-        let deg = overlap[i];
-        let temp = [];
-        for (let j = 0; j < deg.length; j++) {
-            let group = deg[j];
-            temp.push(group.length);
-        }
-        uclist.push(temp);
-    }
-
-    function gety(list, index) {
-        let result = 0;
-        for (let i = 0; i < index; i++) {
-            result += list[i];
-        }
-        return result;
-    }
-
-    function modify(list, datasource, index) {
-        let l = datasource.length;
-        let count = 0;
-        for (let j = 0; j < l; j++) {
-            let group = datasource[j];
-            count += group.length;
-        }
-        let yc = parseInt(count / nextline, 10) + 1;
-        if (list[index] === 1) {
-            list[index] = yc;
-        } else {
-            list[index] = 1;
-        }
-        return list;
-    }
-
-    function uccount(check, list) {
-        let result = [];
-        let l = check.length;
-        for (let i = 0; i < l; i++) {
-            let h = list[i].length;
-            let temp = [];
-            let x = 0;
-            let y = 0;
-            for (let j = 0; j < h; j++) {
-                temp.push({
-                    'x': x,
-                    'y': y,
-                });
-                if (check[i] !== 1) {
-                    y += list[i][j];
-                }
-                x += list[i][j];
-            }
-            result.push(temp);
-        }
-        return result;
-    }
-
-    function count(data) {
-        let c = 0;
-        let l = data.length;
-        for (let i = 0; i < l; i++) {
-            c += data[i].length;
-        }
-        return c;
-    }
-
-    let rect = g.selectAll('g')
-        .data(overlap)
-        .enter().append('g')
-        .attr('id', (d, i) => 'degree' + i)
-        .attr('transform', (d, i) => {
-            return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
-        });
-
-    let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
-        .attr('fill', 'none')
-        .attr('stroke', '#f00')
-        .attr('opacity', 1)
-        .attr('width', (d) => {
-            if (widthcount(d) < nextline) {
-                return widthcount(d) * cellSize1;
-            } else {
-                return nextline * cellSize1;
-            }
-        })
-        .attr('height', (d, i) => {
-            return cellSize1 * degylist[i];
-        })
-        .attr('x', initx)
-        .attr('y', inity);
-
-    let degcounts = overlap.length;
-    let botton = rect.append('rect')
-        .attr('class', (d, i) => 'botton' + ' ' + i)
-        .attr('fill', '#aaa')
-        .attr('stroke', '#f00')
-        .attr('opacity', 1)
-        .attr('width', cellSize1 * 2)
-        .attr('height', (d, i) => {
-            return cellSize1 * degylist[i];
-        })
-        .attr('x', initx - cellSize1 * 2)
-        .attr('y', inity)
-        .on('click', function (d, k) {
-            d3.event.preventDefault();
-            degylist = modify(degylist, d, k);
-            uylist = uccount(degylist, uclist);
-            // console.log(uylist);
-            rect.attr('transform', (d, i) => {
-                return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
-            });
-            d3.selectAll('.degree')
-                .attr('height', (d, i) => {
-                    return cellSize1 * degylist[i];
-                });
-            d3.selectAll('.botton')
-                .attr('height', (d, i) => {
-                    return cellSize1 * degylist[i];
-                });
-            text.attr('y', (d, i) => {
-                return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-            });
-
-            for (let i = 0; i < degcounts; i++) {
-                let did = '#degree' + i;
-                d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
-                    let offsetx = uylist[i][j].x % nextline;
-                    let resultx = initx + offsetx * cellSize1 + (cellSize1 - cellSize2) / 2;
-                    let offsety = 0;
-                    if (degylist[i] !== 1) {
-                        offsety = parseInt(uylist[i][j].y / nextline, 10);
-                    }
-                    let resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
-                    // console.log(offsetx);
-                    return 'translate(' + resultx + ',' + resulty + ')';
-                });
-                d3.selectAll(did).selectAll('.grect')
-                    .attr('height', (d) => {
-                        if (degylist[i] === 1) {
-                            return cellSize1 - (cellSize1 - cellSize2);
-                        } else {
-                            let h = parseInt(d.length / nextline, 10) + 1;
-                            return h * cellSize1 - (cellSize1 - cellSize2);
-                        }
-                    });
-                let gcount = overlap[i].length;
-                for (let j = 0; j < gcount; j++) {
-                    let gid = '#d' + i + 'g' + j;
-                    d3.selectAll(gid).selectAll('.user')
-                        .attr('y', (d, k) => {
-                            function usery(check, index) {
-                                if (check === 1) {
-                                    return (cellSize2 - cellSize3) / 2;
-                                } else {
-                                    let offsety = parseInt(index / nextline, 10);
-                                    let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                                    return result;
-                                }
-                            }
-                            return usery(degylist[i], k) + inity;
-                        });
-                }
-            }
-        });
-
-    let text = rect.append('text')
-        .attr('x', initx - cellSize1 * 2)
-        .attr('y', (d, i) => {
-            return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-        })
-        // .attr('dy', '.35em')
-        .attr('font-size', 50 * ratio)
-        .attr('fill', '#aaa')
-        .attr('stroke', '#f00')
-        .text((d) => {
-            let data = d[0][0].posts;
-            return getlength(data, 'A') + getlength(data, 'B');
-        });
-
-    for (let i = 0; i < degcounts; i++) {
-        let degree = overlap[i];
-        let did = '#degree' + i;
-        let x = 0;
-        let yc = 0;
-        let groupgrid = g.selectAll(did)
-            .selectAll('g')
-            .data(degree)
-            .enter().append('g')
-            .attr('class', 'ggrid')
-            .attr('id', (d, l) => 'd' + i + 'g' + l)
-            .attr('transform', (d) => {
-                resultx = initx + x + (cellSize1 - cellSize2) / 2;
-                x += widthcount(d) * cellSize1;
-                while (x >= nextline * cellSize1) {
-                    x -= nextline * cellSize1;
-                }
-                let offsety = parseInt(yc / nextline, 10);
-                resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
-                yc += d.length;
-                return 'translate(' + resultx + ',' + resulty + ')';
-            })
-            .append('rect')
-            .attr('class', 'grect')
-            .attr('fill', 'none')
-            .attr('stroke', '#0f0')
-            .attr('opacity', 1)
-            .attr('width', (d) => {
-                if (widthcount(d) < nextline) {
-                    return widthcount(d) * cellSize1 - (cellSize1 - cellSize2);
-                } else {
-                    return nextline * cellSize1 - (cellSize1 - cellSize2);
-                }
-            })
-            .attr('height', (d) => {
-                let h = parseInt(d.length / nextline, 10) + 1;
-                return h * cellSize1 - (cellSize1 - cellSize2);
-            })
-            .attr('x', 0)
-            .attr('y', inity);
-
-        let gcount = degree.length;
-        for (let j = 0; j < gcount; j++) {
-            let group = degree[j];
-            let gid = '#d' + i + 'g' + j;
-            if (group.length > 0) {
-                let usergrid = g.selectAll(gid)
-                    .selectAll('g')
-                    .data(group)
-                    .enter().append('rect')
-                    .attr('class', 'user')
-                    .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
-                    .attr('stroke', '#00f')
-                    .attr('opacity', 1)
-                    .attr('width', cellSize3)
-                    .attr('height', cellSize3)
-                    .attr('x', (d, k) => {
-                        result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
-                        return result;
-                    })
-                    .attr('y', (d, k) => {
-                        let offsety = parseInt(k / nextline, 10);
-                        result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                        return result + inity;
-                    });
-            }
-        }
-    }
-
-    let tooltip3 = d3.select('body').select('.c')
-        // .attr('class', 'tooltip1')
-        .style('opacity', 0);
-    // .style("width","200px")
-    // .style("height","30px");
-    d3.selectAll('.user')
-        .on('mouseover', function (d) {
-            d3.event.preventDefault();
-            tooltip3.transition()
-                .duration(200)
-                .style('opacity', .9);
-            tooltip3.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' +
-                    'Activities on A = ' + getlength(d.posts, 'A') + '<br/>' +
-                    'Activities on B = ' + getlength(d.posts, 'B'))
-                .style('left', (d3.event.pageX + 5) + 'px')
-                .style('top', (d3.event.pageY - 30) + 'px');
-        })
-        .on('mouseout', function (d) {
-            d3.event.preventDefault();
-            tooltip3.transition()
-                .duration(500)
-                .style('opacity', 0);
-        })
-        .on('click', function (d) {
-            d3.event.preventDefault();
-            // console.log(d, this);
-            /* let i = selectobj.page === data.query.page1 ? 0 : 1;
-            let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
-            // console.log(i, j);*/
-            let preselect = {};
-            let user = [];
-            let actpost = [
-                [],
-                [],
-            ];
-            for (let i = 0, l = select.user.length; i < l; i++) {
-                user.push(select.user[i]);
-            }
-            for (let i = 0, l = select.actpost.length; i < l; i++) {
-                for (let j = 0, l = select.actpost[i].length; j < l; j++) {
-                    let post = select.actpost[i][j];
-                    actpost[i].push(post);
-                }
-            }
-            preselect.user = user;
-            preselect.actpost = actpost;
-            let la = d.posts.A.length;
-            let lb = d.posts.B.length;
-            let deg = la + lb;
-            let selectobj = d;
-            if (select.user.length !== 0) {
-                for (let i = 0, l = select.user.length; i < l;) {
-                    if (select.user[i].id === selectobj.id) {
-                        select.user.splice(i, 1);
-                        select.ci.user = i - 1 > 0 ? i - 1 : 0;
-                        i = l + 1;
-                    } else {
-                        i++;
-                    }
-                    if (i === l) {
-                        select.user.push(selectobj);
-                        select.ci.user = l;
-                    }
-                }
-            } else {
-                select.user.push(selectobj);
-            }
-            console.log(select.user);
-            // user color update
-            d3.selectAll('.user')
-                .attr('fill', (d) => {
-                    let rcolor = color(Math.sqrt(d.posts.A.length));
-                    for (let i = 0, l = select.user.length; i < l; i++) {
-                        if (d.id === select.user[i].id) {
-                            rcolor = '#000';
-                        }
-                    }
-                    return rcolor;
-                });
-            // status(d);
-            console.log('#degree' + deg.toString());
-            // activepost(data, preselect, select);
-            select.actpost = activepost(data, preselect, select);
-            userdetailview(data, select);
-            showselect(data, select);
-        });
-
-    // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
-
-    /*
-    svg.append('g')
-        .attr('fill', 'none')
-        .attr('stroke', '#000')
-        .selectAll('path')
-        .data(function (d) {
-            return d3.timeMonths(new Date(d, 0, 1), new Date(d + 1, 0, 1));
-        })
-        .enter().append('path')
-        .attr('d', pathMonth);*/
-}
-
-/**
- * return width
- * @param {object} d - datum
- * @return {number}
- */
-function widthcount(d) {
-    let count = 0;
-    for (let i = 0; i < d.length; i++) {
-        if (d[i] instanceof Array) {
-            count += d[i].length;
-        } else {
-            count++;
-        }
-    }
-    return count;
-}
-
-/**
- * get array length
- * @param {array} data - inputarray
- * @param {string} attr - attr array
- * @return {number}
- */
-function getlength(data, attr) {
-    let dl = 0;
-    if (data[attr] !== undefined) {
-        dl = data[attr].length;
-    }
-    return dl;
-}
-
-function sortlength(sortlist) {
-    function compareNumbers(a, b) {
-        // console.log(a.length + " " + b.length);
-        return a.length - b.length;
-    }
-    var len = sortlist.length;
-    for (var i = 0; i < len; i++) {
-        sortlist[i].sort(compareNumbers);
-    }
-    return sortlist;
 }
 
 /**
@@ -1082,6 +586,666 @@ function countactivities(data){
         }
     }
 }*/
+
+function showmodes(overlap, mode) {
+    let show = [];
+    switch (mode) {
+        case 'reaction':
+            // do something
+            for (let i = 0, l = overlap.length; i < l; i++) { // degree
+                if (overlap[i].length > 0) {
+                    let degree = [];
+                    let find = false;
+                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                        let group = [];
+                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                            let user = overlap[i][j][k];
+                            // console.log(user);
+                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                                if (user.posts.A[a].like !== 0) {
+                                    find = true;
+                                    a = al;
+                                }
+                            }
+                            if (!find) {
+                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                    if (user.posts.B[b].like !== 0) {
+                                        find = true;
+                                        b = bl;
+                                    }
+                                }
+                            }
+                            if (find) {
+                                group.push(user);
+                            }
+                        }
+                        if (group.length != 0) {
+                            degree.push(group);
+                        }
+                    }
+                    if (degree.length != 0) {
+                        show.push(degree);
+                    }
+                }
+            }
+            return show;
+            break;
+        case 'comment':
+            // do another thing
+            for (let i = 0, l = overlap.length; i < l; i++) { // degree
+                if (overlap[i].length > 0) {
+                    let degree = [];
+                    let find = false;
+                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                        let group = [];
+                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                            let user = overlap[i][j][k];
+                            // console.log(user);
+                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                                if (user.posts.A[a].commentcount !== 0) {
+                                    find = true;
+                                    a = al;
+                                }
+                            }
+                            if (!find) {
+                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                    if (user.posts.B[b].commentcount !== 0) {
+                                        find = true;
+                                        b = bl;
+                                    }
+                                }
+                            }
+                            if (find) {
+                                group.push(user);
+                            }
+                        }
+                        if (group.length != 0) {
+                            degree.push(group);
+                        }
+                    }
+                    if (degree.length != 0) {
+                        show.push(degree);
+                    }
+                }
+            }
+            return show;
+            break;
+        case 'share':
+            // do yet another thing
+            for (let i = 0, l = overlap.length; i < l; i++) { // degree
+                if (overlap[i].length > 0) {
+                    let degree = [];
+                    let find = false;
+                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                        let group = [];
+                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                            let user = overlap[i][j][k];
+                            // console.log(user);
+                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                                if (user.posts.A[a].share !== false) {
+                                    find = true;
+                                    a = al;
+                                }
+                            }
+                            if (!find) {
+                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                    if (user.posts.B[b].share !== false) {
+                                        find = true;
+                                        b = bl;
+                                    }
+                                }
+                            }
+                            if (find) {
+                                group.push(user);
+                            }
+                        }
+                        if (group.length != 0) {
+                            degree.push(group);
+                        }
+                    }
+                    if (degree.length != 0) {
+                        show.push(degree);
+                    }
+                }
+            }
+            return show;
+            break;
+        default:
+            return overlap;
+    }
+}
+
+/**
+ * showcomments in detail
+ * @param {object} data - inputdata
+ * @param {object} select - selectobj
+ * @param {string} mode -mode
+ */
+function userview(data, select) {
+    overlapvis(data, select, 'default');
+    document.querySelector('.overlap.default').onclick = function () {
+        overlapvis(data, select, 'default');
+    };
+    document.querySelector('.overlap.reaction').onclick = function () {
+        overlapvis(data, select, 'reaction');
+    };
+    document.querySelector('.overlap.comment').onclick = function () {
+        overlapvis(data, select, 'comment');
+    };
+    document.querySelector('.overlap.share').onclick = function () {
+        overlapvis(data, select, 'share');
+    };
+    // console.log(select.ci.post);
+}
+
+/**
+ * overlap vis
+ * @param {object} data - inputdata
+ * @param {object} select - selectobj
+ * @param {string} mode -mode
+ */
+function overlapvis(data, select, mode) {
+    // let width = document.querySelector('#overlap').offsetWidth;
+    let height = '100%';
+    let width = height;
+    let color = d3.scaleQuantize()
+        .domain([0, 10])
+        .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
+            '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
+        ]);
+
+    let zoom = d3.zoom()
+        .scaleExtent([1 / 10, 10])
+        .on('zoom', function () {
+            g.attr('transform', d3.event.transform);
+            let k = this.__zoom.k;
+            g.attr('stroke-width', 1 / k);
+        });
+    /*
+        function zoom(d) {
+            let focus0 = focus;
+            focus = d;
+            // console.log(view);
+            let x = focus.x1 - focus.x0;
+            let y = focus.y1 - focus.y0;
+            let r = x === w && y === w ? w : x > y ? 2 * x : 2 * y;
+            d3.transition()
+                .duration(d3.event.altKey ? 7500 : 750)
+                .tween('zoom', (d) => {
+                    let i = d3.interpolateZoom(view, [focus.x0, focus.y0, r]);
+                    return function (t) {
+                        zoomTo(i(t));
+                    };
+                });
+        }
+
+        function zoomTo(v) {
+            let k = w / v[2];
+            view = v;
+            // console.log(v);
+            cell.attr('transform', function (d) {
+                // console.log(d);
+                return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
+            });
+            rect.attr('width', function (d) {
+                    return (d.x1 - d.x0) * k;
+                })
+                .attr('height', function (d) {
+                    return (d.y1 - d.y0) * k;
+                });
+        }*/
+
+    if (d3.select('#overlap').select('#user')._groups[0][0] !== undefined) {
+        d3.select('#overlap').select('#user')._groups[0][0].remove();
+    }
+    let svg = d3.select('#overlap')
+        .append('svg')
+        .attr('id', 'user')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', '0 0 1000 1000')
+        .attr('preserveAspectRatio', 'xMidYMid meet')
+        .style('fill', 'none')
+        .style('pointer-events', 'all')
+        .call(zoom);
+
+    let g = svg.append('g')
+        .attr('id', 'overlapmap');
+
+    let posts = data.data[0];
+    let users = data.data[1];
+    let overlap = [];
+    let oucount = 0;
+    for (let i = 0, l = data.data[2].O.length; i < l; i++) {
+        if (data.data[2].O[i].length > 0) {
+            overlap.push(data.data[2].O[i]);
+        }
+    }
+
+    overlap = showmodes(overlap, mode);
+
+    for (let i = 0, l = overlap.length; i < l; i++) {
+        if (overlap[i].length > 0) {
+            oucount += overlap[i].length;
+        }
+    }
+
+    // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
+    let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 1 : overlap.length + 1;
+    let ratio = (1000 * 0.95) / (nextline * 50);
+    let cellSize1 = 50 * ratio;
+    let cellSize2 = 40 * ratio;
+    let cellSize3 = 30 * ratio;
+
+    let initx = 1000 * 0.025 + cellSize1 * 2;
+    let inity = 1000 * 0.025;
+
+    // construct degree y checklist
+    let degylist = [];
+    for (let i = 0; i < overlap.length; i++) {
+        let deg = overlap[i];
+        let count = 0;
+        for (let j = 0; j < deg.length; j++) {
+            let group = deg[j];
+            count += group.length;
+        }
+        degylist.push(parseInt(count / nextline, 10) + 1);
+    }
+
+    // usercount in degree[i] list
+    let uclist = [];
+    for (let i = 0; i < overlap.length; i++) {
+        let deg = overlap[i];
+        let temp = [];
+        for (let j = 0; j < deg.length; j++) {
+            let group = deg[j];
+            temp.push(group.length);
+        }
+        uclist.push(temp);
+    }
+
+    function gety(list, index) {
+        let result = 0;
+        for (let i = 0; i < index; i++) {
+            result += list[i];
+        }
+        return result;
+    }
+
+    function modify(list, datasource, index) {
+        let l = datasource.length;
+        let count = 0;
+        for (let j = 0; j < l; j++) {
+            let group = datasource[j];
+            count += group.length;
+        }
+        let yc = parseInt(count / nextline, 10) + 1;
+        if (list[index] === 1) {
+            list[index] = yc;
+        } else {
+            list[index] = 1;
+        }
+        return list;
+    }
+
+    function uccount(check, list) {
+        let result = [];
+        let l = check.length;
+        for (let i = 0; i < l; i++) {
+            let h = list[i].length;
+            let temp = [];
+            let x = 0;
+            let y = 0;
+            for (let j = 0; j < h; j++) {
+                temp.push({
+                    'x': x,
+                    'y': y,
+                });
+                if (check[i] !== 1) {
+                    y += list[i][j];
+                }
+                x += list[i][j];
+            }
+            result.push(temp);
+        }
+        return result;
+    }
+
+    function count(data) {
+        let c = 0;
+        let l = data.length;
+        for (let i = 0; i < l; i++) {
+            c += data[i].length;
+        }
+        return c;
+    }
+
+    let rect = g.selectAll('g')
+        .data(overlap)
+        .enter().append('g')
+        .attr('id', (d, i) => 'degree' + i)
+        .attr('transform', (d, i) => {
+            return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+        });
+
+    let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
+        .attr('fill', 'none')
+        .attr('stroke', '#f00')
+        .attr('opacity', 1)
+        .attr('width', (d) => {
+            if (widthcount(d) < nextline) {
+                return widthcount(d) * cellSize1;
+            } else {
+                return nextline * cellSize1;
+            }
+        })
+        .attr('height', (d, i) => {
+            return cellSize1 * degylist[i];
+        })
+        .attr('x', initx)
+        .attr('y', inity);
+
+    let degcounts = overlap.length;
+    let botton = rect.append('rect')
+        .attr('class', (d, i) => 'botton' + ' ' + i)
+        .attr('fill', '#aaa')
+        .attr('stroke', '#f00')
+        .attr('opacity', 1)
+        .attr('width', cellSize1 * 2)
+        .attr('height', (d, i) => {
+            return cellSize1 * degylist[i];
+        })
+        .attr('x', initx - cellSize1 * 2)
+        .attr('y', inity)
+        .on('click', function (d, k) {
+            d3.event.preventDefault();
+            degylist = modify(degylist, d, k);
+            uylist = uccount(degylist, uclist);
+            // console.log(uylist);
+            rect.attr('transform', (d, i) => {
+                return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+            });
+            d3.selectAll('.degree')
+                .attr('height', (d, i) => {
+                    return cellSize1 * degylist[i];
+                });
+            d3.selectAll('.botton')
+                .attr('height', (d, i) => {
+                    return cellSize1 * degylist[i];
+                });
+            text.attr('y', (d, i) => {
+                return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
+            });
+
+            for (let i = 0; i < degcounts; i++) {
+                let did = '#degree' + i;
+                d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
+                    let offsetx = uylist[i][j].x % nextline;
+                    let resultx = initx + offsetx * cellSize1 + (cellSize1 - cellSize2) / 2;
+                    let offsety = 0;
+                    if (degylist[i] !== 1) {
+                        offsety = parseInt(uylist[i][j].y / nextline, 10);
+                    }
+                    let resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
+                    // console.log(offsetx);
+                    return 'translate(' + resultx + ',' + resulty + ')';
+                });
+                d3.selectAll(did).selectAll('.grect')
+                    .attr('height', (d) => {
+                        if (degylist[i] === 1) {
+                            return cellSize1 - (cellSize1 - cellSize2);
+                        } else {
+                            let h = parseInt(d.length / nextline, 10) + 1;
+                            return h * cellSize1 - (cellSize1 - cellSize2);
+                        }
+                    });
+                let gcount = overlap[i].length;
+                for (let j = 0; j < gcount; j++) {
+                    let gid = '#d' + i + 'g' + j;
+                    d3.selectAll(gid).selectAll('.user')
+                        .attr('y', (d, k) => {
+                            function usery(check, index) {
+                                if (check === 1) {
+                                    return (cellSize2 - cellSize3) / 2;
+                                } else {
+                                    let offsety = parseInt(index / nextline, 10);
+                                    let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                    return result;
+                                }
+                            }
+                            return usery(degylist[i], k) + inity;
+                        });
+                }
+            }
+        });
+
+    let text = rect.append('text')
+        .attr('x', initx - cellSize1 * 2)
+        .attr('y', (d, i) => {
+            return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
+        })
+        // .attr('dy', '.35em')
+        .attr('font-size', 50 * ratio)
+        .attr('fill', '#aaa')
+        .attr('stroke', '#f00')
+        .text((d) => {
+            let data = d[0][0].posts;
+            return getlength(data, 'A') + getlength(data, 'B');
+        });
+
+    for (let i = 0; i < degcounts; i++) {
+        let degree = overlap[i];
+        let did = '#degree' + i;
+        let x = 0;
+        let yc = 0;
+        let groupgrid = g.selectAll(did)
+            .selectAll('g')
+            .data(degree)
+            .enter().append('g')
+            .attr('class', 'ggrid')
+            .attr('id', (d, l) => 'd' + i + 'g' + l)
+            .attr('transform', (d) => {
+                resultx = initx + x + (cellSize1 - cellSize2) / 2;
+                x += widthcount(d) * cellSize1;
+                while (x >= nextline * cellSize1) {
+                    x -= nextline * cellSize1;
+                }
+                let offsety = parseInt(yc / nextline, 10);
+                resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
+                yc += d.length;
+                return 'translate(' + resultx + ',' + resulty + ')';
+            })
+            .append('rect')
+            .attr('class', 'grect')
+            .attr('fill', 'none')
+            .attr('stroke', '#0f0')
+            .attr('opacity', 1)
+            .attr('width', (d) => {
+                if (widthcount(d) < nextline) {
+                    return widthcount(d) * cellSize1 - (cellSize1 - cellSize2);
+                } else {
+                    return nextline * cellSize1 - (cellSize1 - cellSize2);
+                }
+            })
+            .attr('height', (d) => {
+                let h = parseInt(d.length / nextline, 10) + 1;
+                return h * cellSize1 - (cellSize1 - cellSize2);
+            })
+            .attr('x', 0)
+            .attr('y', inity);
+
+        let gcount = degree.length;
+        for (let j = 0; j < gcount; j++) {
+            let group = degree[j];
+            let gid = '#d' + i + 'g' + j;
+            if (group.length > 0) {
+                let usergrid = g.selectAll(gid)
+                    .selectAll('g')
+                    .data(group)
+                    .enter().append('rect')
+                    .attr('class', 'user')
+                    .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
+                    .attr('stroke', '#00f')
+                    .attr('opacity', 1)
+                    .attr('width', cellSize3)
+                    .attr('height', cellSize3)
+                    .attr('x', (d, k) => {
+                        result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                        return result;
+                    })
+                    .attr('y', (d, k) => {
+                        let offsety = parseInt(k / nextline, 10);
+                        result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                        return result + inity;
+                    });
+            }
+        }
+    }
+
+    let tooltip3 = d3.select('body').select('.c')
+        // .attr('class', 'tooltip1')
+        .style('opacity', 0);
+    // .style("width","200px")
+    // .style("height","30px");
+    d3.selectAll('.user')
+        .on('mouseover', function (d) {
+            d3.event.preventDefault();
+            tooltip3.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip3.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' +
+                    'Activities on A = ' + getlength(d.posts, 'A') + '<br/>' +
+                    'Activities on B = ' + getlength(d.posts, 'B'))
+                .style('left', (d3.event.pageX + 5) + 'px')
+                .style('top', (d3.event.pageY - 30) + 'px');
+        })
+        .on('mouseout', function (d) {
+            d3.event.preventDefault();
+            tooltip3.transition()
+                .duration(500)
+                .style('opacity', 0);
+        })
+        .on('click', function (d) {
+            d3.event.preventDefault();
+            // console.log(d, this);
+            /* let i = selectobj.page === data.query.page1 ? 0 : 1;
+            let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
+            // console.log(i, j);*/
+            let preselect = {};
+            let user = [];
+            let actpost = [
+                [],
+                [],
+            ];
+            for (let i = 0, l = select.user.length; i < l; i++) {
+                user.push(select.user[i]);
+            }
+            for (let i = 0, l = select.actpost.length; i < l; i++) {
+                for (let j = 0, l = select.actpost[i].length; j < l; j++) {
+                    let post = select.actpost[i][j];
+                    actpost[i].push(post);
+                }
+            }
+            preselect.user = user;
+            preselect.actpost = actpost;
+            let la = d.posts.A.length;
+            let lb = d.posts.B.length;
+            let deg = la + lb;
+            let selectobj = d;
+            if (select.user.length !== 0) {
+                for (let i = 0, l = select.user.length; i < l;) {
+                    if (select.user[i].id === selectobj.id) {
+                        select.user.splice(i, 1);
+                        select.ci.user = i - 1 > 0 ? i - 1 : 0;
+                        i = l + 1;
+                    } else {
+                        i++;
+                    }
+                    if (i === l) {
+                        select.user.push(selectobj);
+                        select.ci.user = l;
+                    }
+                }
+            } else {
+                select.user.push(selectobj);
+            }
+            console.log(select.user);
+            // user color update
+            d3.selectAll('.user')
+                .attr('fill', (d) => {
+                    let rcolor = color(Math.sqrt(d.posts.A.length));
+                    for (let i = 0, l = select.user.length; i < l; i++) {
+                        if (d.id === select.user[i].id) {
+                            rcolor = '#000';
+                        }
+                    }
+                    return rcolor;
+                });
+            // status(d);
+            console.log('#degree' + deg.toString());
+            // activepost(data, preselect, select);
+            select.actpost = activepost(data, preselect, select);
+            userdetailview(data, select);
+            showselect(data, select);
+        });
+
+    // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
+
+    /*
+    svg.append('g')
+        .attr('fill', 'none')
+        .attr('stroke', '#000')
+        .selectAll('path')
+        .data(function (d) {
+            return d3.timeMonths(new Date(d, 0, 1), new Date(d + 1, 0, 1));
+        })
+        .enter().append('path')
+        .attr('d', pathMonth);*/
+}
+
+/**
+ * return width
+ * @param {object} d - datum
+ * @return {number}
+ */
+
+function widthcount(d) {
+    let count = 0;
+    for (let i = 0; i < d.length; i++) {
+        if (d[i] instanceof Array) {
+            count += d[i].length;
+        } else {
+            count++;
+        }
+    }
+    return count;
+}
+
+/**
+ * get array length
+ * @param {array} data - inputarray
+ * @param {string} attr - attr array
+ * @return {number}
+ */
+function getlength(data, attr) {
+    let dl = 0;
+    if (data[attr] !== undefined) {
+        dl = data[attr].length;
+    }
+    return dl;
+}
+
+function sortlength(sortlist) {
+    function compareNumbers(a, b) {
+        // console.log(a.length + " " + b.length);
+        return a.length - b.length;
+    }
+    var len = sortlist.length;
+    for (var i = 0; i < len; i++) {
+        sortlist[i].sort(compareNumbers);
+    }
+    return sortlist;
+}
 
 /**
  * add button paccordion
