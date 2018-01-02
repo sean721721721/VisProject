@@ -242,6 +242,10 @@ div.tab button.active {
     color: red;
 }
 
+#para {
+    display: inline-block;
+}
+
 #csv {
     display: inline-block;
 }

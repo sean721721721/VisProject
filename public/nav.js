@@ -122,6 +122,15 @@ let body = document.querySelector('#template');
 // console.log(body);
 body.appendChild(clone);
 
+let submissions = [];
+// compile template
+// let rawTemplate = document.getElementById('search-results').innerHTML;
+let rawTemplate = document.getElementById('search-vis').innerHTML;
+let template = Handlebars.compile(rawTemplate);
+
+// initslidelist and add loading effect
+let slideList = document.querySelector('.slider__list');
+let initslideList = slideList.innerHTML;
 // fetch
 
 /**
@@ -129,14 +138,6 @@ body.appendChild(clone);
  * @param {string} type - co type
  */
 function getCR(type) {
-    // compile template
-    // let rawTemplate = document.getElementById('search-results').innerHTML;
-    let rawTemplate = document.getElementById('search-vis').innerHTML;
-    let template = Handlebars.compile(rawTemplate);
-
-    // initslidelist and add loading effect
-    let slideList = document.querySelector('.slider__list');
-    let initslideList = slideList.innerHTML;
     let loading = '<div class="wrapperloading"><div class="loading up"></div><div class="loading down"></div></div>';
     slideList.innerHTML += loading;
 
@@ -191,6 +192,8 @@ function getCR(type) {
             })
             .then(function (json) {
                 console.log(json);
+                let index = submissions.length;
+                json.query.co = 'Submit ' + (index + 1) + ' ';
                 let html = template(json);
                 // console.log(html);
                 slideList.innerHTML = initslideList;
@@ -198,6 +201,11 @@ function getCR(type) {
                 slideList.innerHTML += html;
                 let csv = document.querySelector('div#csv');
                 csv.innerHTML += download(json);
+                submissions.push(json);
+                let btn = document.createElement('button');
+                btn.innerHTML = '<button name="submit' + (index + 1)+'"' + 'onclick="getsubmission(' + index + ')">Submit ' + (index + 1) + '</button>';
+                let submission = document.getElementById('Submit');
+                submission.appendChild(btn);
                 visMain(json);
             }).catch(function (error) {
                 console.log('There has been a problem with your fetch operation: ' + error.message);
@@ -206,6 +214,16 @@ function getCR(type) {
         window.alert('Access Deny!!!');
         slideList.innerHTML = initslideList;
     }
+}
+
+function getsubmission(index) {
+    let json = submissions[index];
+    let html = template(json);
+    // console.log(html);
+    slideList.innerHTML = initslideList;
+    // console.log(csv1(json.data[1]));
+    slideList.innerHTML += html;
+    visMain(json);
 }
 
 /**

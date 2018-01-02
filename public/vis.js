@@ -71,9 +71,9 @@ function overview(data, select) {
     let height = '50%';
     let margin = {
         top: 30,
-        right: 25,
+        right: 60,
         bottom: 30,
-        left: 35,
+        left: 60,
     };
 
     let zoom = d3.zoom()
@@ -99,6 +99,7 @@ function overview(data, select) {
     let w = 500 - margin.left - margin.right;
     let h = 250 - margin.top - margin.bottom;
     let wx = w / ovdata.length;
+    let hy = h / ovdata.length;
 
     let axisname = ovdata.map((d) => {
         return d[0];
@@ -110,19 +111,14 @@ function overview(data, select) {
 
     console.log(axissum);
 
-    let x = d3.scaleBand()
+    let y = d3.scaleBand()
         .domain(axisname)
-        .rangeRound([0, w]);
+        .rangeRound([0, h]);
     // .padding(0.1)
-    // .align(0.1);
 
-    let xtop = d3.scaleBand()
-        .domain(axissum)
-        .rangeRound([0, w]);
-
-    let y = d3.scaleLinear()
+    let x = d3.scaleLinear()
         .domain([0, 1])
-        .range([0, h]);
+        .range([0, w]);
 
     let g = svg.append('g')
         .attr('id', 'over')
@@ -137,18 +133,18 @@ function overview(data, select) {
         .attr('class', 'A')
         .attr('fill', '#aaa')
         .attr('stroke', 'white 5px')
-        .attr('width', wx)
-        .attr('height', (d, i) => {
+        .attr('width', (d) => {
             if (d[3] === 0) {
                 return 0;
             } else {
-                return (d[1] / d[3]) * h;
+                return (d[1] / d[3]) * w;
             }
         })
-        .attr('x', (d, i) => {
-            return i * wx;
+        .attr('height', hy)
+        .attr('x', 0)
+        .attr('y', (d, i) => {
+            return i * hy;
         })
-        .attr('y', 0)
         .on('mouseover', function (d, i) {
             d3.event.preventDefault();
             tooltip2.transition()
@@ -175,23 +171,23 @@ function overview(data, select) {
         .attr('class', 'B')
         .attr('fill', '#333')
         .attr('stroke', 'white 5px')
-        .attr('width', wx)
-        .attr('height', (d, i) => {
+        .attr('width', (d) => {
             if (d[3] === 0) {
                 return 0;
             } else {
-                return (d[2] / d[3]) * h;
+                return (d[2] / d[3]) * w;
             }
         })
-        .attr('x', (d, i) => {
-            return i * wx;
-        })
-        .attr('y', (d) => {
+        .attr('height', hy)
+        .attr('x', (d) => {
             if (d[3] === 0) {
                 return 0;
             } else {
-                return (d[1] / d[3]) * h;
+                return (d[1] / d[3]) * w;
             }
+        })
+        .attr('y', (d, i) => {
+            return i * hy;
         }).on('mouseover', function (d, i) {
             d3.event.preventDefault();
             tooltip2.transition()
@@ -215,9 +211,10 @@ function overview(data, select) {
         .append('g')
         .data(ovdata).enter()
         .append('text')
-        .attr('transform', (d, i) => {
-            let x = i * (w / 11);
-            return 'translate(' + x + ',0)';
+        .attr('sixe', 16)
+        .attr('x', -margin.left + 16)
+        .attr('y', (d, i) => {
+            return i * hy + 16;
         })
         .text((d) => {
             return d[3];
@@ -226,20 +223,20 @@ function overview(data, select) {
 
     let xaxis = g.append('g')
         .attr('class', 'axis axis--x')
-        .attr('transform', 'translate(0,' + h + ')')
-        .call(d3.axisBottom(x));
+        .attr('transform', 'translate(' + w + ',0)')
+        .call(d3.axisRight(y));
 
     let yaxis = g.append('g')
         .attr('class', 'axis axis--y')
-        .attr('transform', 'translate(0, 0)')
-        .call(d3.axisLeft(y).ticks(10, '%'));
+        .attr('transform', 'translate(0,' + h + ')')
+        .call(d3.axisBottom(x).ticks(10, '%'));
 
     let line = g.append('line')
         .attr('class', 'line')
-        .attr('x1', 0)
-        .attr('y1', y(0.5))
-        .attr('x2', w + 10)
-        .attr('y2', y(0.5))
+        .attr('x1', x(0.5))
+        .attr('y1', -10)
+        .attr('x2', x(0.5))
+        .attr('y2', h + 10)
         .attr('stroke', 'lightblue');
 }
 
@@ -282,6 +279,11 @@ function pageview(data, pagedata, select) {
     let w = 500;
     let h = 500;
     // let wx = w / ovdata.length;
+
+    if (d3.select('#page').select('svg')._groups[0][0] !== undefined) {
+        d3.select('#page').select('svg')._groups[0][0].remove();
+    }
+
     let zoom = d3.zoom()
         .scaleExtent([1, 5])
         .on('zoom', function () {
