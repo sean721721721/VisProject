@@ -1450,6 +1450,22 @@ function subcommentdetail(data, id) {
 }
 
 /**
+ * postid to postnumber
+ * @param {object} data -
+ * @param {number} page - page index
+ * @param {string} postid - postud
+ * @return {number}
+ */
+function postidtonum(data, page, postid) {
+    let pagedata = data.data[0][page];
+    for (let i = 0, la = pagedata.length; i < la; i++) {
+        if (pagedata[i].id === postid) {
+            return i + 1;
+        }
+    }
+}
+
+/**
  * show user active post
  * @param {object} data -
  * @param {object} preselect - pre
@@ -1457,14 +1473,6 @@ function subcommentdetail(data, id) {
  * @return {array}
  */
 function activepost(data, preselect, postselect) {
-    function postidtonum(data, page, postid) {
-        let pagedata = data.data[0][page];
-        for (let i = 0, la = pagedata.length; i < la; i++) {
-            if (pagedata[i].id === postid) {
-                return i + 1;
-            }
-        }
-    }
     let result = preselect.actpost;
     console.log(preselect, postselect);
     let presl = preselect.user.length;
@@ -1608,21 +1616,6 @@ function activepost(data, preselect, postselect) {
             }
         }
     }
-
-    /* for (let i = 0, l = user.posts.A.length; i < l; i++) {
-        let id = user.posts.A[i].id;
-        let postnum = postidtonum(data, 0, id);
-        user.posts.A[i].num = postnum;
-        result[0].push(postnum);
-        selectivepost(1, postnum);
-    }
-    for (let i = 0, l = user.posts.B.length; i < l; i++) {
-        let id = user.posts.B[i].id;
-        let postnum = postidtonum(data, 1, id);
-        user.posts.B[i].num = postnum;
-        result[1].push(postnum);
-        selectivepost(2, postnum);
-    }*/
     console.log(result);
     return result;
 }
@@ -1689,6 +1682,16 @@ function userdetail(data, select) {
     let index = select.ci.user;
     if (select.user[index] !== undefined) {
         let point = select.user[index];
+        for (let i = 0, l = point.posts.A.length; i < l; i++) {
+            let id = point.posts.A[i].id;
+            let postnum = postidtonum(data, 0, id);
+            point.posts.A[i].num = postnum;
+        }
+        for (let i = 0, l = point.posts.B.length; i < l; i++) {
+            let id = point.posts.B[i].id;
+            let postnum = postidtonum(data, 1, id);
+            point.posts.B[i].num = postnum;
+        }
         let content = point;
         content.page1 = data.query.page1;
         content.page2 = data.query.page2;

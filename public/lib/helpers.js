@@ -48,6 +48,39 @@ exports.count = function (array) {
                 return result;
             },
 
+            toLike: function (like) {
+                if (like > 0) {
+                    return ' <img src="img/like.jpg" class="dvicon"> ' + like + ' <strong>||</strong> ';
+                }
+            },
+
+            toComment: function (commentcount) {
+                if (commentcount > 0) {
+                    return ' <img src="img/comment.jpg" class="dvicon"> ' + commentcount + ' <strong>||</strong> ';
+                }
+            },
+
+            toShare: function (share) {
+                if (share) {
+                    return ' <img src="img/share.jpg" class="dvicon"> <strong>||</strong> ';
+                }
+            },
+
+            toWord: function (word) {
+                var str = ' ';
+                if (word !== undefined) {
+                    for (var i = 0, l = word.length; i < l; i++) {
+                        str += word[i].word;
+                        if (i < l) {
+                            str += ', ';
+                        }
+                    }
+                } else {
+                    str += 'null';
+                }
+                return str;
+            },
+
             count: function (array) {
                 return array.length;
             },

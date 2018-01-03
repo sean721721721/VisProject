@@ -93,10 +93,8 @@
             <div>
                 <div id="pageA">
                     {{#each posts.A}}
-                    <button class="accordion pageA">p{{{num}}} : 
-                        <img src="img/like.jpg" class="dvicon"> {{like}} /
-                        <img src="img/comment.jpg" class="dvicon"> {{commentcount}} /
-                        <img src="img/share.jpg" class="dvicon"> {{share}}
+                    <button class="accordion pageA">
+                        p{{{num}}}: {{{toLike like}}}{{{toComment commentcount}}}{{{toShare share}}}{{{toWord word}}}
                     </button>
                     <div class="panel">
                         <p>{{{toURL id}}}</p>
@@ -117,10 +115,8 @@
                 </div>
                 <div id="pageB">
                     {{#each posts.B}}
-                    <button class="accordion pageB">p{{{num}}} : 
-                        <img src="img/like.jpg" class="dvicon"> {{like}} /
-                        <img src="img/comment.jpg" class="dvicon"> {{commentcount}} /
-                        <img src="img/share.jpg" class="dvicon"> {{share}}
+                    <button class="accordion pageB">
+                        p{{{num}}}: {{{toLike like}}}{{{toComment commentcount}}}{{{toShare share}}}{{{toWord word}}}
                     </button>
                     <div class="panel">
                         <p>{{{toURL id}}}</p>

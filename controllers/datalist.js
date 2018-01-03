@@ -64,54 +64,59 @@ var ualist = function ualist(files) {
     var data, reaction, user, post, reactionlength;
     var filelength = files.length;
     console.log("file length: " + filelength)
-    var find = false;
-    for (var i = 0; i < filelength; i++) {
-        //console.log(userlist.length)
-        data = files[i];
+    files = jb.cut(files, function () {
+        // list.push(data);
         //console.log(data.id)
-        if (data.reactions.list !== undefined) {
-            reactionlength = data.reactions.list.length;
-            if (reactionlength !== 0) {
-                //console.log(userlist.length)
-                for (var k = 0; k < reactionlength; k++) {
-                    reaction = data.reactions.list[k];
-                    post = {};
-                    post["id"] = data.id
-                    post["like"] = post_liketype(post, reaction);
-                    post["commentcount"] = 0;
-                    post["share"] = false;
-                    post["clist"] = [];
-                    //console.log(post)
-                    user = {};
-                    user["id"] = reaction.id;
-                    user["name"] = reaction.name;
-                    user["posts"] = [];
+        var find = false;
+        for (var i = 0; i < filelength; i++) {
+            //console.log(userlist.length)
+            data = files[i];
+            if (data.reactions.list !== undefined) {
+                reactionlength = data.reactions.list.length;
+                if (reactionlength !== 0) {
                     //console.log(userlist.length)
-                    find = false;
-                    for (var a = 0; a < userlist.length; a++) {
-                        if (userlist[a].id == user.id) {
-                            userlist[a].posts.push(post);
-                            a = userlist.length;
-                            find = true;
-                        }
-                    }
-                    if (find == false) {
-                        user.posts.push(post);
+                    for (var k = 0; k < reactionlength; k++) {
+                        reaction = data.reactions.list[k];
+                        post = {};
+                        post["id"] = data.id
+                        post["like"] = post_liketype(post, reaction);
+                        post["commentcount"] = 0;
+                        post["share"] = false;
+                        post["clist"] = [];
+                        post["word"] = data.word;
                         //console.log(post)
-                        //console.log(user.posts[0])
-                        userlist.push(user);
-                        //people++;
-                        //console.log(user)
-                        //console.log("---------------------")
+                        user = {};
+                        user["id"] = reaction.id;
+                        user["name"] = reaction.name;
+                        user["posts"] = [];
+                        //console.log(userlist.length)
+                        find = false;
+                        for (var a = 0; a < userlist.length; a++) {
+                            if (userlist[a].id == user.id) {
+                                userlist[a].posts.push(post);
+                                a = userlist.length;
+                                find = true;
+                            }
+                        }
+                        if (find == false) {
+                            user.posts.push(post);
+                            //console.log(post)
+                            //console.log(user.posts[0])
+                            userlist.push(user);
+                            //people++;
+                            //console.log(user)
+                            //console.log("---------------------")
+                        }
                     }
                 }
             }
         }
-    }
-    comment_countdb(files, userlist);
-    share_db(files, userlist);
-    console.log("userlist length: " + userlist.length)
-    //console.log("people "+people)
+        comment_countdb(files, userlist);
+        share_db(files, userlist);
+        console.log("userlist length: " + userlist.length)
+        //console.log("people "+people)
+    });
+
     return userlist;
 }
 
@@ -227,7 +232,7 @@ function comment_countdb(files, userlist) {
     }
 }
 
-// commentcount and adjust userlist obkect
+// commentcount and adjust userlist object
 function commentcount(data, comment, userlist) {
     let findid = false;
     var listlength = userlist.length;
@@ -468,10 +473,10 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
         var post = postobj(qobj1[i]);
         pagea.push(post);
     }
-    pagea = jb.cut(pagea, function () {
-        list.push(pagea);
+    list.push(pagea);
+    /*pagea = jb.cut(pagea, function () {
         // console.log(pagea);
-    });
+    });*/
     // for return single page query faster
     if (qobj1 !== qobj2) {
         for (var i = 0; i < l2; i++) {
@@ -489,10 +494,10 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
                 }
             }
         }
-        pageb = jb.cut(pageb, function () {
-            list.push(pageb);
+        list.push(pageb);
+        /*pageb = jb.cut(pageb, function () {
             // console.log(pageb);
-        });
+        });*/
     }
 
     console.log("postlen: " + (list[0].length + list[1].length));
