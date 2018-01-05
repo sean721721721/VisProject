@@ -237,9 +237,9 @@ var callback = function callback(req, res) {
             return new Promise((resolve, reject) => {
                     findquery(page1, queryobj1).then(result => {
                         console.log("q1 lenght: " + result.length);
-                        var postlist = dl.bindpostlist(result, result);
-                        var response = [];
+                        //var response = [];
                         var ul1 = dl.ualist(result);
+                        var postlist = dl.bindpostlist(result, result);
                         var userlist = dl.binduserlist(ul1, ul1);
                         var oldata = dl.overlap(userlist, 'all');
                         console.log('All');
@@ -252,8 +252,8 @@ var callback = function callback(req, res) {
                             title: 'query',
                             query: req.params,
                             summary: [
-                                [result.length, result.length],
-                                [ul1.length, ul1.length, userlist.length]
+                                [result.length, result.length, result.length*2],
+                                [ul1.length, ul1.length, ul1.length*2]
                             ],
                             data: [postlist, oldata, sortdata],
                         };
@@ -270,10 +270,10 @@ var callback = function callback(req, res) {
                 .then(result => {
                     console.log("q1 lenght: " + result[0].length);
                     console.log("q2 lenght: " + result[1].length);
-                    var postlist = dl.bindpostlist(result[0], result[1]);
                     var response = [];
                     var ul1 = dl.ualist(result[0]);
                     var ul2 = dl.ualist(result[1]);
+                    var postlist = dl.bindpostlist(result[0], result[1]);
                     var userlist = dl.binduserlist(ul1, ul2);
                     var oldata = userlist;
                     if (req.params.co === 'Co reaction') {

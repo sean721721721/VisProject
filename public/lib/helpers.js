@@ -72,7 +72,7 @@ exports.count = function (array) {
                     for (var i = 0, l = word.length; i < l; i++) {
                         str += word[i].word;
                         if (i < l) {
-                            str += ', ';
+                            str += ' ';
                         }
                     }
                 } else {

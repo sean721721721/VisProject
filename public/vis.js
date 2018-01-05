@@ -316,6 +316,7 @@ function pageview(data, pagedata, select) {
     // .paddingOuter(1);
 
     let n = 100;
+
     let root = d3.hierarchy(pagedata)
         .eachBefore(function (d) {
             d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
@@ -506,7 +507,7 @@ function pageview(data, pagedata, select) {
         let r = Math.sqrt(x * y);
         return r;
     }
-    console.log('root', root);
+    // console.log('root', root);
     // zoomTo([root.x0, root.y0, getr(root)]);
     /*
     d3.selectAll('input')
@@ -1059,7 +1060,7 @@ function overlapvis(data, select, mode) {
             .attr('transform', (d) => {
                 resultx = initx + x + (cellSize1 - cellSize2) / 2;
                 x += widthcount(d) * cellSize1;
-                while (x >= nextline * cellSize1) {
+                while (x > (nextline - 1) * cellSize1) {
                     x -= nextline * cellSize1;
                 }
                 let offsety = parseInt(yc / nextline, 10);
@@ -1374,6 +1375,7 @@ function postdetail(data, select) {
         content.post = post;
         content.id = pagedata[i][j].id;
         content.message = pagedata[i][j].message;
+        content.word = pagedata[i][j].word;
         content.reactions = {};
         // content.reactions.total=pagedata[0][0][0].reactions;
         content.reactions.like = pagedata[i][j].reactions.like;
@@ -1505,28 +1507,30 @@ function activepost(data, preselect, postselect) {
                     selectivepost(1, postnum);
                 }
             }
-            for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
-                let id = postselect.user[i].posts.B[j].id;
-                if (result[1].length > 0) {
-                    for (let x = 0, l = result[1].length; x < l;) {
-                        if (result[1][x] === id) {
-                            // result[1].splice(j, 1);
-                            /* let postnum = postidtonum(data, 0, id);
-                            selectivepost(1, postnum);*/
-                            x = l + 1;
-                        } else {
-                            x++;
+            if (eqarray(result[0], result[1])) {
+                for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
+                    let id = postselect.user[i].posts.B[j].id;
+                    if (result[1].length > 0) {
+                        for (let x = 0, l = result[1].length; x < l;) {
+                            if (result[1][x] === id) {
+                                // result[1].splice(j, 1);
+                                /* let postnum = postidtonum(data, 0, id);
+                                selectivepost(1, postnum);*/
+                                x = l + 1;
+                            } else {
+                                x++;
+                            }
+                            if (x === l) {
+                                result[1].push(id);
+                                let postnum = postidtonum(data, 1, id);
+                                selectivepost(2, postnum);
+                            }
                         }
-                        if (x === l) {
-                            result[1].push(id);
-                            let postnum = postidtonum(data, 1, id);
-                            selectivepost(2, postnum);
-                        }
+                    } else {
+                        result[1].push(id);
+                        let postnum = postidtonum(data, 1, id);
+                        selectivepost(2, postnum);
                     }
-                } else {
-                    result[1].push(id);
-                    let postnum = postidtonum(data, 1, id);
-                    selectivepost(2, postnum);
                 }
             }
         }
@@ -1593,29 +1597,51 @@ function activepost(data, preselect, postselect) {
                     selectivepost(1, postnum);
                 }
             }
-            for (let j = 0, ubl = preselect.user[i].posts.B.length; j < ubl; j++) {
-                let id = preselect.user[i].posts.B[j].id;
-                if (result[1].length > 0) {
-                    for (let x = 0, l = result[1].length; x < l;) {
-                        if (result[1][x] === id) {
-                            /* let postnum = postidtonum(data, 0, id);
-                            selectivepost(1, postnum);*/
-                            x = l + 1;
-                        } else {
-                            x++;
+            if (eqarray(result[0], result[1])) {
+                for (let j = 0, ubl = preselect.user[i].posts.B.length; j < ubl; j++) {
+                    let id = preselect.user[i].posts.B[j].id;
+                    if (result[1].length > 0) {
+                        for (let x = 0, l = result[1].length; x < l;) {
+                            if (result[1][x] === id) {
+                                /* let postnum = postidtonum(data, 0, id);
+                                selectivepost(1, postnum);*/
+                                x = l + 1;
+                            } else {
+                                x++;
+                            }
+                            if (x === l) {
+                                let postnum = postidtonum(data, 1, id);
+                                selectivepost(2, postnum);
+                            }
                         }
-                        if (x === l) {
-                            let postnum = postidtonum(data, 1, id);
-                            selectivepost(2, postnum);
-                        }
+                    } else {
+                        let postnum = postidtonum(data, 1, id);
+                        selectivepost(2, postnum);
                     }
-                } else {
-                    let postnum = postidtonum(data, 1, id);
-                    selectivepost(2, postnum);
                 }
             }
         }
     }
+
+    function eqarray(arr1, arr2) {
+        let l1 = arr1.length;
+        let l2 = arr2.length;
+        if (l1 !== l2) {
+            return false;
+        } else {
+            for (let i = 0; i < l1;) {
+                if (arr1[i] === arr2[i]) {
+                    i++;
+                } else {
+                    return false;
+                }
+                if (i = l1) {
+                    return true;
+                }
+            }
+        }
+    }
+
     console.log(result);
     return result;
 }
@@ -1763,7 +1789,11 @@ function pagedata(data) {
         tmdata.push(page);
     }
     tm.name = 'root';
-    tm.children = tmdata;
+    if (tmdata[0].name === tmdata[1].name) {
+        tm.children = [tmdata[0]];
+    } else {
+        tm.children = tmdata;
+    }
     console.log('pagedata', tm);
     return tm;
 };

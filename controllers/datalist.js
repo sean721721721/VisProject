@@ -116,7 +116,6 @@ var ualist = function ualist(files) {
         console.log("userlist length: " + userlist.length)
         //console.log("people "+people)
     });
-
     return userlist;
 }
 
@@ -423,7 +422,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
         var posts = {};
         for (prop in obj) {
             //posts[prop] = obj[prop];
-            if (prop.match(/^(id|created_time|type|message|from|shares|attachments|sharedposts)$/)) {
+            if (prop.match(/^(id|created_time|type|message|from|shares|attachments|sharedposts|word)$/)) {
                 posts[prop] = obj[prop];
             } else {
                 var reactions = {};
@@ -498,8 +497,9 @@ var bindpostlist = function bindpostlist(qobj1, qobj2) {
         /*pageb = jb.cut(pageb, function () {
             // console.log(pageb);
         });*/
+    } else {
+        list.push(pagea);
     }
-
     console.log("postlen: " + (list[0].length + list[1].length));
     return list;
 }
@@ -511,15 +511,15 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
     var result = [];
     var l1 = userlist1.length;
     var l2 = userlist2.length;
-    for (var i = 0; i < l1; i++) {
-        user[i].posts = {
-            "A": userlist1[i].posts,
-            "B": [],
-        }
-        result.push(user[i]);
-    }
-    // // for return single page query faster
+    // for return single page query faster
     if (userlist1 !== userlist2) {
+        for (var i = 0; i < l1; i++) {
+            user[i].posts = {
+                "A": userlist1[i].posts,
+                "B": [],
+            }
+            result.push(user[i]);
+        }
         for (var i = 0; i < l2; i++) {
             var find = false;
             for (var j = 0; j < l1; j++) {
@@ -536,6 +536,14 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
                 }
                 result.push(tuser[i]);
             }
+        }
+    } else {
+        for (var i = 0; i < l1; i++) {
+            user[i].posts = {
+                "A": userlist1[i].posts,
+                "B": userlist1[i].posts,
+            }
+            result.push(user[i]);
         }
     }
     console.log("user length: " + result.length);
@@ -671,7 +679,6 @@ var olresult = function olresult(ollist) {
     console.log("fol length: " + result.length);
     return result;
 }
-
 //sort overlap degree
 var sortdegree = function sortdegree(olrlist) {
     // console.log(olrlist);
@@ -733,7 +740,6 @@ var sortdegree = function sortdegree(olrlist) {
                 list.push([item]);
             }
         }
-
         var list = obj.O[index];
         var deg = item.posts.A.length;
         var degB = item.posts.B.length;
@@ -819,7 +825,6 @@ var sortdegree = function sortdegree(olrlist) {
             list.push([item]);
         }
     }
-
     //var sortlist = [];
     var sortobj = {};
     sortobj.A = [];
