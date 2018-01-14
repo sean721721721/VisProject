@@ -1507,7 +1507,8 @@ function activepost(data, preselect, postselect) {
                     selectivepost(1, postnum);
                 }
             }
-            if (eqarray(result[0], result[1])) {
+            if (!(eqpost(postselect.user[i].posts.A, postselect.user[i].posts.B))) {
+                console.log(postselect.user[i].posts);
                 for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
                     let id = postselect.user[i].posts.B[j].id;
                     if (result[1].length > 0) {
@@ -1539,6 +1540,7 @@ function activepost(data, preselect, postselect) {
             [],
             [],
         ];
+        // rebuild result by postselect
         for (let i = 0; i < postsl; i++) {
             for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
                 let id = postselect.user[i].posts.A[j].id;
@@ -1575,6 +1577,7 @@ function activepost(data, preselect, postselect) {
                 }
             }
         }
+        // show result
         for (let i = 0; i < presl; i++) {
             for (let j = 0, ual = preselect.user[i].posts.A.length; j < ual; j++) {
                 let id = preselect.user[i].posts.A[j].id;
@@ -1597,7 +1600,8 @@ function activepost(data, preselect, postselect) {
                     selectivepost(1, postnum);
                 }
             }
-            if (eqarray(result[0], result[1])) {
+            if (!(eqpost(preselect.user[i].posts.A, preselect.user[i].posts.B))) {
+                // console.log(result);
                 for (let j = 0, ubl = preselect.user[i].posts.B.length; j < ubl; j++) {
                     let id = preselect.user[i].posts.B[j].id;
                     if (result[1].length > 0) {
@@ -1623,14 +1627,14 @@ function activepost(data, preselect, postselect) {
         }
     }
 
-    function eqarray(arr1, arr2) {
+    function eqpost(arr1, arr2) {
         let l1 = arr1.length;
         let l2 = arr2.length;
         if (l1 !== l2) {
             return false;
         } else {
             for (let i = 0; i < l1;) {
-                if (arr1[i] === arr2[i]) {
+                if (arr1[i].id === arr2[i].id) {
                     i++;
                 } else {
                     return false;
