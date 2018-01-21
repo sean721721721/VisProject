@@ -269,7 +269,7 @@ div.tab button.active {
 
 rect:hover {
     fill-opacity: 0.8;
-    stroke: white;
+    stroke: black;
 }
 
 

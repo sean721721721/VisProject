@@ -207,24 +207,32 @@ function overview(data, select) {
                 .style('opacity', 0);
         });
 
+    let numarray = [];
+    for (let i = 0, l = ovdata.length; i < l; i++) {
+        numarray.push(ovdata[i][3]);
+    }
+    let offset = numoffset(numarray);
+    // console.log(offset);
+
     let xvalue = g.selectAll('g')
         .append('g')
         .data(ovdata).enter()
         .append('text')
         .attr('sixe', 16)
-        .attr('x', -margin.left + 16)
+        .attr('x', w + 16)
         .attr('y', (d, i) => {
             return i * hy + 16;
         })
         .text((d) => {
-            return d[3];
+            // return d[3];
+            return numalign(d[3], offset);
         })
         .attr('fill', '#000');
 
     let xaxis = g.append('g')
         .attr('class', 'axis axis--x')
-        .attr('transform', 'translate(' + w + ',0)')
-        .call(d3.axisRight(y));
+        .attr('transform', 'translate(' + '0' + ',0)')
+        .call(d3.axisLeft(y));
 
     let yaxis = g.append('g')
         .attr('class', 'axis axis--y')
@@ -1032,6 +1040,12 @@ function overlapvis(data, select, mode) {
             }
         });
 
+    let maxi = overlap.length - 1;
+    let num = [];
+    let maxd = overlap[maxi][0][0].posts;
+    num.push(getlength(maxd, 'A') + getlength(maxd, 'B'));
+    let offset = numoffset(num);
+    // console.log(offset);
     let text = rect.append('text')
         .attr('x', initx - cellSize1 * 2)
         .attr('y', (d, i) => {
@@ -1043,7 +1057,8 @@ function overlapvis(data, select, mode) {
         .attr('stroke', '#f00')
         .text((d) => {
             let data = d[0][0].posts;
-            return getlength(data, 'A') + getlength(data, 'B');
+            let len = getlength(data, 'A') + getlength(data, 'B');
+            return numalign(len, offset);
         });
 
     for (let i = 0; i < degcounts; i++) {
@@ -1058,10 +1073,10 @@ function overlapvis(data, select, mode) {
             .attr('class', 'ggrid')
             .attr('id', (d, l) => 'd' + i + 'g' + l)
             .attr('transform', (d) => {
-                resultx = initx + x + (cellSize1 - cellSize2) / 2;
-                x += widthcount(d) * cellSize1;
-                while (x > (nextline - 1) * cellSize1) {
-                    x -= nextline * cellSize1;
+                resultx = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
+                x += widthcount(d);
+                while (x > (nextline - 1)) {
+                    x -= nextline;
                 }
                 let offsety = parseInt(yc / nextline, 10);
                 resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
@@ -1997,6 +2012,42 @@ function chcolor(c, h, s, l, o) {
     // console.log(parah(h), paras(s), paral(l));
     return d3.cubehelix(parah(h), paras(s), paral(l), o);
 };
+
+/**
+ * align numbers
+ * @param {number} num - number
+ * @param {number} offset - offset
+ * @return {string}
+ */
+function numalign(num, offset) {
+    let str = '';
+    let ioffset = 0;
+    let numstr = num.toString();
+    while (num >= 10) {
+        num = Math.round(num / 10);
+        ioffset++;
+    }
+    for (let i = ioffset; i < offset; i++) {
+        str += '\xa0';
+    }
+    str += numstr;
+    return str;
+}
+
+/**
+ * get number offset
+ * @param {array} numarray - number array
+ * @return {number}
+ */
+function numoffset(numarray) {
+    let max = Math.max(...numarray);
+    let offset = 0;
+    while (max >= 10) {
+        max = Math.round(max / 10);
+        offset++;
+    }
+    return offset;
+}
 
 // https://github.com/wbkd/d3-extended
 d3.selection.prototype.moveToFront = function () {
