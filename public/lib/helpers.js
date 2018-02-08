@@ -105,7 +105,6 @@ exports.count = function (array) {
             // just return helpers object if we can't register helpers here
             return helpers;
         }
-
     };
 
     // client

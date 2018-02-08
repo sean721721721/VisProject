@@ -1,4 +1,5 @@
 /* eslint-disable */
+const os = require('os');
 var graph = require('fbgraph'), // npm install fbgraph
 
 	fs = require('fs'), // File System
@@ -32,13 +33,13 @@ var getdateformat = function getdateformat() {
 	return "_" + curr_month + "-" + curr_date + "-" + curr_year;
 };
 
-var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
-	dirpathAfter20141202 = "/windows/D/pagedata after 20141202/";
-/*
-//for windows
-var dirpath = "F:/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
-	dirpathAfter20141202 = "F:/pagedata after 20141202/";*/
-
+if (os.platform() === "linux") { // for linux
+	var dirpath = "/windows/D/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
+		dirpathAfter20141202 = "/windows/D/pagedata after 20141202/";
+} else { //for windows
+	var dirpath = "F:/Crawler_data/", // G:\\Dropbox\\sharevis-data\\
+		dirpathAfter20141202 = "F:/pagedata after 20141202/";
+}
 
 var savejson = function savejson(name, jsondata) {
 	//fs.writeFile(name +".json", JSON.stringify(jsondata));
@@ -84,22 +85,25 @@ var createfolder = function createfolder(id) {
 		console.log("Not find folder '" + id + getdateformat() + "', create new folder.");
 	}
 
-	if (fs.existsSync("/windows/D/Crawler_data/" + id + getdateformat() + "/")) {
-		dirpath = "/windows/D/Crawler_data/" + id + getdateformat() + "/";
-	} else {
-		dirpath = "/windows/D/Crawler_data/" + id + getdateformat() + "/";
-		fs.mkdirSync(dirpath);
-		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
+	
+	if (os.platform() === "linux") { // for linux
+		if (fs.existsSync("/windows/D/Crawler_data/" + id + getdateformat() + "/")) {
+			dirpath = "/windows/D/Crawler_data/" + id + getdateformat() + "/";
+		} else {
+			dirpath = "/windows/D/Crawler_data/" + id + getdateformat() + "/";
+			fs.mkdirSync(dirpath);
+			console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
+		}
+	} else { // for windows
+		if (fs.existsSync("F:/Crawler_data/" + id + getdateformat() + "/")) {
+			dirpath = "F:/Crawler_data/" + id + getdateformat() + "/";
+		} else {
+			dirpath = "F:/Crawler_data/" + id + getdateformat() + "/";
+			fs.mkdirSync(dirpath);
+			console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
+		}
 	}
-	/*
-	// for windows
-	if (fs.existsSync("F:/Crawler_data/" + id + getdateformat() + "/")) {
-		dirpath = "F:/Crawler_data/" + id + getdateformat() + "/";
-	} else {
-		dirpath = "F:/Crawler_data/" + id + getdateformat() + "/";
-		fs.mkdirSync(dirpath);
-		console.log("Not find folder'" + id + getdateformat() + "', create new folder.");
-	}*/
+
 	/*
 	// Temporary saving the files after 20141202 in dirpathAfter20141202, without checking dirpathAfter20141202 folder exist or not.
 	if (fs.existsSync("/windows/D/pagedata after 20141202/" + id + getdateformat() + "/")) {

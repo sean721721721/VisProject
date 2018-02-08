@@ -169,7 +169,9 @@ function getCR(type) {
     let strtime3 = 'time3=' + date3.value;
     let strtime4 = 'time4=' + date4.value;
     let strco = 'co=' + type;
-    let str = 'http://140.119.164.22:3000/searching?' + strminlike + '&' + strmaxlike + '&' + strmincomment + '&' + strmaxcomment + '&' + strposttype + '&' +
+    let searchurl = 'http://140.119.164.22:3000/searching?';
+    // let searchurl = 'http://140.119.164.166:8000/searching?';
+    let str = searchurl + strminlike + '&' + strmaxlike + '&' + strmincomment + '&' + strmaxcomment + '&' + strposttype + '&' +
         strpage1 + '&' + strpage2 + '&' + strtime1 + '&' + strtime2 + '&' + strtime3 + '&' + strtime4 + '&' + strco;
 
     // let form = new FormData(document.getElementById('para'));

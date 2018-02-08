@@ -2,6 +2,7 @@
 var express = require("express");
 var app = express();
 var config = require("./config")[app.settings.env];
+const os = require('os');
 
 var options = {
   timeout: 10000000,
@@ -23,8 +24,9 @@ require("./db").connect(config);
  * Load all models and controllers
  * remove if not needed, and you can also remove fs variable declaration above
  */
-require("./models")(app);
-//console.log('model')
+// controller auto load Account model
+/*require("./models")(app);
+console.log('model');*/
 require("./controllers")(app);
 console.log('controlers loaded');
 /* 
@@ -36,7 +38,12 @@ console.log('settings loaded');
 /* 
  * Start listening 
  */
-app.set("port", process.env.PORT || 3000);
+if (os.platform() === "linux") {
+  app.set("port", process.env.PORT || 3000);
+} else {
+  app.set("port", process.env.PORT || 8000);
+}
+
 app.listen(app.get("port"), function () {
   console.log("Express server listening on port %s", app.get("port"));
 });

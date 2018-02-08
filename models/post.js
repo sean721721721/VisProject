@@ -25,5 +25,6 @@ var postSchema = require('./postSchema.js');
 
 var exports = module.exports = {}
 //exports.postSchema = postSchema;
+console.log("Post Schema");
 module.exports = mongoose.model("Post", postSchema);
 //})();

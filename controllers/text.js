@@ -55,10 +55,10 @@ if (os.platform() === "linux") {
     nodejieba.load({
         dict: nodejieba.DEFAULT_DICT,
         hmmDict: nodejieba.DEFAULT_HMM_DICT,
-        userDict: "d:/project/server/big_dict.utf8", //windows
+        userDict: "F:/PageVis/PageVis/controllers/big_dict.utf8", //windows
         //userDict: "/Users/guojiankai/Project/server/big_dict.utf8", //mac        
         idfDict: nodejieba.DEFAULT_IDF_DICT,
-        stopWordDict: "d:/project/server/stop_dict.utf8" //windows
+        stopWordDict: "F:/PageVis/PageVis/controllers/stop_dict.utf8" //windows
         //stopWordDict: "/Users/guojiankai/Project/server/stop_dict.utf8" //mac    
     });
 }
