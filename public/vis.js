@@ -126,18 +126,30 @@ function overview(data, select) {
 
     let tooltip2 = d3.select('body').select('.b');
 
+
+    const colorA = d3.interpolateRdBu;
     let rectA = g.selectAll('g')
         .append('g')
         .data(ovdata)
         .enter().append('rect')
         .attr('class', 'A')
-        .attr('fill', '#aaa')
+        .attr('fill', (d, i) => {
+            let diff = getBaseLog(10, d[1]) > 5 ? 5 : getBaseLog(10, d[1]);
+            let cvalue = 0.5 - (diff / 10);
+            return colorA(cvalue);
+        })
         .attr('stroke', 'white 5px')
-        .attr('width', (d) => {
+        .attr('width', (d, i) => {
             if (d[3] === 0) {
                 return 0;
             } else {
-                return (d[1] / d[3]) * w;
+                let wa = (d[1] / d[3]) * w;
+                if (i === 1) {
+                    ratio = d[1] / (2 * d[1] + 2 * d[2] - d[3]);
+                    return w * ratio;
+                } else {
+                    return wa;
+                }
             }
         })
         .attr('height', hy)
@@ -164,26 +176,42 @@ function overview(data, select) {
                 .style('opacity', 0);
         });
 
+    const colorB = d3.interpolateRdBu;
     let rectB = g.selectAll('g')
         .append('g')
         .data(ovdata)
         .enter().append('rect')
         .attr('class', 'B')
-        .attr('fill', '#333')
+        .attr('fill', (d, i) => {
+            let diff = getBaseLog(10, d[2]) > 5 ? 5 : getBaseLog(10, d[2]);
+            let cvalue = diff / 10 + 0.5;
+            return colorB(cvalue);
+        })
         .attr('stroke', 'white 5px')
-        .attr('width', (d) => {
+        .attr('width', (d, i) => {
             if (d[3] === 0) {
                 return 0;
             } else {
-                return (d[2] / d[3]) * w;
+                let wb = (d[2] / d[3]) * w;
+                if (i === 1) {
+                    let ratio = d[2] / (2 * d[1] + 2 * d[2] - d[3]);
+                    return w * ratio;
+                } else {
+                    return wb;
+                }
             }
         })
         .attr('height', hy)
-        .attr('x', (d) => {
+        .attr('x', (d, i) => {
             if (d[3] === 0) {
                 return 0;
             } else {
-                return (d[1] / d[3]) * w;
+                if (i === 1) {
+                    let ratio = (2 * d[1] + d[2] - d[3]) / (2 * d[1] + 2 * d[2] - d[3]);
+                    return w * ratio;
+                } else {
+                    return (d[1] / d[3]) * w;
+                }
             }
         })
         .attr('y', (d, i) => {
@@ -199,6 +227,66 @@ function overview(data, select) {
                     '% = ' + d[2] / d[3] * 100 + '%')
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
+        })
+        .on('mouseout', function (d) {
+            d3.event.preventDefault();
+            tooltip2.transition()
+                .duration(500)
+                .style('opacity', 0);
+        });
+
+    const colorC = d3.interpolateGreens;
+    let rectC = g.selectAll('g')
+        .append('g')
+        .data(ovdata)
+        .enter().append('rect')
+        .attr('class', 'B')
+        .attr('fill', (d, i) => {
+            if (i === 1) {
+                let diff = getBaseLog(10, d[1] + d[2] - d[3]) > 5 ? 5 : getBaseLog(10, d[1] + d[2] - d[3]);
+                let cvalue = diff / 10 + 0.5;
+                return colorC(cvalue);
+            }
+        })
+        .attr('stroke', 'white 5px')
+        .attr('width', (d, i) => {
+            if (i === 1) {
+                let ratio = (d[1] + d[2] - d[3]) / (2 * d[1] + 2 * d[2] - d[3]);
+                if (d[3] === 0) {
+                    return 0;
+                } else {
+                    return w * ratio;
+                }
+            }
+        })
+        .attr('height', hy)
+        .attr('x', (d, i) => {
+            if (i === 1) {
+                let ratio = (d[1]) / (2 * d[1] + 2 * d[2] - d[3]);
+                if (d[3] === 0) {
+                    return 0;
+                } else {
+                    return w * ratio;
+                }
+            }
+        })
+        .attr('y', (d, i) => {
+            if (i === 1) {
+                return i * hy;
+            }
+        }).on('mouseover', function (d, i) {
+            if (i === 1) {
+                d3.event.preventDefault();
+                tooltip2.transition()
+                    .duration(200)
+                    .style('opacity', .9);
+                tooltip2.html('Page= ' + data.query.page2 + '<br/>' +
+                        'Type = ' + axis[i] + '<br/>' +
+                        'Count = ' + d[2] + '<br/>' +
+                        '% = ' + d[2] / d[3] * 100 + '%')
+                    .style('left', (d3.event.pageX + 5) + 'px')
+                    .style('top', (d3.event.pageY - 30) + 'px');
+            }
         })
         .on('mouseout', function (d) {
             d3.event.preventDefault();
@@ -239,13 +327,22 @@ function overview(data, select) {
         .attr('transform', 'translate(0,' + h + ')')
         .call(d3.axisBottom(x).ticks(10, '%'));
 
-    let line = g.append('line')
+    for (let i = 1; i < 10; i++) {
+        g.append('line')
+            .attr('class', 'line')
+            .attr('x1', x(i / 10))
+            .attr('y1', -10)
+            .attr('x2', x(i / 10))
+            .attr('y2', h + 10)
+            .attr('stroke', 'white');
+    }
+    /*let line = g.append('line')
         .attr('class', 'line')
         .attr('x1', x(0.5))
         .attr('y1', -10)
         .attr('x2', x(0.5))
         .attr('y2', h + 10)
-        .attr('stroke', 'lightblue');
+        .attr('stroke', 'lightblue');*/
 }
 
 /**
@@ -1106,18 +1203,87 @@ function overlapvis(data, select, mode) {
         for (let j = 0; j < gcount; j++) {
             let group = degree[j];
             let gid = '#d' + i + 'g' + j;
+
+            function xof(k) {
+                result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                return result;
+            }
+
+            function yof(k) {
+                let offsety = parseInt(k / nextline, 10);
+                result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                return result + inity;
+            }
+
+            let glyphmargin = {
+                top: yof(0),
+                right: 0,
+                bottom: 0,
+                left: xof(0),
+            };
+            let labelMargin = 1;
+            let scale = d3.scaleLinear()
+                .domain([0, 5])
+                .range([0, 100]);
+            let star = d3.starglyph()
+                .width(cellSize3)
+                .properties([
+                    'A',
+                    'B',
+                    'C',
+                    /* function (d) {
+                        return scale(d.Smoky);
+                    },
+                    function (d) {
+                        return scale(d.Honey);
+                    },
+                    function (d) {
+                        return scale(d.Spicy);
+                    },
+                    function (d) {
+                        return scale(d.Nutty);
+                    },
+                    function (d) {
+                        return scale(d.Malty);
+                    },
+                    function (d) {
+                        return scale(d.Fruity);
+                    },
+                    function (d) {
+                        return scale(d.Floral);
+                    },*/
+                ])
+                .scales(scale)
+                .labels([
+                    'A',
+                    'B',
+                    'C',
+                    /* 'Smoky',
+                    'Honey',
+                    'Spicy',
+                    'Nutty',
+                    'Malty',
+                    'Fruity',
+                    'Floral',*/
+                ])
+                .title(function (d) {
+                    return d.name;
+                })
+                .margin(glyphmargin)
+                .labelMargin(labelMargin);
+
             if (group.length > 0) {
                 let usergrid = g.selectAll(gid)
                     .selectAll('g')
                     .data(group)
-                    .enter().append('rect')
+                    .enter().append('g')
                     .attr('class', 'user')
-                    .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
-                    .attr('stroke', '#00f')
+                    // .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
+                    // .attr('stroke', '#00f')
                     .attr('opacity', 1)
                     .attr('width', cellSize3)
                     .attr('height', cellSize3)
-                    .attr('x', (d, k) => {
+                    /* .attr('x', (d, k) => {
                         result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
                         return result;
                     })
@@ -1125,7 +1291,9 @@ function overlapvis(data, select, mode) {
                         let offsety = parseInt(k / nextline, 10);
                         result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
                         return result + inity;
-                    });
+                    });*/
+                    .call(star)
+                    .call(star.interaction);
             }
         }
     }
@@ -2024,11 +2192,11 @@ function numalign(num, offset) {
     let ioffset = 0;
     let numstr = num.toString();
     while (num >= 10) {
-        num = Math.round(num / 10);
+        num = (num / 10);
         ioffset++;
     }
     for (let i = ioffset; i < offset; i++) {
-        str += '\xa0';
+        str += '\xa0\xa0';
     }
     str += numstr;
     return str;

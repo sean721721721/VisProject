@@ -112,3 +112,13 @@ let overlap = function overlap(userlist, type) {
     console.log('ol length: ' + len);
     return userlist;
 };
+
+/**
+ * get BaseLog
+ * @param {number} x -
+ * @param {number} y -
+ * @return {number}
+ */
+function getBaseLog(x, y) {
+    return Math.log(y) / Math.log(x);
+  }
