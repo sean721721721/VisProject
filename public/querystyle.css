@@ -93,7 +93,6 @@ video {
     box-sizing: border-box
 }
 
-
 /* HTML5 display-role reset for older browsers */
 
 article,
@@ -141,7 +140,6 @@ table {
     table-layout: fixed;
 }
 
-
 /* reset css end */
 
 body {
@@ -165,7 +163,7 @@ svg {
     border: 1px solid;
 }
 
-div.tooltip {
+div.tooltip.b {
     position: absolute;
     text-align: left;
     padding: 2px;
@@ -176,12 +174,15 @@ div.tooltip {
     pointer-events: none;
 }
 
+div.tooltip.c {
+    position: absolute;
+}
+
 th,
 td {
     text-align: left;
     font: 15px sans-serif;
 }
-
 
 /* Style the tab */
 
@@ -190,7 +191,6 @@ div.tab {
     border: 1px solid #ccc;
     background-color: #f1f1f1;
 }
-
 
 /* Style the buttons inside the tab */
 
@@ -205,20 +205,17 @@ div.tab button {
     font-size: 17px;
 }
 
-
 /* Change background color of buttons on hover */
 
 div.tab button:hover {
     background-color: #ddd;
 }
 
-
 /* Create an active/current tablink class */
 
 div.tab button.active {
     background-color: #ccc;
 }
-
 
 /* Style the tab content */
 
@@ -228,7 +225,6 @@ div.tab button.active {
     border: 1px solid #ccc;
     border-top: none;
 }
-
 
 /* Style the close button */
 
@@ -271,7 +267,6 @@ rect:hover {
     fill-opacity: 0.8;
     stroke: black;
 }
-
 
 /* grid setting */
 
@@ -366,9 +361,7 @@ td {
     padding: 5px;
 }
 
-
 /*****************************************************/
-
 
 /*next and previous botton*/
 
@@ -397,64 +390,66 @@ a:hover {
     border-radius: 50%;
 }
 
-
 /*****************************************************/
-
 
 /*glyph*/
 
 #target {
     margin: 40px 0;
-  }
-  .wrapper {
+}
+
+.wrapper {
     position: relative;
-    display: inline-block;
-  }
-  .chart {
+}
+
+.chart {
     margin-bottom: 40px;
-  }
-  .star-title {
-    font-size: 14px;
-  }
-  .star-label {
-    font-size: 11px;
+}
+
+.star-title {
+    /*font-size: 14px;*/
+}
+
+.star-label {
     pointer-events: none;
-  }
-  .star-origin {
+}
+
+.star-origin {
     fill: #333;
-  }
-  .star-axis {
+}
+
+.star-axis {
     stroke: #ccc;
-    stroke-width: 2px;
     stroke-dasharray: 4 5;
-  }
-  .star-path {
+}
+
+.star-path {
     stroke: #444;
-    stroke-width: 2px;
     fill: #709CB1;
     fill-opacity: 0.6;
-  }
-  .star-interaction {
-    opacity: 0;
-  }
-  
-  .interaction {
+}
+
+.star-interaction {
+    opacity: 0.1;
+}
+
+.interaction {
     pointer-events: none;
-  }
-  .interaction.label {
+}
+
+.interaction.label {
     position: absolute;
     font-size: 11px;
     text-shadow: 0 1px 0 #FFF, 0 -1px 0 #FFF, 1px 0 #FFF, -1px 0 #FFF;
-  }
-  .interaction.circle {
+}
+
+.interaction.circle {
     fill: #444;
     fill-opacity: 0.6;
     stroke: #444;
-  }
-
+}
 
 /*****************************************************/
-
 
 /*accordion*/
 
@@ -514,7 +509,6 @@ div.panel {
     border: 1px solid #ccc;
     width: 50%;
 }
-
 
 /**************************************Loading effect*/
 
@@ -643,6 +637,5 @@ div.panel {
         transform: rotate(360deg);
     }
 }
-
 
 /**************************************Loading effect*/

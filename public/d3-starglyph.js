@@ -13,6 +13,7 @@ d3.starglyph = function () {
     let scales = [];
     let labels = [];
     let title = nop;
+    let ratio = 1;
 
     let g;
     let datum;
@@ -22,12 +23,12 @@ d3.starglyph = function () {
     let radians = 2 * Math.PI / radii;
     let scale = d3.scaleLinear()
         .domain([0, 100])
-        .range([0, radius]);
+        .range([1, radius]);
 
     /** */
     function chart(selection) {
         datum = selection.datum();
-        console.log(datum);
+        // console.log(datum);
         g = selection
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
@@ -37,7 +38,7 @@ d3.starglyph = function () {
         if (includeLabels) {
             drawLabels();
         }
-        console.log(scales, origin, radius, radii, radians);
+        // console.log('chart', scale, origin, radius, radii, radians);
         drawChart();
     }
 
@@ -53,11 +54,12 @@ d3.starglyph = function () {
                 .attr('x1', origin[0])
                 .attr('y1', origin[1])
                 .attr('x2', origin[0] + x)
-                .attr('y2', origin[1] + y);
+                .attr('y2', origin[1] + y)
+                .attr('stroke-width', 2);
 
             r += radians;
         });
-        console.log('drawGuidelines', origin);
+        // console.log('drawGuidelines', origin);
     }
 
     /** */
@@ -72,12 +74,14 @@ d3.starglyph = function () {
                 .attr('x', origin[0] + x)
                 .attr('y', origin[1] + y)
                 .text(labels[i])
+                .attr('font-size', 11 * ratio)
+                .style('display', 'none')
                 .style('text-anchor', 'middle')
                 .style('dominant-baseline', 'central');
 
             r += radians;
         });
-        console.log('drawLabels');
+        // console.log('drawLabels');
     }
 
     /** */
@@ -86,39 +90,39 @@ d3.starglyph = function () {
             .attr('class', 'star-origin')
             .attr('cx', origin[0])
             .attr('cy', origin[1])
-            .attr('r', 1);
+            .attr('r', 1 * ratio);
 
         let path = d3.lineRadial();
 
         let pathData = [];
         let r = Math.PI / 2;
-        console.log(properties);
         properties.forEach(function (d, i) {
-            // let userScale = scales[i] || scales[0];
-            let userScale = datum.posts[d];
-            if (userScale === undefined) {
-                userScale = [];
+            let userScale = scales[i] || scales[0];
+            let value = datum.posts[d];
+            if (value === undefined) {
+                value = [0];
             }
-            console.log(d, i, userScale);
             pathData.push([
                 r,
-                scale(userScale.length),
+                scale(userScale(value.length)),
             ]);
             r += radians;
+            // console.log('drawChart', origin, d, i, scale(userScale(value.length)), margin);
         });
-        console.log(pathData);
         g.append('path')
             .attr('class', 'star-path')
             .attr('transform', 'translate(' + origin[0] + ',' + origin[1] + ')')
-            .attr('d', path(pathData) + 'Z');
+            .attr('d', path(pathData) + 'Z')
+            .attr('stroke-width', 2);
 
         g.append('text')
             .attr('class', 'star-title')
             .attr('x', origin[0])
             .attr('y', -(margin.top / 2))
             .text(title(datum))
+            .style('display', 'none')
+            .attr('font-size', 12 * ratio)
             .style('text-anchor', 'middle');
-        console.log('drawChart');
     }
 
     /** */
@@ -140,21 +144,24 @@ d3.starglyph = function () {
             let xExtent = lExtent * Math.cos(rExtent) + origin[0] + margin.left;
             let yExtent = lExtent * Math.sin(rExtent) + origin[1] + margin.top;
 
-            // let userScale = scales[i] || scales[0];
+            let userScale = scales[i] || scales[0];
             // lValue = scale(userScale(datum[d]));
-            let userScale = datum.posts[d];
-            if (userScale === undefined) {
-                userScale = [];
+            let value = datum.posts[d];
+            if (value === undefined) {
+                value = [0];
             }
-            lValue = scale(userScale.length),
-                x = lValue * Math.cos(rExtent) + origin[0] + margin.left;
-            y = lValue * Math.sin(rExtent) + origin[1] + margin.top;
+            let lValue = scale(userScale(value.length));
+            // let x = lValue * Math.cos(rExtent) + origin[0] + margin.left;
+            // let y = lValue * Math.sin(rExtent) + origin[1] + margin.top;
+            let x = lValue * Math.cos(rExtent) + origin[0];
+            let y = lValue * Math.sin(rExtent) + origin[1];
 
             let halfRadians = radians / 2;
             let pathData = [
-                [0, rInteraction - halfRadians],
-                [lInteraction, rInteraction - halfRadians],
-                [lInteraction, rInteraction + halfRadians],
+                [rInteraction - halfRadians, 0],
+                [rInteraction - halfRadians, lInteraction],
+                [rInteraction, lInteraction],
+                [rInteraction + halfRadians, lInteraction],
             ];
 
             let datumToBind = {
@@ -174,6 +181,7 @@ d3.starglyph = function () {
 
             rInteraction += radians;
             rExtent += radians;
+            // console.log('drawInteraction', origin, d, i, lValue, x, y, margin);
         });
     }
 
@@ -210,6 +218,12 @@ d3.starglyph = function () {
         radius = width / 2;
         origin = [radius, radius];
         scale.range([0, radius]);
+        return chart;
+    };
+
+    chart.ratio = function (_) {
+        if (!arguments.length) return ratio;
+        ratio = _;
         return chart;
     };
 

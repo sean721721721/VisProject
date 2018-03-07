@@ -306,7 +306,7 @@ function overview(data, select) {
         .append('g')
         .data(ovdata).enter()
         .append('text')
-        .attr('sixe', 16)
+        .attr('size', 16)
         .attr('x', w + 16)
         .attr('y', (d, i) => {
             return i * hy + 16;
@@ -871,14 +871,6 @@ function overlapvis(data, select, mode) {
         .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
             '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
         ]);
-
-    let zoom = d3.zoom()
-        .scaleExtent([1 / 10, 10])
-        .on('zoom', function () {
-            g.attr('transform', d3.event.transform);
-            let k = this.__zoom.k;
-            g.attr('stroke-width', 1 / k);
-        });
     /*
         function zoom(d) {
             let focus0 = focus;
@@ -917,6 +909,8 @@ function overlapvis(data, select, mode) {
         d3.select('#overlap').select('#user')._groups[0][0].remove();
     }
     let svg = d3.select('#overlap')
+        .append('div')
+        .attr('class', 'wrapper')
         .append('svg')
         .attr('id', 'user')
         .attr('width', width)
@@ -924,8 +918,7 @@ function overlapvis(data, select, mode) {
         .attr('viewBox', '0 0 1000 1000')
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .call(zoom);
+        .style('pointer-events', 'all');
 
     let g = svg.append('g')
         .attr('id', 'overlapmap');
@@ -1158,6 +1151,9 @@ function overlapvis(data, select, mode) {
             return numalign(len, offset);
         });
 
+
+    let interactionLabel = d3.select('.c').select('.interaction.label');
+
     for (let i = 0; i < degcounts; i++) {
         let degree = overlap[i];
         let did = '#degree' + i;
@@ -1199,6 +1195,7 @@ function overlapvis(data, select, mode) {
             .attr('x', 0)
             .attr('y', inity);
 
+
         let gcount = degree.length;
         for (let j = 0; j < gcount; j++) {
             let group = degree[j];
@@ -1207,6 +1204,7 @@ function overlapvis(data, select, mode) {
             function xof(k) {
                 result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
                 return result;
+
             }
 
             function yof(k) {
@@ -1215,70 +1213,54 @@ function overlapvis(data, select, mode) {
                 return result + inity;
             }
 
-            let glyphmargin = {
-                top: yof(0),
-                right: 0,
-                bottom: 0,
-                left: xof(0),
-            };
-            let labelMargin = 1;
-            let scale = d3.scaleLinear()
-                .domain([0, 5])
-                .range([0, 100]);
-            let star = d3.starglyph()
-                .width(cellSize3)
-                .properties([
-                    'A',
-                    'B',
-                    'C',
-                    /* function (d) {
-                        return scale(d.Smoky);
-                    },
-                    function (d) {
-                        return scale(d.Honey);
-                    },
-                    function (d) {
-                        return scale(d.Spicy);
-                    },
-                    function (d) {
-                        return scale(d.Nutty);
-                    },
-                    function (d) {
-                        return scale(d.Malty);
-                    },
-                    function (d) {
-                        return scale(d.Fruity);
-                    },
-                    function (d) {
-                        return scale(d.Floral);
-                    },*/
-                ])
-                .scales(scale)
-                .labels([
-                    'A',
-                    'B',
-                    'C',
-                    /* 'Smoky',
-                    'Honey',
-                    'Spicy',
-                    'Nutty',
-                    'Malty',
-                    'Fruity',
-                    'Floral',*/
-                ])
-                .title(function (d) {
-                    return d.name;
-                })
-                .margin(glyphmargin)
-                .labelMargin(labelMargin);
-
             if (group.length > 0) {
+                function glyphmargin(k) {
+                    let result = {
+                        top: yof(k),
+                        right: 0,
+                        bottom: 0,
+                        left: xof(k),
+                    };
+                    return result;
+                };
+                let labelMargin = 1;
+                let scale = d3.scaleLog()
+                    .domain([1, 32])
+                    .range([0, 100]);
+
+                function glyph(k) {
+                    let glyph = d3.starglyph()
+                        .width(cellSize3)
+                        .properties([
+                            'A',
+                            'B',
+                            'C',
+                            /* function (d) {
+                                return scale(d.Smoky);
+                            },*/
+                        ])
+                        .scales(scale)
+                        .labels([
+                            'A',
+                            'B',
+                            'C',
+                            /* 'Smoky',*/
+                        ])
+                        .title(function (d) {
+                            return d.name;
+                        })
+                        .ratio(ratio)
+                        .margin(glyphmargin(k))
+                        .labelMargin(labelMargin);
+                    return glyph;
+                };
+
                 let usergrid = g.selectAll(gid)
                     .selectAll('g')
                     .data(group)
                     .enter().append('g')
                     .attr('class', 'user')
-                    // .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
+                    .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
                     // .attr('stroke', '#00f')
                     .attr('opacity', 1)
                     .attr('width', cellSize3)
@@ -1292,8 +1274,75 @@ function overlapvis(data, select, mode) {
                         result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
                         return result + inity;
                     });*/
-                    .call(star)
-                    .call(star.interaction);
+                    .each(function (d, i) {
+                        let star = glyph(i);
+                        d3.select(this)
+                            .datum(d)
+                            .call(star)
+                            .call(star.interaction);
+                    });
+
+                let circle = usergrid.append('circle')
+                    .attr('class', (d, i) => {
+                        return 'interaction circle ' + gid + i;
+                    })
+                    .attr('r', 1 * ratio);
+
+                let interaction = svg.selectAll('.interaction')
+                    .style('display', 'none');
+
+                // let transform = d3.zoomTransform(svg.node());
+
+                usergrid.selectAll('.star-interaction')
+                    .on('mouseover', function (d) {
+                        console.log(this);
+                        usergrid.selectAll('.star-title')
+                            .style('display', 'block');
+
+                        usergrid.selectAll('.star-label')
+                            .style('display', 'block');
+
+                        usergrid.selectAll('.interaction')
+                            .style('display', 'block');
+
+                        usergrid.selectAll('circle')
+                            .attr('cx', d.x)
+                            .attr('cy', d.y);
+
+                        // interactionLabel = interactionLabel.node();
+                        interactionLabel
+                            .datum(d)
+                            .text((d) => {
+                                console.log(d);
+                                let post = d.datum.posts[d.key];
+                                let value = post === undefined ? 0 : post.length;
+                                return d.key + ':' + value;
+                            });
+                        /* .style('left', function (d) {
+                            console.log(svg.node(), transform);
+                            let left = transform.x * transform.k + d.xExtent - (this.clientWidth / 2);
+                            console.log(left);
+                            return left + 'px';
+                        })
+                        .style('top', function (d) {
+                            let top = transform.y * transform.k + d.yExtent - (this.clientHeight / 2);
+                            console.log(top);
+                            return top + 'px';
+                        });*/
+                    })
+                    .on('mouseout', function (d) {
+                        usergrid.selectAll('.star-title')
+                            .style('display', 'none');
+
+                        usergrid.selectAll('.star-label')
+                            .style('display', 'none');
+
+                        interaction
+                            .style('display', 'none');
+
+                        usergrid.selectAll('circle')
+                            .style('display', 'none');
+                    });
             }
         }
     }
@@ -1309,9 +1358,10 @@ function overlapvis(data, select, mode) {
             tooltip3.transition()
                 .duration(200)
                 .style('opacity', .9);
-            tooltip3.html('ID=' + d.id + '<br/>' + 'Name = ' + d.name + '<br/>' +
-                    'Activities on A = ' + getlength(d.posts, 'A') + '<br/>' +
-                    'Activities on B = ' + getlength(d.posts, 'B'))
+            tooltip3
+                /* .html('ID=' + d.datum.id + '<br/>' + 'Name = ' + d.datum.name + '<br/>' +
+                    'Activities on A = ' + getlength(d.datum.posts, 'A') + '<br/>' +
+                    'Activities on B = ' + getlength(d.datum.posts, 'B'))*/
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
@@ -1385,6 +1435,22 @@ function overlapvis(data, select, mode) {
             overview(data, select);
             showselect(data, select);
         });
+
+    let strokewidth = 1;
+    let zoom = d3.zoom()
+        .scaleExtent([1 / 10, 10])
+        .on('zoom', function () {
+            g.attr('transform', d3.event.transform);
+            let k = this.__zoom.k;
+            g.attr('stroke-width', 1 / k);
+            g.selectAll('.star-path')
+                .attr('stroke-width', 2 / k);
+            g.selectAll('.star-axis')
+                .attr('stroke-width', 2 / k);
+            strokewidth = 1 / k;
+        });
+
+    svg.call(zoom);
 
     // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
 
@@ -1666,56 +1732,11 @@ function activepost(data, preselect, postselect) {
     if (postsl > presl) {
         for (let i = 0; i < postsl; i++) {
             console.log(postselect.user[i]);
-            for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
-                let id = postselect.user[i].posts.A[j].id;
-                if (result[0].length > 0) {
-                    for (let x = 0, l = result[0].length; x < l;) {
-                        if (result[0][x] === id) {
-                            // result[0].splice(j, 1);
-                            /* let postnum = postidtonum(data, 0, id);
-                            selectivepost(1, postnum);*/
-                            x = l + 1;
-                        } else {
-                            x++;
-                        }
-                        if (x === l) {
-                            result[0].push(id);
-                            let postnum = postidtonum(data, 0, id);
-                            selectivepost(1, postnum);
-                        }
-                    }
-                } else {
-                    result[0].push(id);
-                    let postnum = postidtonum(data, 0, id);
-                    selectivepost(1, postnum);
-                }
-            }
+            checkselect(i, postselect, 'A', result[0], true, 0);
+            // if pageA !== pageB
             if (!(eqpost(postselect.user[i].posts.A, postselect.user[i].posts.B))) {
                 console.log(postselect.user[i].posts);
-                for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
-                    let id = postselect.user[i].posts.B[j].id;
-                    if (result[1].length > 0) {
-                        for (let x = 0, l = result[1].length; x < l;) {
-                            if (result[1][x] === id) {
-                                // result[1].splice(j, 1);
-                                /* let postnum = postidtonum(data, 0, id);
-                                selectivepost(1, postnum);*/
-                                x = l + 1;
-                            } else {
-                                x++;
-                            }
-                            if (x === l) {
-                                result[1].push(id);
-                                let postnum = postidtonum(data, 1, id);
-                                selectivepost(2, postnum);
-                            }
-                        }
-                    } else {
-                        result[1].push(id);
-                        let postnum = postidtonum(data, 1, id);
-                        selectivepost(2, postnum);
-                    }
-                }
+                checkselect(i, postselect, 'B', result[1], true, 1);
             }
         }
     } else {
@@ -1725,87 +1746,84 @@ function activepost(data, preselect, postselect) {
         ];
         // rebuild result by postselect
         for (let i = 0; i < postsl; i++) {
-            for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
-                let id = postselect.user[i].posts.A[j].id;
-                if (result[0].length > 0) {
-                    for (let x = 0, l = result[0].length; x < l;) {
-                        if (result[0][x] === id) {
-                            x = l + 1;
-                        } else {
-                            x++;
-                        }
-                        if (x === l) {
-                            result[0].push(id);
-                        }
-                    }
-                } else {
-                    result[0].push(id);
-                }
-            }
-            for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
-                let id = postselect.user[i].posts.B[j].id;
-                if (result[1].length > 0) {
-                    for (let x = 0, l = result[1].length; x < l;) {
-                        if (result[1][x] === id) {
-                            x = l + 1;
-                        } else {
-                            x++;
-                        }
-                        if (x === l) {
-                            result[1].push(id);
-                        }
-                    }
-                } else {
-                    result[1].push(id);
-                }
-            }
+            rebuildsp(i, postselect, 'A', result[0]);
+            rebuildsp(i, postselect, 'B', result[1]);
         }
         // show result
         for (let i = 0; i < presl; i++) {
-            for (let j = 0, ual = preselect.user[i].posts.A.length; j < ual; j++) {
-                let id = preselect.user[i].posts.A[j].id;
-                if (result[0].length > 0) {
-                    for (let x = 0, l = result[0].length; x < l;) {
-                        if (result[0][x] === id) {
-                            /* let postnum = postidtonum(data, 0, id);
-                            selectivepost(1, postnum);*/
-                            x = l + 1;
-                        } else {
-                            x++;
-                        }
-                        if (x === l) {
-                            let postnum = postidtonum(data, 0, id);
-                            selectivepost(1, postnum);
-                        }
-                    }
-                } else {
-                    let postnum = postidtonum(data, 0, id);
-                    selectivepost(1, postnum);
-                }
-            }
+            checkselect(i, preselect, 'A', result[0], false, 0);
+            // if pageA !== pageB
             if (!(eqpost(preselect.user[i].posts.A, preselect.user[i].posts.B))) {
                 // console.log(result);
-                for (let j = 0, ubl = preselect.user[i].posts.B.length; j < ubl; j++) {
-                    let id = preselect.user[i].posts.B[j].id;
-                    if (result[1].length > 0) {
-                        for (let x = 0, l = result[1].length; x < l;) {
-                            if (result[1][x] === id) {
-                                /* let postnum = postidtonum(data, 0, id);
-                                selectivepost(1, postnum);*/
-                                x = l + 1;
-                            } else {
-                                x++;
-                            }
-                            if (x === l) {
-                                let postnum = postidtonum(data, 1, id);
-                                selectivepost(2, postnum);
-                            }
-                        }
+                checkselect(i, preselect, 'B', result[1], false, 1);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {*} ui 
+     * @param {*} select 
+     * @param {*} page 
+     * @param {*} result 
+     */
+    function rebuildsp(ui, select, page, result) {
+        for (let j = 0, ubl = select.user[ui].posts[page].length; j < ubl; j++) {
+            let id = select.user[ui].posts[page][j].id;
+            if (result.length > 0) {
+                for (let x = 0, l = result.length; x < l;) {
+                    if (result[x] === id) {
+                        x = l + 1;
                     } else {
-                        let postnum = postidtonum(data, 1, id);
-                        selectivepost(2, postnum);
+                        x++;
+                    }
+                    if (x === l) {
+                        result.push(id);
                     }
                 }
+            } else {
+                result.push(id);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {*} ui 
+     * @param {*} select 
+     * @param {*} page 
+     * @param {*} result 
+     * @param {*} push 
+     * @param {*} pi 
+     */
+    function checkselect(ui, select, page, result, push, pi) {
+        for (let j = 0, ul = select.user[ui].posts[page].length; j < ul; j++) {
+            console.log(select.user[ui].posts[page]);
+            let id = select.user[ui].posts[page][j].id;
+            if (result.length > 0) {
+                for (let x = 0, l = result.length; x < l;) {
+                    if (result[x] === id) {
+                        /* let postnum = postidtonum(data, 0, id);
+                        selectivepost(1, postnum);*/
+                        x = l + 1;
+                    } else {
+                        x++;
+                    }
+                    if (x === l) {
+                        if (push) {
+                            result.push(id);
+                        }
+                        let postnum = postidtonum(data, pi, id);
+                        selectivepost((pi + 1), postnum);
+                    }
+                }
+            } else {
+                if (push) {
+                    result.push(id);
+                }
+                let postnum = postidtonum(data, pi, id);
+                let spi = pi + 1;
+                selectivepost(spi, postnum);
             }
         }
     }
