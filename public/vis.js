@@ -1295,7 +1295,7 @@ function overlapvis(data, select, mode) {
 
                 usergrid.selectAll('.star-interaction')
                     .on('mouseover', function (d) {
-                        console.log(this);
+                        // console.log(this);
                         usergrid.selectAll('.star-title')
                             .style('display', 'block');
 
@@ -1313,7 +1313,7 @@ function overlapvis(data, select, mode) {
                         interactionLabel
                             .datum(d)
                             .text((d) => {
-                                console.log(d);
+                                // console.log(d);
                                 let post = d.datum.posts[d.key];
                                 let value = post === undefined ? 0 : post.length;
                                 return d.key + ':' + value;
@@ -1729,6 +1729,8 @@ function activepost(data, preselect, postselect) {
     let presl = preselect.user.length;
     let postsl = postselect.user.length;
     console.log(presl, postsl);
+    // union
+    /*
     if (postsl > presl) {
         for (let i = 0; i < postsl; i++) {
             console.log(postselect.user[i]);
@@ -1758,6 +1760,243 @@ function activepost(data, preselect, postselect) {
                 checkselect(i, preselect, 'B', result[1], false, 1);
             }
         }
+    }*/
+
+    // intersection
+    // result = postselect.actpost;
+    if (postsl > presl) {
+        for (let i = 0; i < postsl; i++) {
+            if (presl > 0) {
+                console.log('>');
+                let del = [];
+                for (let x = 0, l = result[0].length; x < l; x++) {
+                    for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual;) {
+                        let id = postselect.user[i].posts.A[j].id;
+                        if (result[0][x] === id) {
+                            // console.log('===', result[0], id);
+                            j = ual + 1;
+                        } else {
+                            j++;
+                        }
+                        if (j === ual) {
+                            let postnum = postidtonum(data, 0, result[0][x]);
+                            selectivepost(1, postnum);
+                            del.push(result[0][x]);
+                            // console.log(result[0][x], postnum);
+                        }
+                    }
+                }
+                result[0] = result[0].filter((x) => !del.includes(x));
+                del = [];
+                for (let x = 0, l = result[1].length; x < l; x++) {
+                    for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl;) {
+                        let id = postselect.user[i].posts.B[j].id;
+                        if (result[1][x] === id) {
+                            // console.log('===', result[1], id);
+                            j = ubl + 1;
+                        } else {
+                            j++;
+                        }
+                        if (j === ubl) {
+                            let postnum = postidtonum(data, 1, result[1][x]);
+                            selectivepost(2, postnum);
+                            del.push(result[1][x]);
+                            // console.log(result[1][x], postnum);
+                        }
+                    }
+                }
+                result[1] = result[1].filter((x) => !del.includes(x));
+            } else {
+                for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
+                    let id = postselect.user[i].posts.A[j].id;
+                    let postnum = postidtonum(data, 0, id);
+                    selectivepost(1, postnum);
+                    result[0].push(id);
+                    console.log(id, postnum);
+                }
+                for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
+                    let id = postselect.user[i].posts.B[j].id;
+                    let postnum = postidtonum(data, 1, id);
+                    selectivepost(2, postnum);
+                    result[1].push(id);
+                    console.log(id, postnum);
+                }
+            }
+        }
+    } else {
+        let userlistA = getlower(postselect, 'A', 10);
+        let userlistB = getlower(postselect, 'B', 10);
+        console.log(userlistA, userlistB, result);
+        let pl = postselect.user.length;
+        if (pl > 0) {
+            for (let x = 0, ul = postselect.user[userlistA].posts.A.length; x < ul; x++) {
+                let xid = postselect.user[userlistA].posts.A[x].id;
+                let update = false;
+                let rl = result[0].length;
+                if (rl > 0) {
+                    for (let a = 0; a < rl;) {
+                        console.log(a, result[0][a]);
+                        if (xid !== result[0][a]) {
+                            a++;
+                        } else {
+                            console.log('noway');
+                            a = rl + 1;
+                        }
+                        if (a === rl) {
+                            console.log('what');
+                            update = true;
+                        }
+                    }
+                } else {
+                    update = true;
+                }
+                console.log(xid, update);
+                if (update) {
+                    for (let j = 0; j < pl;) {
+                        console.log('j = ', j, pl);
+                        /* if (j === userlistA) {
+                            console.log('=usa');
+                            j++;
+                        } else {*/
+                            for (let y = 0, ual = postselect.user[j].posts.A.length; y < ual;) {
+                                let yid = postselect.user[j].posts.A[y].id;
+                                console.log(yid);
+                                if (xid === yid) {
+                                    console.log('===');
+                                    y = ual + 1;
+                                    j++;
+                                } else {
+                                    console.log('next y');
+                                    y++;
+                                }
+                                if (y === ual) {
+                                    console.log('end y');
+                                    j = pl + 1;
+                                }
+                                if (j === pl && y === ual + 1) {
+                                    console.log('push', xid);
+                                    result[0].push(xid);
+                                    let postnum = postidtonum(data, 0, xid);
+                                    selectivepost(1, postnum);
+                                }
+                            }
+                        // }
+                    }
+                }
+            }
+            for (let x = 0, ul = postselect.user[userlistB].posts.B.length; x < ul; x++) {
+                let xid = postselect.user[userlistB].posts.B[x].id;
+                let update = false;
+                let rl = result[1].length;
+                if (rl > 0) {
+                    for (let b = 0; b < rl;) {
+                        if (xid !== result[1][b]) {
+                            b++;
+                        } else {
+                            b = rl + 1;
+                        }
+                        if (b === rl) {
+                            update = true;
+                        }
+                    }
+                } else {
+                    update = true;
+                }
+                let pl = postselect.user.length;
+                if (update) {
+                    for (let j = 0; j < pl;) {
+                        /* if (j === userlistB) {
+                            j++;
+                        } else {*/
+                            for (let y = 0, ubl = postselect.user[j].posts.B.length; y < ubl;) {
+                                let yid = postselect.user[j].posts.B[y].id;
+                                if (xid === yid) {
+                                    y = ubl + 1;
+                                    j++;
+                                } else {
+                                    y++;
+                                }
+                                if (y === ubl) {
+                                    j = pl + 1;
+                                }
+                                if (j === pl && y === ubl + 1) {
+                                    result[1].push(xid);
+                                    let postnum = postidtonum(data, 1, xid);
+                                    selectivepost(2, postnum);
+                                }
+                            }
+                        // }
+                    }
+                }
+            }
+        } else {
+            let deluser = [];
+            for (let i = 0; i < presl; i++) {
+                if (postsl > 0) {
+                    for (let j = 0; j < postsl;) {
+                        if (postselect.user[j].id !== preselect.user[i].id) {
+                            j++;
+                        } else {
+                            j = postsl + 1;
+                        }
+                        if (j === postsl) {
+                            deluser.push(preselect.user[i]);
+                        }
+                    }
+                } else {
+                    deluser.push(preselect.user[i]);
+                }
+            }
+            let ual = deluser[0].posts.A.length;
+            for (let i = 0; i < ual; i++) {
+                let id = deluser[0].posts.A[i].id;
+                result[0] = [];
+                let postnum = postidtonum(data, 0, id);
+                selectivepost(1, postnum);
+            }
+            let ubl = deluser[0].posts.B.length;
+            for (let i = 0; i < ubl; i++) {
+                let id = deluser[0].posts.B[i].id;
+                result[1] = [];
+                let postnum = postidtonum(data, 1, id);
+                selectivepost(2, postnum);
+            }
+        }
+    }
+
+    function getlower(select, page, times) {
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min; // The maximum is exclusive and the minimum is inclusive
+        }
+        let ul = select.user.length - 1;
+        let num = 0;
+        if (times > ul) {
+            times = ul;
+        }
+
+        function getlowercase(num, ul) {
+            let num1 = num;
+            let num2 = getRandomInt(0, ul);
+            if (ul > 2) {
+                while (num1 === num2) {
+                    num2 = getRandomInt(0, ul);
+                }
+            }
+            let c1 = select.user[num1].posts[page].length;
+            let c2 = select.user[num2].posts[page].length;
+            console.log(num1, c1, num2, c2);
+            if (c1 <= c2) {
+                return num1;
+            } else {
+                return num2;
+            }
+        }
+        for (let i = 0; i < times; i++) {
+            num = getlowercase(num, ul);
+        }
+        return num;
     }
 
     /**
