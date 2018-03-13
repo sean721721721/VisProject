@@ -807,9 +807,14 @@ var sortdegree = function sortdegree(olrlist) {
         if (l > 0) { //if list is not empty
             for (var i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
                 var degi = list[i][0].posts.A.length;
+                var post = list[i][0].posts.A;
+                var ipost = item.posts.A;
+                if (degi === 0) {
+                    degi = list[i][0].posts.B.length;
+                    post = list[i][0].posts.B;
+                    ipost = item.posts.B;
+                }
                 if (deg === degi) { // if find
-                    var post = list[i][0].posts.A;
-                    var ipost = item.posts.A;
                     makelist(list, post, ipost);
                     i = l;
                 } else if (deg > degi) { // push item in list to creat new list[deg]
