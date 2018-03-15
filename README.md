@@ -1,15 +1,18 @@
 # PageVis
 linux / windows diffenences
-public/nav.js
-views/partials/page/nav.hbs
-shared/templates/error.hbs
+---
+* public/nav.js
+* views/partials/page/nav.hbs
+* shared/templates/error.hbs
 
 autocheck bellow:
-app.js
-config.js
-controllers/text.js
-server/serverUtilities.js
+* app.js
+* config.js
+* controllers/text.js
+* server/serverUtilities.js
 
+data format
+```
 data
     pagedata
         id
@@ -47,7 +50,6 @@ data
         word
             word
             weight
-
     userdata
         A / B / O
             name
@@ -62,7 +64,7 @@ data
                                 name
                                 id
                             id
-                            like_count
+                            like_coun
                             message
                         created_time
                         from
@@ -70,12 +72,14 @@ data
                             id
                         id
                         like_count
-                        message 
+                        message
                     commentcount
                     id
                     like
                     share
-
+                    word
+                        word
+                        weight
 query
     co
     mincomment
@@ -86,8 +90,7 @@ query
     time2
     time3
     time4
-
 summary
     p1_post_count, p2_post_count, post_count
     p1_user_count, p2_user_count, user_count
-
+```
