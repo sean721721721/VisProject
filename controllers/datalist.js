@@ -830,6 +830,25 @@ var sortdegree = function sortdegree(olrlist) {
             list.push([item]);
         }
     }
+
+    function makeaddr(sortobj) {
+        function addr(data) {
+            var il = data.length
+            for (var i = 0; i < il; i++) {
+                var jl = data[i].length;
+                for (var j = 0; j < jl; j++) {
+                    var kl = data[i][j].length;
+                    for (var k = 0; k < kl; k++) {
+                        data[i][j][k].addr = i + ',' + j + ',' + k;
+                    }
+                }
+            }
+        }
+        addr(sortobj.A);
+        addr(sortobj.B);
+        addr(sortobj.O);
+        return sortobj;
+    }
     //var sortlist = [];
     var sortobj = {};
     sortobj.A = [];
@@ -889,6 +908,7 @@ var sortdegree = function sortdegree(olrlist) {
         //console.log(degree);
     }
     //console.log(degree.length === sortlist.length);
+    makeaddr(sortobj);
     return sortobj;
 }
 
