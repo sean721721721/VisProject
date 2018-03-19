@@ -8,6 +8,10 @@ yarn-error.log*
 # Pagedata
 pagedata/
 
+#PTTdata
+pttdata/
+ptt-web-crawler
+
 # Runtime data
 pids
 *.pid
