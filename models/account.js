@@ -1,6 +1,6 @@
 /* eslint-disable */
 var mongoose = require('mongoose');
-
+var db = require("../db");
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 
@@ -24,5 +24,5 @@ var passportLocalMongoose = require('passport-local-mongoose');
     var exports = module.exports = {}
     //exports.postSchema = postSchema;
     console.log("Account Schema");
-    module.exports = mongoose.model("Account", Account);
+    module.exports = db.db1.model("Account", Account);
 })();

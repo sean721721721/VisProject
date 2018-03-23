@@ -3,12 +3,12 @@ const os = require('os');
 if (os.platform() === "linux") {
 	module.exports = {
 		development: {
-			db: "localhost:27017/haka?authSource=admin",
+			db: ["localhost:27017/haka?authSource=admin", "localhost:27017/ptt?authSource=admin"],
 			dbUser: 'villager',
 			dbPwd: '4given4get'
 		},
 		production: {
-			db: "localhost:27017/haka?authSource=admin",
+			db: ["localhost:27017/haka?authSource=admin", "localhost:27017/ptt?authSource=admin"],
 			dbUser: 'villager',
 			dbPwd: '4given4get'
 		}
@@ -16,12 +16,12 @@ if (os.platform() === "linux") {
 } else {
 	module.exports = {
 		development: {
-			db: "localhost:27017/Pages?authSource=admin",
+			db: ["localhost:27017/Pages?authSource=admin","localhost:27017/ptt?authSource=admin"],
 			dbUser: 'villager',
 			dbPwd: '4given4get'
 		},
 		production: {
-			db: "localhost:27017/Pages?authSource=admin",
+			db: ["localhost:27017/Pages?authSource=admin","localhost:27017/ptt?authSource=admin"],
 			dbUser: 'villager',
 			dbPwd: '4given4get'
 		}

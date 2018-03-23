@@ -225,9 +225,11 @@ module.exports = function (app) {
 
     app.post('/vis', urlencodedParser, redirecturl);
 
+    // ajax getting data for the web
     app.get('/searching', urlencodedParser, urlhandle, async function (req, res) {
         //console.log(req.query);
         //if (req.session.passport.user == "villager") {
+        //console.log(req);
         var result = await query.callback(req, res);
         result.title = 'search';
         //console.log(result);
@@ -281,11 +283,13 @@ module.exports = function (app) {
         failureRedirect: '/login',
         failureFlash: true
     }), (req, res, next) => {
+        console.log('on!');
         req.session.save((err) => {
             if (err) {
                 console.log(err);
                 return next(err);
             }
+            console.log('in!');
             Account.findOne({
                 username: req.body.username
             }, (err, account) => {

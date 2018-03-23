@@ -34,9 +34,9 @@ db.once('open', function () {
     // we're connected!
 });
 
-var folders = ['data']; //, '2011', '2012'];
+var folders = ['Tech_Job']; //, '2011', '2012'];
 folders.forEach(folder => {
-    var root = "../ptt-web-crawler/";
+    var root = "../pttdata/";
     mongoose.model(folder, schema.postSchema)
     var pagepost = mongoose.model(folder);
     //console.log(typeof(root + '/' + folder))

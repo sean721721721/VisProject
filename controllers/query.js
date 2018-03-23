@@ -5,7 +5,7 @@ var assert = require('assert');
 var mongoose = require('mongoose');
 var dl = require('./datalist.js');
 var winston = require('winston');
-var schema = require('../models/postSchema.js');
+var db = require("../db");
 
 // Use native promises
 mongoose.Promise = global.Promise;
@@ -54,6 +54,29 @@ var queryobj = function queryobj(req, res, time1, time2) {
     */
     //var queryobj = queryobj(req, req.params.time1, req.params.time2);
     var queryobj = {};
+    if (req.params.posttype) {
+        if (req.params.posttype === 'PTT') {
+            if (time1 || time2) {
+                console.log(time1,time2);
+                if (time1) {
+                    if (!time2) {
+                        time2 = Date(Date.now());
+                    }
+                    queryobj['date'] = {
+                        $gte: time1,
+                        $lt: time2,
+                    };
+                } else {
+                    queryobj['date'] = {
+                        $lt: time2,
+                    }
+                }
+                return queryobj;
+            } else {
+                queryobj['type'] = req.params.posttype;
+            }
+        }
+    }
     if (req.params.postid) {
         queryobj['id'] = req.params.postid;
     }
@@ -71,9 +94,6 @@ var queryobj = function queryobj(req, res, time1, time2) {
                 $lt: time2,
             }
         }
-    }
-    if (req.params.posttype) {
-        queryobj['type'] = req.params.posttype;
     }
     if (req.params.fromname) {
         queryobj['from.name'] = req.params.fromname;
@@ -126,14 +146,22 @@ var queryobj = function queryobj(req, res, time1, time2) {
     return queryobj;
 };
 
-var findquery = function findquery(page, queryobj) {
+var findquery = function findquery(page, queryobj, ptt) {
     if (!page) {
         var page = '客台';
     }
     //console.log(options)
-    mongoose.model(page, schema.postSchema)
-    var pagepost = mongoose.model(page);
+    if (ptt) {
+        var schema = require('../models/pttSchema.js');
+        db.db2.model(page, schema.pttSchema)
+        var pagepost = db.db2.model(page);
+    } else {
+        var schema = require('../models/postSchema.js');
+        db.db1.model(page, schema.postSchema)
+        var pagepost = db.db1.model(page);
+    }
     //return Query(queryobj, options, pagepost, page);
+    //console.log(page,pagepost);
     return pagepost.find(queryobj, function (err, pagepost) {
         //logger.log('info',pagepost);
         return pagepost;
@@ -232,10 +260,14 @@ var callback = function callback(req, res) {
         var time3 = req.params.time3;
         var time4 = req.params.time4;
         var queryobj1 = queryobj(req, res, time1, time2);
+        var ptt = false;
+        if (req.params.posttype === 'PTT') {
+            ptt = true;
+        }
         console.log(queryobj1);
         if (page1 === page2 && time1 === time3 && time2 === time4) {
             return new Promise((resolve, reject) => {
-                    findquery(page1, queryobj1).then(result => {
+                    findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
                         //var response = [];
                         var ul1 = dl.ualist(result);
@@ -252,8 +284,8 @@ var callback = function callback(req, res) {
                             title: 'query',
                             query: req.params,
                             summary: [
-                                [result.length, result.length, result.length*2],
-                                [ul1.length, ul1.length, ul1.length*2]
+                                [result.length, result.length, result.length * 2],
+                                [ul1.length, ul1.length, ul1.length * 2]
                             ],
                             data: [postlist, oldata, sortdata],
                         };
@@ -266,7 +298,7 @@ var callback = function callback(req, res) {
         } else {
             var queryobj2 = queryobj(req, res, time3, time4);
             console.log(queryobj2);
-            return Promise.all([findquery(page1, queryobj1), findquery(page2, queryobj2)])
+            return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {
                     console.log("q1 lenght: " + result[0].length);
                     console.log("q2 lenght: " + result[1].length);

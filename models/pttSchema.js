@@ -33,7 +33,7 @@ var Schema = mongoose.Schema;
         content: String,
         date: Date,
         ip: String,
-        message_conut: countSchema,
+        message_count: countSchema,
         messages: [messageSchema],
         url: String,
     }, {
@@ -41,5 +41,5 @@ var Schema = mongoose.Schema;
     });
 
     var exports = module.exports = {}
-    exports.postSchema = postSchema;
+    exports.pttSchema = postSchema;
 })();

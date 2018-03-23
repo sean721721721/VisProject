@@ -19,7 +19,7 @@ var options = {
  * remove if not needed
  */
 require("./db").connect(config);
-//console.log('db');
+console.log('db');
 /* 
  * Load all models and controllers
  * remove if not needed, and you can also remove fs variable declaration above
@@ -36,7 +36,7 @@ console.log('controlers loaded');
 require("./settings")(app, config);
 console.log('settings loaded');
 /* 
- * Start listening 
+ * Start listening
  */
 if (os.platform() === "linux") {
   app.set("port", process.env.PORT || 3000);

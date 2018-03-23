@@ -2,7 +2,7 @@
 var express = require("express");
 var exphbs = require('express-handlebars');
 var path = require('path');
-var ansyc = require('./server/ansyc.js');
+// var ansyc = require('./server/ansyc.js');
 // mongodbExpressHandler = require('./server/mongodbExpressHandler.js'),
 var tableHandler = require('./server/tableHandler.js');
 
