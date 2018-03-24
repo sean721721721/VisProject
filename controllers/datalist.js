@@ -59,64 +59,156 @@ var user_list = function user_list(files) {
 }
 
 //for dbquery
-var ualist = function ualist(files) {
+var ualist = function ualist(files, ptt) {
     var userlist = [];
-    var data, reaction, user, post, reactionlength;
     var filelength = files.length;
     console.log("file length: " + filelength)
-    files = jb.cut(files, function () {
-        // list.push(data);
-        //console.log(data.id)
-        var find = false;
-        for (var i = 0; i < filelength; i++) {
-            //console.log(userlist.length)
-            data = files[i];
-            if (data.reactions.list !== undefined) {
-                reactionlength = data.reactions.list.length;
-                if (reactionlength !== 0) {
-                    //console.log(userlist.length)
-                    for (var k = 0; k < reactionlength; k++) {
-                        reaction = data.reactions.list[k];
-                        post = {};
-                        post["id"] = data.id
-                        post["like"] = post_liketype(post, reaction);
-                        post["commentcount"] = 0;
-                        post["share"] = false;
-                        post["clist"] = [];
-                        post["word"] = data.word;
-                        //console.log(post)
-                        user = {};
-                        user["id"] = reaction.id;
-                        user["name"] = reaction.name;
-                        user["posts"] = [];
-                        //console.log(userlist.length)
-                        find = false;
-                        for (var a = 0; a < userlist.length; a++) {
-                            if (userlist[a].id == user.id) {
-                                userlist[a].posts.push(post);
-                                a = userlist.length;
-                                find = true;
+    if (ptt) {
+        var data, message, user, post, comment, messageslength;
+        files = jb.cut(files, function () {
+            //console.log(files);
+            var find = false;
+            for (var i = 0; i < filelength; i++) {
+                data = files[i];
+                find = false;
+                var id = data.author.split(" ")[0];
+                post = {};
+                post["article_id"] = data.article_id;
+                post["article_title"] = data.article_title;
+                post["author"] = data.author;
+                post["board"] = data.board;
+                post["content"] = data.content;
+                post["word"] = data.word;
+                post["date"] = data.date;
+                post["ip"] = data.ip;
+                post["message_conut"] = data.message_conut;
+                for (var a = 0; a < userlist.length; a++) {
+                    if (userlist[a].id == id) {
+                        userlist[a].posts.push(post);
+                        a = userlist.length;
+                        find = true;
+                    }
+                }
+                if (find == false) {
+                    user = {};
+                    user["id"] = id;
+                    user["posts"] = [];
+                    user["comments"] = [];
+                    user.posts.push(post);
+                    userlist.push(user);
+                }
+                if (data.messages !== undefined) {
+                    messageslength = data.messages.length;
+                    if (messageslength !== 0) {
+                        for (var j = 0; j < messageslength; j++) {
+                            message = data.messages[j];
+                            comment = {};
+                            comment["id"] = data.article_id;
+                            pushtype(comment, message);
+                            comment["word"] = data.word;
+                            user = {};
+                            user["id"] = message.push_userid;
+                            user["posts"] = [];
+                            user["comments"] = [];
+                            find = false;
+                            for (var a = 0; a < userlist.length; a++) {
+                                if (userlist[a].id == user.id) {
+                                    userlist[a].comments.push(comment);
+                                    a = userlist.length;
+                                    find = true;
+                                }
                             }
-                        }
-                        if (find == false) {
-                            user.posts.push(post);
-                            //console.log(post)
-                            //console.log(user.posts[0])
-                            userlist.push(user);
-                            //people++;
-                            //console.log(user)
-                            //console.log("---------------------")
+                            if (find == false) {
+                                user.comments.push(comment);
+                                userlist.push(user);
+                            }
                         }
                     }
                 }
             }
-        }
-        comment_countdb(files, userlist);
-        share_db(files, userlist);
-        console.log("userlist length: " + userlist.length)
-        //console.log("people "+people)
-    });
+        })
+    } else {
+        var data, reaction, user, post, reactionlength;
+        files = jb.cut(files, function () {
+            // list.push(data);
+            //console.log(data.id)
+            var find = false;
+            for (var i = 0; i < filelength; i++) {
+                //console.log(userlist.length)
+                data = files[i];
+                if (data.reactions.list !== undefined) {
+                    reactionlength = data.reactions.list.length;
+                    if (reactionlength !== 0) {
+                        //console.log(userlist.length)
+                        for (var k = 0; k < reactionlength; k++) {
+                            reaction = data.reactions.list[k];
+                            post = {};
+                            post["id"] = data.id;
+                            post["like"] = post_liketype(post, reaction);
+                            post["commentcount"] = 0;
+                            post["share"] = false;
+                            post["clist"] = [];
+                            post["word"] = data.word;
+                            //console.log(post)
+                            user = {};
+                            user["id"] = reaction.id;
+                            user["name"] = reaction.name;
+                            user["posts"] = [];
+                            //console.log(userlist.length)
+                            find = false;
+                            for (var a = 0; a < userlist.length; a++) {
+                                if (userlist[a].id == user.id) {
+                                    userlist[a].posts.push(post);
+                                    a = userlist.length;
+                                    find = true;
+                                }
+                            }
+                            if (find == false) {
+                                user.posts.push(post);
+                                //console.log(post)
+                                //console.log(user.posts[0])
+                                userlist.push(user);
+                                //people++;
+                                //console.log(user)
+                                //console.log("---------------------")
+                            }
+                        }
+                    }
+                }
+            }
+            comment_countdb(files, userlist);
+            share_db(files, userlist);
+            console.log("userlist length: " + userlist.length)
+            //console.log("people "+people)
+        });
+    }
+    console.log(userlist);
     return userlist;
+}
+
+function pushtype(post, message) {
+    if (message.push_tag === "推") {
+        if (post["push"]) {
+            post["push"].push(message);
+        } else {
+            post["push"] = [message];
+        }
+        //return 1;
+    } else if (message.push_tag === "→") {
+        if (post["neutral"]) {
+            post["neutral"].push(message);
+        } else {
+            post["neutral"] = [message];
+        }
+        //return 2;
+    } else if (message.push_tag === "噓") {
+        if (post["boo"]) {
+            post["boo"].push(message);
+        } else {
+            post["boo"] = [message];
+        }
+        //return 3;
+    }
 }
 
 //check like type

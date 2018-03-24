@@ -283,13 +283,11 @@ module.exports = function (app) {
         failureRedirect: '/login',
         failureFlash: true
     }), (req, res, next) => {
-        console.log('on!');
         req.session.save((err) => {
             if (err) {
                 console.log(err);
                 return next(err);
             }
-            console.log('in!');
             Account.findOne({
                 username: req.body.username
             }, (err, account) => {

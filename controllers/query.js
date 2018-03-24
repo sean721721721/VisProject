@@ -57,7 +57,7 @@ var queryobj = function queryobj(req, res, time1, time2) {
     if (req.params.posttype) {
         if (req.params.posttype === 'PTT') {
             if (time1 || time2) {
-                console.log(time1,time2);
+                console.log(time1, time2);
                 if (time1) {
                     if (!time2) {
                         time2 = Date(Date.now());
@@ -270,7 +270,7 @@ var callback = function callback(req, res) {
                     findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
                         //var response = [];
-                        var ul1 = dl.ualist(result);
+                        var ul1 = dl.ualist(result, ptt);
                         var postlist = dl.bindpostlist(result, result);
                         var userlist = dl.binduserlist(ul1, ul1);
                         var oldata = dl.overlap(userlist, 'all');
@@ -303,8 +303,8 @@ var callback = function callback(req, res) {
                     console.log("q1 lenght: " + result[0].length);
                     console.log("q2 lenght: " + result[1].length);
                     var response = [];
-                    var ul1 = dl.ualist(result[0]);
-                    var ul2 = dl.ualist(result[1]);
+                    var ul1 = dl.ualist(result[0], ptt);
+                    var ul2 = dl.ualist(result[1], ptt);
                     var postlist = dl.bindpostlist(result[0], result[1]);
                     var userlist = dl.binduserlist(ul1, ul2);
                     var oldata = userlist;

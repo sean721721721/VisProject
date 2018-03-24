@@ -19,7 +19,7 @@ var options = {
  * remove if not needed
  */
 require("./db").connect(config);
-console.log('db');
+console.log('db connected');
 /* 
  * Load all models and controllers
  * remove if not needed, and you can also remove fs variable declaration above

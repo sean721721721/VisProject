@@ -107,6 +107,23 @@ var cut = function cut(posts, callback) {
 
             next();
 
+        } else if (data[i].content) {
+            var temp = data[i].content;
+            var str = "";
+            for (var j = 0; j < temp.length; j++) {
+
+                str += temp.substr(j, 1).replace(pattern, "");
+            }
+            //temp = temp.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g,'');
+            var message_length = str.length;
+            str = nodejieba.extract(str, 10);
+            var word = str;
+            var post = data[i];
+            post.word = str;
+            result.push(post);
+
+            next();
+
         } else {
             next();
         }

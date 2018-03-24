@@ -1,6 +1,5 @@
 # PageVis
 ## linux / windows diffenences
-***
 ### manual setting
 * public/nav.js
 * views/partials/page/nav.hbs
@@ -13,7 +12,6 @@
 * server/serverUtilities.js
 
 ## database
-***
 ### db1 facebook pages
 ```
 data

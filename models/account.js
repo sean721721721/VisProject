@@ -23,6 +23,6 @@ var passportLocalMongoose = require('passport-local-mongoose');
 
     var exports = module.exports = {}
     //exports.postSchema = postSchema;
-    console.log("Account Schema");
+    //console.log("Account Schema");
     module.exports = db.db1.model("Account", Account);
 })();
