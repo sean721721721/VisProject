@@ -271,7 +271,7 @@ var callback = function callback(req, res) {
                         console.log("q1 lenght: " + result.length);
                         //var response = [];
                         var ul1 = dl.ualist(result, ptt);
-                        var postlist = dl.bindpostlist(result, result);
+                        var postlist = dl.bindpostlist(result, result, ptt);
                         var userlist = dl.binduserlist(ul1, ul1);
                         var oldata = dl.overlap(userlist, 'all');
                         console.log('All');
@@ -305,7 +305,7 @@ var callback = function callback(req, res) {
                     var response = [];
                     var ul1 = dl.ualist(result[0], ptt);
                     var ul2 = dl.ualist(result[1], ptt);
-                    var postlist = dl.bindpostlist(result[0], result[1]);
+                    var postlist = dl.bindpostlist(result[0], result[1], ptt);
                     var userlist = dl.binduserlist(ul1, ul2);
                     var oldata = userlist;
                     if (req.params.co === 'Co reaction') {

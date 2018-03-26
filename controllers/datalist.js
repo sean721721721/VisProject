@@ -81,20 +81,22 @@ var ualist = function ualist(files, ptt) {
                 post["word"] = data.word;
                 post["date"] = data.date;
                 post["ip"] = data.ip;
-                post["message_conut"] = data.message_conut;
+                post["publish"] = true;
+                post["message_count"] = data.message_count;
+                post["pushing"] = [];
+                post["boo"] = [];
+                post["neutral"] = [];
                 for (var a = 0; a < userlist.length; a++) {
-                    if (userlist[a].id == id) {
+                    if (userlist[a].id === id) {
                         userlist[a].posts.push(post);
                         a = userlist.length;
                         find = true;
                     }
                 }
-                if (find == false) {
+                if (find === false) {
                     user = {};
                     user["id"] = id;
-                    user["posts"] = [];
-                    user["comments"] = [];
-                    user.posts.push(post);
+                    user["posts"] = [post];
                     userlist.push(user);
                 }
                 if (data.messages !== undefined) {
@@ -102,24 +104,21 @@ var ualist = function ualist(files, ptt) {
                     if (messageslength !== 0) {
                         for (var j = 0; j < messageslength; j++) {
                             message = data.messages[j];
-                            comment = {};
-                            comment["id"] = data.article_id;
-                            pushtype(comment, message);
-                            comment["word"] = data.word;
                             user = {};
                             user["id"] = message.push_userid;
                             user["posts"] = [];
-                            user["comments"] = [];
                             find = false;
+                            post.publish = false;
                             for (var a = 0; a < userlist.length; a++) {
-                                if (userlist[a].id == user.id) {
-                                    userlist[a].comments.push(comment);
+                                if (userlist[a].id === user.id) {
+                                    pushtype(userlist[a].posts, message);
                                     a = userlist.length;
                                     find = true;
                                 }
                             }
-                            if (find == false) {
-                                user.comments.push(comment);
+                            if (find === false) {
+                                pushtype(post, message);
+                                user.posts.push(post);
                                 userlist.push(user);
                             }
                         }
@@ -182,29 +181,35 @@ var ualist = function ualist(files, ptt) {
             //console.log("people "+people)
         });
     }
-    console.log(userlist);
+    //console.log(userlist);
     return userlist;
 }
 
 function pushtype(post, message) {
     if (message.push_tag === "推") {
-        if (post["push"]) {
-            post["push"].push(message);
+        if (post["pushing"]) {
+            post["pushing"].push(message);
         } else {
-            post["push"] = [message];
+            post["pushing"] = [message];
+            //post["neutral"] = [];
+            //post["boo"] = [];
         }
         //return 1;
     } else if (message.push_tag === "→") {
         if (post["neutral"]) {
             post["neutral"].push(message);
         } else {
+            //post["push"] = [];
             post["neutral"] = [message];
+            //post["boo"] = [];
         }
         //return 2;
     } else if (message.push_tag === "噓") {
         if (post["boo"]) {
             post["boo"].push(message);
         } else {
+            //post["push"] = [];
+            //post["neutral"] = [];
             post["boo"] = [message];
         }
         //return 3;
@@ -509,30 +514,54 @@ function share_db(files, userlist) {
 }
 
 //slow code, need to improve
-var bindpostlist = function bindpostlist(qobj1, qobj2) {
+var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
     function postobj(obj) {
-        var posts = {};
+        /*var posts = {};
         for (prop in obj) {
             //posts[prop] = obj[prop];
-            if (prop.match(/^(id|created_time|type|message|from|shares|attachments|sharedposts|word)$/)) {
-                posts[prop] = obj[prop];
+            if (ptt) {
+                if (prop.match(/^(article_id|article_title|author|board|content|date|ip|message_count|word)$/)) {
+                    posts[prop] = obj[prop];
+                } else {
+                    var messages = {};
+                    for (prop in obj.messages) {
+                        if (prop.match(/^(push_content|push_ipdatetime|push_tag|push_userid)$/)) {
+                            messages[prop] = obj.messages[prop];
+                        }
+                    }
+                    posts.messages = messages;
+                }
             } else {
-                var reactions = {};
-                for (prop in obj.reactions) {
-                    if (prop.match(/^(like|love|haha|wow|angry|sad|thankful)$/)) {
-                        reactions[prop] = obj.reactions[prop];
+                if (prop.match(/^(id|created_time|type|message|from|shares|attachments|sharedposts|word)$/)) {
+                    posts[prop] = obj[prop];
+                } else {
+                    var reactions = {};
+                    for (prop in obj.reactions) {
+                        if (prop.match(/^(like|love|haha|wow|angry|sad|thankful)$/)) {
+                            reactions[prop] = obj.reactions[prop];
+                        }
                     }
-                }
-                posts.reactions = reactions;
-                var comments = {};
-                for (prop in obj.comments) {
-                    if (prop.match(/^(context|created_time|summary)$/)) {
-                        comments[prop] = obj.comments[prop];
+                    posts.reactions = reactions;
+                    var comments = {};
+                    for (prop in obj.comments) {
+                        if (prop.match(/^(context|created_time|summary)$/)) {
+                            comments[prop] = obj.comments[prop];
+                        }
                     }
+                    posts.comments = comments;
                 }
-                posts.comments = comments;
+            }
+        }*/
+        for (prop in obj) {
+            if (prop.match(/^(id)$/)) {
+                if (ptt) {
+                    obj[prop] = obj.article_id;
+                } else {
+                    obj[prop] = obj.id;
+                }
             }
         }
+        var posts = obj;
         //delete posts.comments;
         //delete posts.reactions;
         /*
@@ -806,7 +835,7 @@ var sortdegree = function sortdegree(olrlist) {
     function sort(obj, item, index) {
         function makelist(list, post, ipost) {
             var degi = post.length;
-            for (var a = 0; a < degi;) { // compare list[i][0] and item 's postsA
+            for (var a = 0; a < degi;) { // compare list[i][0] and item's postsA
                 for (var b = 0; b < deg; b++) {
                     if (post[a].id === ipost[b].id) {
                         a++;
@@ -837,12 +866,11 @@ var sortdegree = function sortdegree(olrlist) {
         var degB = item.posts.B.length;
         var temp = [];
         var eqdeg = false;
-        if (deg === 0 || degB === 0) { // if item's deg eqaul 0
-            if (deg === 0) {
-                list = obj.B[index];
-            } else {
-                list = obj.A[index];
-            }
+        if (deg === 0) {
+            list = obj.B[index];
+        }
+        if (degB === 0) { // if item's deg eqaul 0
+            list = obj.A[index];
         }
         //console.log(list);
         var l = list.length;
@@ -900,13 +928,15 @@ var sortdegree = function sortdegree(olrlist) {
             for (var i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
                 var degi = list[i][0].posts.A.length;
                 var post = list[i][0].posts.A;
+                var degib = list[i][0].posts.B.length;
                 var ipost = item.posts.A;
                 if (degi === 0) {
-                    degi = list[i][0].posts.B.length;
+                    degi = degib;
                     post = list[i][0].posts.B;
                     ipost = item.posts.B;
                 }
-                if (deg === degi) { // if find
+                if (deg === degi && degib !== 0) { // if find
+                    //console.log(deg, list[i][0].posts.A.length, list[i][0].posts.B.length)
                     makelist(list, post, ipost);
                     i = l;
                 } else if (deg > degi) { // push item in list to creat new list[deg]
@@ -914,6 +944,7 @@ var sortdegree = function sortdegree(olrlist) {
                         list.push([item]);
                     }
                 } else { // insert item in new list[i]
+                    //console.log(deg, list[i][0].posts.A.length, list[i][0].posts.B.length)
                     list.splice(i, 0, [item]);
                     i = l;
                 }
