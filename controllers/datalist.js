@@ -81,6 +81,7 @@ var ualist = function ualist(files, ptt) {
                 post["word"] = data.word;
                 post["date"] = data.date;
                 post["ip"] = data.ip;
+                post["url"] = data.url;
                 post["publish"] = true;
                 post["message_count"] = data.message_count;
                 post["pushing"] = [];
@@ -93,38 +94,14 @@ var ualist = function ualist(files, ptt) {
                         find = true;
                     }
                 }
-                if (find === false) {
+                if (!find) {
                     user = {};
                     user["id"] = id;
                     user["posts"] = [post];
                     userlist.push(user);
                 }
-                if (data.messages !== undefined) {
-                    messageslength = data.messages.length;
-                    if (messageslength !== 0) {
-                        for (var j = 0; j < messageslength; j++) {
-                            message = data.messages[j];
-                            user = {};
-                            user["id"] = message.push_userid;
-                            user["posts"] = [];
-                            find = false;
-                            post.publish = false;
-                            for (var a = 0; a < userlist.length; a++) {
-                                if (userlist[a].id === user.id) {
-                                    pushtype(userlist[a].posts, message);
-                                    a = userlist.length;
-                                    find = true;
-                                }
-                            }
-                            if (find === false) {
-                                pushtype(post, message);
-                                user.posts.push(post);
-                                userlist.push(user);
-                            }
-                        }
-                    }
-                }
             }
+            messaageuserlist(files, userlist)
         })
     } else {
         var data, reaction, user, post, reactionlength;
@@ -156,13 +133,13 @@ var ualist = function ualist(files, ptt) {
                             //console.log(userlist.length)
                             find = false;
                             for (var a = 0; a < userlist.length; a++) {
-                                if (userlist[a].id == user.id) {
+                                if (userlist[a].id === user.id) {
                                     userlist[a].posts.push(post);
                                     a = userlist.length;
                                     find = true;
                                 }
                             }
-                            if (find == false) {
+                            if (!find) {
                                 user.posts.push(post);
                                 //console.log(post)
                                 //console.log(user.posts[0])
@@ -216,6 +193,59 @@ function pushtype(post, message) {
     }
 }
 
+function messaageuserlist(files, userlist) {
+    var filelength = files.length;
+    for (var i = 0; i < filelength; i++) {
+        data = files[i];
+        var id = data.author.split(" ")[0];
+        post = {};
+        post["article_id"] = data.article_id;
+        post["article_title"] = data.article_title;
+        post["author"] = data.author;
+        post["board"] = data.board;
+        post["content"] = data.content;
+        post["word"] = data.word;
+        post["date"] = data.date;
+        post["ip"] = data.ip;
+        post["url"] = data.url;
+        post["publish"] = false;
+        post["message_count"] = data.message_count;
+        post["pushing"] = [];
+        post["boo"] = [];
+        post["neutral"] = [];
+        if (data.messages !== undefined) {
+            messageslength = data.messages.length;
+            if (messageslength !== 0) {
+                for (var j = 0; j < messageslength; j++) {
+                    message = data.messages[j];
+                    find = false;
+                    user = {};
+                    user["id"] = message.push_userid;
+                    user["posts"] = [];
+                    post.publish = false;
+                    for (var a = 0; a < userlist.length; a++) {
+                        if (userlist[a].id === message.push_userid) { // insert message into user's posts obj
+                            pushtype(userlist[a].posts, message);
+                            //console.log(userlist[a], message);
+                            a = userlist.length;
+                            find = true;
+                        }
+                    }
+                    if (!find) { // create new user
+                        post["pushing"] = [];
+                        post["boo"] = [];
+                        post["neutral"] = [];
+                        pushtype(post, message);
+                        user.posts.push(post);
+                        userlist.push(user);
+                        //console.log(user, message);
+                    }
+                }
+            }
+        }
+    }
+}
+
 //check like type
 function post_liketype(post, reaction) {
     if (reaction.type === "LIKE") {
@@ -254,14 +284,14 @@ function comment_count(files, userlist) {
                         comment = data.comments.context[k];
                         findid = false;
                         for (var a = 0; a < listlength; a++) {
-                            if (comment.from.id == userlist[a].id) {
+                            if (comment.from.id === userlist[a].id) {
                                 findid = true;
                                 //console.log("find")
                                 var length = userlist[a].posts.length;
                                 //console.log(length)
                                 findpost = false;
                                 for (var b = 0; b < length; b++) {
-                                    if (data.id == userlist[a].posts[b].id) {
+                                    if (data.id === userlist[a].posts[b].id) {
                                         findpost = true;
                                         //console.log("find")
                                         userlist[a].posts[b].commentcount++;
@@ -333,14 +363,14 @@ function commentcount(data, comment, userlist) {
     let findid = false;
     var listlength = userlist.length;
     for (var a = 0; a < listlength; a++) {
-        if (comment.from.id == userlist[a].id) {
+        if (comment.from.id === userlist[a].id) {
             findid = true;
             //console.log("find")
             var length = userlist[a].posts.length;
             //console.log(length)
             let findpost = false;
             for (var b = 0; b < length; b++) {
-                if (data.id == userlist[a].posts[b].id) {
+                if (data.id === userlist[a].posts[b].id) {
                     findpost = true;
                     //console.log("find")
                     userlist[a].posts[b].commentcount++;
@@ -399,14 +429,14 @@ function share_count(files, userlist) {
                         sharedpost = data.sharedposts.data[k];
                         findid = false;
                         for (var a = 0; a < listlength; a++) {
-                            if (sharedpost.from.id == userlist[a].id) {
+                            if (sharedpost.from.id === userlist[a].id) {
                                 findid = true;
                                 //console.log("find")
                                 var length = userlist[a].posts.length;
                                 //console.log(length)
                                 findpost = false;
                                 for (var b = 0; b < length; b++) {
-                                    if (data.id == userlist[a].posts[b].id) {
+                                    if (data.id === userlist[a].posts[b].id) {
                                         findpost = true;
                                         //console.log("find")
                                         userlist[a].posts[b].share = true;
@@ -465,14 +495,14 @@ function share_db(files, userlist) {
                     sharedpost = data.sharedposts.data[k];
                     findid = false;
                     for (var a = 0; a < listlength; a++) {
-                        if (sharedpost.from.id == userlist[a].id) {
+                        if (sharedpost.from.id === userlist[a].id) {
                             findid = true;
                             //console.log("find")
                             var length = userlist[a].posts.length;
                             //console.log(length)
                             findpost = false;
                             for (var b = 0; b < length; b++) {
-                                if (data.id == userlist[a].posts[b].id) {
+                                if (data.id === userlist[a].posts[b].id) {
                                     findpost = true;
                                     //console.log("find")
                                     userlist[a].posts[b].share = true;
@@ -567,7 +597,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
         /*
         var reactions = {};
         for (prop in obj.reactions) {
-            if (prop == "list") {
+            if (prop === "list") {
                 reactions[prop] = obj.reactions[prop];
                 delete reactions.list;
             }
@@ -576,7 +606,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
         posts.reactions = reactions;
         var comments = {};
         for (prop in obj.comments) {
-            if (prop == "context") {
+            if (prop === "context") {
                 comments[prop] = obj.comments[prop];
                 delete comments.context;
             }
@@ -1032,6 +1062,7 @@ var sortdegree = function sortdegree(olrlist) {
     }
     //console.log(degree.length === sortlist.length);
     makeaddr(sortobj);
+    console.log(sortobj);
     return sortobj;
 }
 
