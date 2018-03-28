@@ -141,7 +141,7 @@
     </script>
     <script id="detailpttuser-view" type="text/x-handlebars-template">
         <div id="user">
-            <p>{{{id}}}</p>
+            <p class="user">{{{id}}}</p>
             <div>Activities: {{{summary}}}</div>
             <div id="pageA">{{{page1}}} Activities:{{{activities1}}}</div>
             <div id="pageB">{{{page2}}} Activities:{{{activities2}}}</div>
@@ -152,9 +152,10 @@
                         p{{{num}}}: {{{article_title}}}
                     </button>
                     <div class="panel">
-                        <p>{{{author}}}</p>
+                        <p id="author">{{{author}}}</p>
                         <p>{{{date}}}_{{{ip}}}</p>
                         <p>{{{toWord word}}}</p>
+                        {{{pttURL url}}}
                         <div>
                             <button class="subaccordion commentA">{{{count pushing}}} 推</button>
                             <div class="panel">
@@ -191,9 +192,10 @@
                         p{{{num}}}: {{{article_title}}}
                     </button>
                     <div class="panel">
-                        <p>{{{author}}}</p>
+                        <p id="author">{{{author}}}</p>
                         <p>{{{date}}}_{{{ip}}}</p>
                         <p>{{{toWord word}}}</p>
+                        {{{pttURL url}}}
                         <div>
                             <button class="subaccordion commentB">{{{count pushing}}} 推</button>
                             <div class="panel">

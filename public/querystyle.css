@@ -510,6 +510,10 @@ div.panel {
     width: 50%;
 }
 
+.author {
+    color: red;
+}
+
 /**************************************Loading effect*/
 
 .wrapperloading {

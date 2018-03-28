@@ -1822,9 +1822,16 @@ function activeuser(data, preselect, postselect, mode) {
  * @return {number}
  */
 function postidtonum(data, page, postid) {
+    let ptt = data.query.posttype === 'PTT';
     let pagedata = data.data[0][page];
+    let id;
     for (let i = 0, la = pagedata.length; i < la; i++) {
-        if (pagedata[i].id === postid) {
+        if (ptt) {
+            id = pagedata[i].article_id;
+        } else {
+            id = pagedata[i].id;
+        }
+        if (id === postid) {
             return i + 1;
         }
     }
@@ -2226,15 +2233,26 @@ function userdetail(data, select) {
     let detail = document.querySelector('#detail');
     let initdetail = '';
     let index = select.ci.user;
+    let point;
     if (select.user[index] !== undefined) {
-        let point = select.user[index];
+        point = select.user[index];
         for (let i = 0, l = point.posts.A.length; i < l; i++) {
-            let id = point.posts.A[i].id;
+            let id;
+            if (ptt) {
+                id = point.posts.A[i].article_id;
+            } else {
+                id = point.posts.A[i].id;
+            }
             let postnum = postidtonum(data, 0, id);
             point.posts.A[i].num = postnum;
         }
         for (let i = 0, l = point.posts.B.length; i < l; i++) {
-            let id = point.posts.B[i].id;
+            let id;
+            if (ptt) {
+                id = point.posts.B[i].article_id;
+            } else {
+                id = point.posts.B[i].id;
+            }
             let postnum = postidtonum(data, 1, id);
             point.posts.B[i].num = postnum;
         }
@@ -2255,6 +2273,13 @@ function userdetail(data, select) {
         let html = template(content);
         detail.innerHTML += html;
         paccordion();
+    }
+    // highlight author if self post
+    let author = document.querySelectorAll('#author');
+    for (let i = 0; i < author.length; i++) {
+        if (author[i].innerHTML.split(' ')[0] === point.id) {
+            author[i].classList.toggle('author');
+        };
     }
 }
 

@@ -1062,7 +1062,7 @@ var sortdegree = function sortdegree(olrlist) {
     }
     //console.log(degree.length === sortlist.length);
     makeaddr(sortobj);
-    console.log(sortobj);
+    //console.log(sortobj);
     return sortobj;
 }
 

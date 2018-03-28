@@ -41,11 +41,15 @@ exports.count = function (array) {
             toURL: function (id) {
                 var str = id.split("_");
                 if (str.length === 1) {
-                    var result = "<a href=\"https://www.facebook.com/" + id + "\">" + "userid: " + id + "</a>"
+                    var result = "<a href=\"https://www.facebook.com/" + id + " target=\"_blank\">" + "userid: " + id + "</a>"
                 } else {
-                    result = "<a href=\"https://www.facebook.com/" + str[0] + "/posts/" + str[1] + "\">" + "postid: " + id + "</a>"
+                    result = "<a href=\"https://www.facebook.com/" + str[0] + "/posts/" + str[1] + " target=\"_blank\">" + "postid: " + id + "</a>"
                 }
                 return result;
+            },
+
+            pttURL: function (url) {
+                return "<a href=" + url + " target=\"_blank\">" + url + "</a>";
             },
 
             toLike: function (like) {
