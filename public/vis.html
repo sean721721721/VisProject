@@ -139,4 +139,92 @@
             </div>
         </div>
     </script>
+    <script id="detailpttuser-view" type="text/x-handlebars-template">
+        <div id="user">
+            <p>{{{id}}}</p>
+            <div>Activities: {{{summary}}}</div>
+            <div id="pageA">{{{page1}}} Activities:{{{activities1}}}</div>
+            <div id="pageB">{{{page2}}} Activities:{{{activities2}}}</div>
+            <div>
+                <div id="pageA">
+                    {{#each posts.A}}
+                    <button class="accordion pageA">
+                        p{{{num}}}: {{{article_title}}}
+                    </button>
+                    <div class="panel">
+                        <p>{{{author}}}</p>
+                        <p>{{{date}}}_{{{ip}}}</p>
+                        <p>{{{toWord word}}}</p>
+                        <div>
+                            <button class="subaccordion commentA">{{{count pushing}}} 推</button>
+                            <div class="panel">
+                                {{#each pushing}}
+                                <p>{{{push_ipdatetime}}} {{{push_userid}}}:</p>
+                                <p>{{{push_content}}}</p>
+                                {{/each}}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="subaccordion commentA">{{{count neutral}}} →</button>
+                            <div class="panel">
+                                {{#each neutral}}
+                                <p>{{{push_ipdatetime}}} {{{push_userid}}}:</p>
+                                <p>{{{push_content}}}</p>
+                                {{/each}}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="subaccordion commentA">{{{count boo}}} 噓</button>
+                            <div class="panel">
+                                {{#each boo}}
+                                <p> {{{push_ipdatetime}}} {{{push_userid}}}:</p>
+                                <p>{{{push_content}}}</p>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+                <div id="pageB">
+                    {{#each posts.B}}
+                    <button class="accordion pageB">
+                        p{{{num}}}: {{{article_title}}}
+                    </button>
+                    <div class="panel">
+                        <p>{{{author}}}</p>
+                        <p>{{{date}}}_{{{ip}}}</p>
+                        <p>{{{toWord word}}}</p>
+                        <div>
+                            <button class="subaccordion commentB">{{{count pushing}}} 推</button>
+                            <div class="panel">
+                                {{#each pushing}}
+                                <p>{{{push_ipdatetime}}} {{{push_userid}}}:</p>
+                                <p>{{{push_content}}}</p>
+                                {{/each}}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="subaccordion commentB">{{{count neutral}}} →</button>
+                            <div class="panel">
+                                {{#each neutral}}
+                                <p>{{{push_ipdatetime}}} {{{push_userid}}}:</p>
+                                <p>{{{push_content}}}</p>
+                                {{/each}}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="subaccordion commentB">{{{count boo}}} 噓</button>
+                            <div class="panel">
+                                {{#each boo}}
+                                <p>{{{push_ipdatetime}}} {{{push_userid}}}:</p>
+                                <p>{{{push_content}}}</p>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </script>
 </template>

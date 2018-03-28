@@ -352,6 +352,7 @@ function overview(data, select) {
  * @param {object} select -
  */
 function showselect(data, select) {
+    let ptt = data.query.posttype;
     let poststr = '';
     let userstr = '';
     for (let i = 0, l = select.post.length; i < l; i++) {
@@ -361,6 +362,9 @@ function showselect(data, select) {
     }
     for (let i = 0, l = select.user.length; i < l; i++) {
         // userstr += '_';
+        if (ptt) {
+            userstr += select.user[i].id;
+        }
         userstr += select.user[i].name;
         userstr += i < l ? ', ' : '';
     }
@@ -2169,7 +2173,7 @@ function selectivepost(page, post) {
     for (let i = 2, l = rect.length; i < l; i++) {
         rect[i].classList.toggle('selective');
     }
-    text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text
+    //text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text
 }
 
 /**
@@ -2211,7 +2215,13 @@ function userdetailview(data, select) {
  * @param {object} select - select user
  */
 function userdetail(data, select) {
-    let rawTemplate = document.getElementById('detailuser-view').innerHTML;
+    let ptt = data.query.posttype === 'PTT';
+    let rawTemplate;
+    if (ptt) {
+        rawTemplate = document.getElementById('detailpttuser-view').innerHTML;
+    } else {
+        rawTemplate = document.getElementById('detailuser-view').innerHTML;
+    }
     let template = Handlebars.compile(rawTemplate);
     let detail = document.querySelector('#detail');
     let initdetail = '';
@@ -2231,9 +2241,15 @@ function userdetail(data, select) {
         let content = point;
         content.page1 = data.query.page1;
         content.page2 = data.query.page2;
-        content.activities1 = point.posts.A.length;
-        content.activities2 = point.posts.B.length;
-        content.summary = point.posts.A.length + point.posts.B.length;
+        if (ptt) {
+            content.activities1 = point.posts.A.length;
+            content.activities2 = point.posts.B.length;
+            content.summary = point.posts.A.length + point.posts.B.length;
+        } else {
+            content.activities1 = point.posts.A.length;
+            content.activities2 = point.posts.B.length;
+            content.summary = point.posts.A.length + point.posts.B.length;
+        }
         console.log('detail', content);
         detail.innerHTML = initdetail;
         let html = template(content);
@@ -2370,15 +2386,33 @@ function countactivities(data, select) {
                         if (pa.A instanceof Array) {
                             let al = pa.A.length;
                             for (let a = 0; a < al; a++) {
-                                if (pa.A[a].commentcount !== 0) {
+                                if (pa.A[a].commentcount) {
                                     acc += pa.A[a].commentcount;
                                 }
-                                if (pa.A[a].like !== 0) {
+                                if (pa.A[a].like) {
                                     let num = pa.A[a].like;
                                     arc[0]++;
                                     arc[num]++;
                                 }
-                                if (pa.A[a].share !== false) {
+                                if (pa.A[a].share === true) {
+                                    asc++;
+                                }
+                                // for ptt data below
+                                if (pa.A[a].pushing) {
+                                    acc += pa.A[a].pushing.length;
+                                    arc[0] += pa.A[a].pushing.length;
+                                    arc[1] += pa.A[a].pushing.length;
+                                }
+                                if (pa.A[a].neutral) {
+                                    acc += pa.A[a].neutral.length;
+                                    arc[2] += pa.A[a].neutral.length;
+                                }
+                                if (pa.A[a].boo) {
+                                    acc += pa.A[a].boo.length;
+                                    arc[0] -= pa.A[a].boo.length;
+                                    arc[3] += pa.A[a].boo.length;
+                                }
+                                if (pa.A[a].publish === true) {
                                     asc++;
                                 }
                             }
@@ -2386,15 +2420,32 @@ function countactivities(data, select) {
                         if (pa.B instanceof Array) {
                             let bl = pa.B.length;
                             for (let b = 0; b < bl; b++) {
-                                if (pa.B[b].commentcount !== 0) {
+                                if (pa.B[b].commentcount) {
                                     bcc += pa.B[b].commentcount;
                                 }
-                                if (pa.B[b].like !== 0) {
+                                if (pa.B[b].like) {
                                     let num = pa.B[b].like;
                                     brc[0]++;
                                     brc[num]++;
                                 }
-                                if (pa.B[b].share !== false) {
+                                if (pa.B[b].share === true) {
+                                    bsc++;
+                                } // for ptt data below
+                                if (pa.B[b].pushing) {
+                                    bcc += pa.B[b].pushing.length;
+                                    brc[0] += pa.B[b].pushing.length;
+                                    brc[1] += pa.B[b].pushing.length;
+                                }
+                                if (pa.B[b].neutral) {
+                                    bcc += pa.B[b].neutral.length;
+                                    brc[2] += pa.B[b].neutral.length;
+                                }
+                                if (pa.B[b].boo) {
+                                    bcc += pa.B[b].boo.length;
+                                    brc[0] -= pa.B[b].boo.length;
+                                    brc[3] += pa.B[b].boo.length;
+                                }
+                                if (pa.B[b].publish === true) {
                                     bsc++;
                                 }
                             }

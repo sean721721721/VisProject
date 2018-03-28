@@ -39,7 +39,7 @@ exports.count = function (array) {
             },
 
             toURL: function (id) {
-                var str = id.split("_")
+                var str = id.split("_");
                 if (str.length === 1) {
                     var result = "<a href=\"https://www.facebook.com/" + id + "\">" + "userid: " + id + "</a>"
                 } else {
