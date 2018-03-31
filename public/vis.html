@@ -85,6 +85,24 @@
             <p>{{{message}}}</p>
         </div>
     </script>
+    <script id="pttdetailpost-view" type="text/x-handlebars-template">
+        <div id="post">
+            <p>{{{page}}} {{{post}}} {{{id}}}</p>
+            <p>{{{pttURL url}}}</p>
+            <p>key word: {{{toWord word}}}</p>
+            <p>{{{content}}}</p>
+            <p>
+                all： {{{message_count.all}}} / count： {{{message_count.count}}} / 推： {{{message_count.push}}} / →： {{{message_count.neutral}}}
+                / 噓： {{{message_count.boo}}}
+            </p>
+            <div id="message"></div>
+        </div>
+    </script>
+    <script id="messages-detail" type="text/x-handlebars-template">
+        <div>
+            <p>{{{divid}}}樓 {{{push_ipdatetime}}} {{{push_tag}}} {{{push_userid}}}： {{{push_content}}}</p>
+        </div>
+    </script>
     <script id="detailuser-view" type="text/x-handlebars-template">
         <div id="user">
             <p>{{{name}}} {{{toURL id}}}</p>
@@ -141,7 +159,7 @@
     </script>
     <script id="detailpttuser-view" type="text/x-handlebars-template">
         <div id="user">
-            <p class="user">{{{id}}}</p>
+            <p>{{{id}}}</p>
             <div>Activities: {{{summary}}}</div>
             <div id="pageA">{{{page1}}} Activities:{{{activities1}}}</div>
             <div id="pageB">{{{page2}}} Activities:{{{activities2}}}</div>

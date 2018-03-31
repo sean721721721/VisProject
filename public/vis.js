@@ -30,6 +30,7 @@ function visMain(data) {
 function overview(data, select) {
     // data manipulate
     let ov = countactivities(data.data, select);
+    let ptt = data.query.posttype === 'PTT';
     // console.log(data);
     // postcount
     // usercount
@@ -48,15 +49,28 @@ function overview(data, select) {
     let cb = ov.O.B[1] + ov.A.B[1] + ov.B.B[1];
     let sa = ov.O.A[2] + ov.A.A[2] + ov.B.A[2];
     let sb = ov.O.B[2] + ov.A.B[2] + ov.B.B[2];
-    let ovdata = [
-        ['post', data.summary[0][0], data.summary[0][1], allpostcount], // postcount
-        ['user', data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
-        ['comment', ca, cb, ca + cb], // commentcount
-        ['share', sa, sb, sa + sb], // sharecount
-    ];
+    let ovdata;
+    let axis;
+    if (ptt) {
+        ovdata = [
+            ['post', data.summary[0][0], data.summary[0][1], allpostcount], // postcount
+            ['user', data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
+            ['messages', ca, cb, ca + cb], // messagecount
+            ['posts', sa, sb, sa + sb], // postcount
+        ];
+        axis = ['post', 'user', 'message', 'post', 'count', 'push', 'neutral', 'boo'];
+    } else {
+        ovdata = [
+            ['post', data.summary[0][0], data.summary[0][1], allpostcount], // postcount
+            ['user', data.summary[1][0], data.summary[1][1], data.summary[1][2]], // usercount
+            ['comment', ca, cb, ca + cb], // commentcount
+            ['share', sa, sb, sa + sb], // sharecount
+        ];
+        axis = ['post', 'user', 'comment', 'share', 'reaction', 'like', 'love', 'haha', 'wow', 'sad', 'angry'];
+    }
 
-    let axis = ['post', 'user', 'comment', 'share', 'reaction', 'like', 'love', 'haha', 'wow', 'sad', 'angry'];
-    for (let i = 0; i < 7; i++) {
+    let loop = axis.length - 4;
+    for (let i = 0; i < loop; i++) {
         let j = i + 4;
         ovdata.push([axis[j], oarc[i], obrc[i], orc[i]]); // reactioncount
     }
@@ -127,7 +141,7 @@ function overview(data, select) {
 
     let tooltip2 = d3.select('body').select('.b');
 
-
+    let ypadding = 2;
     const colorA = d3.interpolateRdBu;
     let rectA = g.selectAll('g')
         .append('g')
@@ -153,10 +167,10 @@ function overview(data, select) {
                 }
             }
         })
-        .attr('height', hy)
+        .attr('height', hy - 2 * ypadding)
         .attr('x', 0)
         .attr('y', (d, i) => {
-            return i * hy;
+            return i * hy + ypadding;
         })
         .on('mouseover', function (d, i) {
             d3.event.preventDefault();
@@ -202,7 +216,7 @@ function overview(data, select) {
                 }
             }
         })
-        .attr('height', hy)
+        .attr('height', hy - 2 * ypadding)
         .attr('x', (d, i) => {
             if (d[3] === 0) {
                 return 0;
@@ -216,7 +230,7 @@ function overview(data, select) {
             }
         })
         .attr('y', (d, i) => {
-            return i * hy;
+            return i * hy + ypadding;
         }).on('mouseover', function (d, i) {
             d3.event.preventDefault();
             tooltip2.transition()
@@ -260,7 +274,7 @@ function overview(data, select) {
                 }
             }
         })
-        .attr('height', hy)
+        .attr('height', hy - 2 * ypadding)
         .attr('x', (d, i) => {
             if (i === 1) {
                 let ratio = (d[1]) / (2 * d[1] + 2 * d[2] - d[3]);
@@ -273,7 +287,7 @@ function overview(data, select) {
         })
         .attr('y', (d, i) => {
             if (i === 1) {
-                return i * hy;
+                return i * hy + ypadding;
             }
         }).on('mouseover', function (d, i) {
             if (i === 1) {
@@ -337,7 +351,14 @@ function overview(data, select) {
             .attr('y2', h + 10)
             .attr('stroke', 'white');
     }
-    /*let line = g.append('line')
+
+    let legend = svg.append('g')
+        .attr('class', 'legend')
+        .attr('transform', 'translate(50,30)')
+        .style('font-size', '12px')
+        .call(d3.legend);
+
+    /* let line = g.append('line')
         .attr('class', 'line')
         .attr('x1', x(0.5))
         .attr('y1', -10)
@@ -352,7 +373,7 @@ function overview(data, select) {
  * @param {object} select -
  */
 function showselect(data, select) {
-    let ptt = data.query.posttype;
+    let ptt = data.query.posttype === 'PTT';
     let poststr = '';
     let userstr = '';
     for (let i = 0, l = select.post.length; i < l; i++) {
@@ -384,6 +405,7 @@ function showselect(data, select) {
 function pageview(data, pagedata, select) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
+    let ptt = data.query.posttype === 'PTT';
     let height = '100%';
     let width = height;
     let w = 500;
@@ -557,7 +579,12 @@ function pageview(data, pagedata, select) {
         .datum(function (d) {
             d.size = Math.sqrt(d.value);
             let arr = d.data.id.split('.');
-            d.text = d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
+            // console.log(d, arr);
+            if (ptt) {
+                d.text = d.depth === 4 && d.data.name === 'push' ? arr[2] : '';
+            } else {
+                d.text = d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
+            }
             // console.log(d);
             return d;
         })
@@ -854,6 +881,7 @@ function userview(data, select) {
  */
 function overlapvis(data, select, mode) {
     // let width = document.querySelector('#overlap').offsetWidth;
+    let ptt = data.query.posttype === 'PTT';
     let height = '100%';
     let width = height;
     let color = d3.scaleQuantize()
@@ -1407,16 +1435,23 @@ function overlapvis(data, select, mode) {
             }
             console.log(select.user);
             // user color update
-            d3.selectAll('.user')
-                .attr('fill', (d) => {
-                    let rcolor = color(Math.sqrt(d.posts.A.length));
-                    for (let i = 0, l = select.user.length; i < l; i++) {
-                        if (d.id === select.user[i].id) {
-                            rcolor = '#000';
-                        }
+            let bug = d3.selectAll('.user')
+            console.log(bug);
+            bug.attr('fill', (d) => {
+                console.log(d);
+                let rcolor;
+                if (ptt) {
+                    rcolor = color(Math.sqrt(d.posts.A.length));
+                } else {
+                    rcolor = color(Math.sqrt(d.posts.A.length));
+                }
+                for (let i = 0, l = select.user.length; i < l; i++) {
+                    if (d.id === select.user[i].id) {
+                        rcolor = '#000';
                     }
-                    return rcolor;
-                });
+                }
+                return rcolor;
+            });
             // status(d);
             console.log('#degree' + deg.toString());
             // activepost(data, preselect, select);
@@ -1595,7 +1630,13 @@ function postdetailview(data, select) {
  * @param {array} select -
  */
 function postdetail(data, select) {
-    let rawTemplate = document.getElementById('detailpost-view').innerHTML;
+    let ptt = data.query.posttype === 'PTT';
+    let rawTemplate;
+    if (ptt) {
+        rawTemplate = document.getElementById('pttdetailpost-view').innerHTML;
+    } else {
+        rawTemplate = document.getElementById('detailpost-view').innerHTML;
+    }
     let template = Handlebars.compile(rawTemplate);
     let detail = document.querySelector('#detail');
     let initdetail = '';
@@ -1613,27 +1654,65 @@ function postdetail(data, select) {
         content.page = data.query.page1;
         content.post = post;
         content.id = pagedata[i][j].id;
-        content.message = pagedata[i][j].message;
         content.word = pagedata[i][j].word;
-        content.reactions = {};
-        // content.reactions.total=pagedata[0][0][0].reactions;
-        content.reactions.like = pagedata[i][j].reactions.like;
-        content.reactions.love = pagedata[i][j].reactions.love;
-        content.reactions.haha = pagedata[i][j].reactions.haha;
-        content.reactions.wow = pagedata[i][j].reactions.wow;
-        content.reactions.sad = pagedata[i][j].reactions.sad;
-        content.reactions.angry = pagedata[i][j].reactions.angry;
-        content.commentcount = pagedata[i][j].comments.summary;
-        content.comments = pagedata[i][j].comments.context;
-        content.shares = pagedata[i][j].shares;
+        if (ptt) {
+            content.url = pagedata[i][j].url;
+            content.content = pagedata[i][j].content;
+            content.message_count = {};
+            content.message_count.all = pagedata[i][j].message_count.all;
+            content.message_count.boo = pagedata[i][j].message_count.boo;
+            content.message_count.count = pagedata[i][j].message_count.count;
+            content.message_count.neutral = pagedata[i][j].message_count.neutral;
+            content.message_count.push = pagedata[i][j].message_count.push;
+        } else {
+            content.message = pagedata[i][j].message;
+            content.reactions = {};
+            // content.reactions.total=pagedata[0][0][0].reactions;
+            content.reactions.like = pagedata[i][j].reactions.like;
+            content.reactions.love = pagedata[i][j].reactions.love;
+            content.reactions.haha = pagedata[i][j].reactions.haha;
+            content.reactions.wow = pagedata[i][j].reactions.wow;
+            content.reactions.sad = pagedata[i][j].reactions.sad;
+            content.reactions.angry = pagedata[i][j].reactions.angry;
+            content.commentcount = pagedata[i][j].comments.summary;
+            content.comments = pagedata[i][j].comments.context;
+            content.shares = pagedata[i][j].shares;
+        }
         console.log('detail', content);
         detail.innerHTML = initdetail;
         let html = template(content);
         detail.innerHTML += html;
-        if (pagedata[i][j].comments.summary !== 0) {
-            commentdetail(pagedata[i][j].comments.context);
+        if (ptt && pagedata[i][j].messages.length !== 0) {
+            messagedetail(pagedata[i][j].messages);
         }
+        if (!ptt && pagedata[i][j].comments.summary !== 0) {
+            commentdetail(pagedata[i][j].comments.context);
+        };
         paccordion();
+    }
+}
+
+/**
+ * get message instance by index
+ * @param {array} data - message
+ */
+function messagedetail(data) {
+    let rawTemplate = document.getElementById('messages-detail').innerHTML;
+    let template = Handlebars.compile(rawTemplate);
+    let cdetail = document.querySelector('#message');
+    let init = '';
+    cdetail.innerHTML = init;
+    let content = {};
+    for (let ci = 0, l = data.length; ci < l; ci++) {
+        let message = data[ci];
+        content.push_ipdatetime = message.push_ipdatetime;
+        content.push_userid = message.push_userid;
+        content.push_content = message.push_content === '' ? 'no text' : message.push_content;
+        content.push_tag = message.push_tag;
+        content.divid = ci >= 10 ? ci : ' ' + ci;
+        // console.log('comment', content);
+        let html = template(content);
+        cdetail.innerHTML += html;
     }
 }
 
@@ -1758,6 +1837,7 @@ function activeuser(data, preselect, postselect, mode) {
      */
     function modifycolor(postchange, add, mode) {
         console.log(postchange);
+        let ptt = data.query.posttype === 'PTT';
         let colormod;
         if (mode === 'intersection') {
             colormod = postselect.post.length;
@@ -1778,8 +1858,16 @@ function activeuser(data, preselect, postselect, mode) {
                         let x = postchange[j].page === data.query.page1 ? 0 : 1;
                         let y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
                         console.log(x, y);
-                        let id = pagedata[x][y].id;
-                        if (d.posts.A[i].id === id) {
+                        let id;
+                        let eqid;
+                        if (ptt) {
+                            id = pagedata[x][y].article_id;
+                            eqid = d.posts.A[i].article_id === id;
+                        } else {
+                            id = pagedata[x][y].id;
+                            eqid = d.posts.A[i].id === id;
+                        }
+                        if (eqid) {
                             if (add) {
                                 d.act++;
                             } else {
@@ -1794,8 +1882,16 @@ function activeuser(data, preselect, postselect, mode) {
                         let x = postchange[j].page === data.query.page1 ? 0 : 1;
                         let y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
                         // console.log(x, y);
-                        let id = pagedata[x][y].id;
-                        if (d.posts.B[i].id === id) {
+                        let id;
+                        let eqid;
+                        if (ptt) {
+                            id = pagedata[x][y].article_id;
+                            eqid = d.posts.B[i].article_id === id;
+                        } else {
+                            id = pagedata[x][y].id;
+                            eqid = d.posts.B[i].id === id;
+                        }
+                        if (eqid) {
                             if (add) {
                                 d.act++;
                             } else {
@@ -1846,6 +1942,7 @@ function postidtonum(data, page, postid) {
  * @return {array}
  */
 function activepost(data, preselect, postselect, mode) {
+    let ptt = data.query.posttype === 'PTT';
     let result = preselect.actpost;
     console.log(preselect, postselect);
     let presl = preselect.user.length;
@@ -1894,14 +1991,24 @@ function activepost(data, preselect, postselect, mode) {
                     result[1] = showaddpost(i, postselect, 'B', result[1], 1);
                 } else {
                     for (let j = 0, ual = postselect.user[i].posts.A.length; j < ual; j++) {
-                        let id = postselect.user[i].posts.A[j].id;
+                        let id;
+                        if (ptt) {
+                            id = postselect.user[i].posts.A[j].article_id;
+                        } else {
+                            id = postselect.user[i].posts.A[j].id;
+                        }
                         let postnum = postidtonum(data, 0, id);
                         selectivepost(1, postnum);
                         result[0].push(id);
                         // console.log(id, postnum);
                     }
                     for (let j = 0, ubl = postselect.user[i].posts.B.length; j < ubl; j++) {
-                        let id = postselect.user[i].posts.B[j].id;
+                        let id;
+                        if (ptt) {
+                            id = postselect.user[i].posts.B[j].article_id;
+                        } else {
+                            id = postselect.user[i].posts.B[j].id;
+                        }
                         let postnum = postidtonum(data, 1, id);
                         selectivepost(2, postnum);
                         result[1].push(id);
@@ -1921,14 +2028,24 @@ function activepost(data, preselect, postselect, mode) {
                 let deluser = preselect.user;
                 let ual = deluser[0].posts.A.length;
                 for (let i = 0; i < ual; i++) {
-                    let id = deluser[0].posts.A[i].id;
+                    let id;
+                    if (ptt) {
+                        id = deluser[0].posts.A[i].article_id;
+                    } else {
+                        id = deluser[0].posts.A[i].id;
+                    }
                     result[0] = [];
                     let postnum = postidtonum(data, 0, id);
                     selectivepost(1, postnum);
                 }
                 let ubl = deluser[0].posts.B.length;
                 for (let i = 0; i < ubl; i++) {
-                    let id = deluser[0].posts.B[i].id;
+                    let id;
+                    if (ptt) {
+                        id = deluser[0].posts.B[i].article_id;
+                    } else {
+                        id = deluser[0].posts.B[i].id;
+                    }
                     result[1] = [];
                     let postnum = postidtonum(data, 1, id);
                     selectivepost(2, postnum);
@@ -1949,7 +2066,12 @@ function activepost(data, preselect, postselect, mode) {
     function showunionpost(ui, select, page, result, push, pi) {
         for (let j = 0, ul = select.user[ui].posts[page].length; j < ul; j++) {
             console.log(select.user[ui].posts[page]);
-            let id = select.user[ui].posts[page][j].id;
+            let id;
+            if (ptt) {
+                id = select.user[ui].posts[page][j].article_id;
+            } else {
+                id = select.user[ui].posts[page][j].id;
+            }
             if (result.length > 0) {
                 for (let x = 0, l = result.length; x < l;) {
                     if (result[x] === id) {
@@ -1987,7 +2109,12 @@ function activepost(data, preselect, postselect, mode) {
      */
     function rebuildsp(ui, select, page, result) {
         for (let j = 0, ubl = select.user[ui].posts[page].length; j < ubl; j++) {
-            let id = select.user[ui].posts[page][j].id;
+            let id;
+            if (ptt) {
+                id = select.user[ui].posts[page][j].article_id;
+            } else {
+                id = select.user[ui].posts[page][j].id;
+            }
             if (result.length > 0) {
                 for (let x = 0, l = result.length; x < l;) {
                     if (result[x] === id) {
@@ -2017,13 +2144,24 @@ function activepost(data, preselect, postselect, mode) {
             return false;
         } else {
             for (let i = 0; i < l1;) {
-                if (arr1[i].id === arr2[i].id) {
-                    i++;
+                if (ptt) {
+                    if (arr1[i].article_id === arr2[i].article_id) {
+                        i++;
+                    } else {
+                        return false;
+                    }
+                    if (i = l1) {
+                        return true;
+                    }
                 } else {
-                    return false;
-                }
-                if (i = l1) {
-                    return true;
+                    if (arr1[i].id === arr2[i].id) {
+                        i++;
+                    } else {
+                        return false;
+                    }
+                    if (i = l1) {
+                        return true;
+                    }
                 }
             }
         }
@@ -2041,7 +2179,12 @@ function activepost(data, preselect, postselect, mode) {
         let del = [];
         for (let x = 0, l = result.length; x < l; x++) {
             for (let j = 0, ual = select.user[ui].posts[page].length; j < ual;) {
-                let id = select.user[ui].posts[page][j].id;
+                let id;
+                if (ptt) {
+                    id = select.user[ui].posts[page][j].article_id;
+                } else {
+                    id = select.user[ui].posts[page][j].id;
+                }
                 if (result[x] === id) {
                     // console.log('===', result[0], id);
                     j = ual + 1;
@@ -2112,7 +2255,12 @@ function activepost(data, preselect, postselect, mode) {
     function showdelpost(ui, select, page, result, pi) {
         let pl = select.user.length;
         for (let x = 0, ul = select.user[ui].posts[page].length; x < ul; x++) {
-            let xid = select.user[ui].posts[page][x].id;
+            let xid;
+            if (ptt) {
+                xid = select.user[ui].posts[page][x].article_id;
+            } else {
+                xid = select.user[ui].posts[page][x].id;
+            }
             let update = false;
             let rl = result.length;
             if (rl > 0) {
@@ -2137,7 +2285,12 @@ function activepost(data, preselect, postselect, mode) {
                 for (let j = 0; j < pl;) {
                     // console.log('j = ', j, pl);
                     for (let y = 0, ual = select.user[j].posts[page].length; y < ual;) {
-                        let yid = select.user[j].posts[page][y].id;
+                        let yid;
+                        if (ptt) {
+                            yid = select.user[j].posts[page][y].article_id;
+                        } else {
+                            yid = select.user[j].posts[page][y].id;
+                        }
                         // console.log(yid);
                         if (xid === yid) {
                             // console.log('===');
@@ -2180,7 +2333,7 @@ function selectivepost(page, post) {
     for (let i = 2, l = rect.length; i < l; i++) {
         rect[i].classList.toggle('selective');
     }
-    //text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text
+    text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text
 }
 
 /**
@@ -2273,13 +2426,14 @@ function userdetail(data, select) {
         let html = template(content);
         detail.innerHTML += html;
         paccordion();
-    }
-    // highlight author if self post
-    let author = document.querySelectorAll('#author');
-    for (let i = 0; i < author.length; i++) {
-        if (author[i].innerHTML.split(' ')[0] === point.id) {
-            author[i].classList.toggle('author');
-        };
+        // highlight author if self post
+        let author = document.querySelectorAll('#author');
+        for (let i = 0; i < author.length; i++) {
+            console.log(point);
+            if (author[i].innerHTML.split(' ')[0] === point.id) {
+                author[i].classList.toggle('author');
+            };
+        }
     }
 }
 
@@ -2289,46 +2443,63 @@ function userdetail(data, select) {
  * @return {object}
  */
 function pagedata(data) {
+    let ptt = data.query.posttype === 'PTT';
     let pagedata = data.data[0];
     let tm = {};
     let tmdata = [];
-    for (let i = 0, l = pagedata.length; i < l; i++) {
+    for (let i = 0, l = pagedata.length; i < l; i++) { // page
         let page = {};
         let posttemp = [];
         let posts = pagedata[i];
-        for (let j = 0, l = posts.length; j < l; j++) {
+        for (let j = 0, l = posts.length; j < l; j++) { // post
             let post = {};
-            let comment = {};
-            let reaction = {};
-            let like = {};
-            let love = {};
-            let haha = {};
-            let wow = {};
-            let sad = {};
-            let angry = {};
-            let share = {};
-            comment.name = 'comment';
-            comment.size = posts[j].comments.summary;
-            like.name = 'like';
-            like.size = posts[j].reactions.like;
-            love.name = 'love';
-            love.size = posts[j].reactions.love;
-            haha.name = 'haha';
-            haha.size = posts[j].reactions.haha;
-            wow.name = 'wow';
-            wow.size = posts[j].reactions.wow;
-            sad.name = 'sad';
-            sad.size = posts[j].reactions.sad;
-            angry.name = 'angry';
-            angry.size = posts[j].reactions.angry;
-            reaction.name = 'reaction';
-            reaction.children = [like, love, haha, wow, sad, angry];
-            share.name = 'share';
-            share.size = posts[j].shares;
             let temp = [];
-            temp.push(comment);
-            temp.push(reaction);
-            temp.push(share);
+            if (ptt) {
+                let message = {};
+                let pushing = {};
+                let neutral = {};
+                let boo = {};
+                pushing.name = 'push';
+                pushing.size = posts[j].message_count.push;
+                neutral.name = 'neutral';
+                neutral.size = posts[j].message_count.neutral;
+                boo.name = 'boo';
+                boo.size = posts[j].message_count.boo;
+                message.name = 'comment';
+                message.children = [pushing, neutral, boo];
+                temp.push(message);
+            } else {
+                let comment = {};
+                let reaction = {};
+                let like = {};
+                let love = {};
+                let haha = {};
+                let wow = {};
+                let sad = {};
+                let angry = {};
+                let share = {};
+                comment.name = 'comment';
+                comment.size = posts[j].comments.summary;
+                like.name = 'like';
+                like.size = posts[j].reactions.like;
+                love.name = 'love';
+                love.size = posts[j].reactions.love;
+                haha.name = 'haha';
+                haha.size = posts[j].reactions.haha;
+                wow.name = 'wow';
+                wow.size = posts[j].reactions.wow;
+                sad.name = 'sad';
+                sad.size = posts[j].reactions.sad;
+                angry.name = 'angry';
+                angry.size = posts[j].reactions.angry;
+                reaction.name = 'reaction';
+                reaction.children = [like, love, haha, wow, sad, angry];
+                share.name = 'share';
+                share.size = posts[j].shares;
+                temp.push(comment);
+                temp.push(reaction);
+                temp.push(share);
+            }
             // post.name = posts[j].id;
             post.name = 'p' + (j + 1);
             post.children = temp;
