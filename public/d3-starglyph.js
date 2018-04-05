@@ -266,3 +266,85 @@ d3.starglyph = function () {
 
     return chart;
 };
+
+// d3.legend.js
+// (C) 2012 ziggy.jonsson.nyc@gmail.com
+// MIT licence
+d3.legend = function (g) {
+    g.each(function () {
+        let g = d3.select(this);
+        let items = {};
+        let svg = d3.select(g.property('nearestViewportElement'));
+        let legendPadding = g.attr('data-style-padding') || 5;
+        let lb = g.selectAll('.legend-box').data([true]);
+        let li = g.selectAll('.legend-items').data([true]);
+
+        lb = lb.enter().append('rect').classed('legend-box', true).merge(lb);
+        li = li.enter().append('g').classed('legend-items', true).merge(li);
+
+        svg.selectAll('[data-legend]').each(function () {
+            let self = d3.select(this);
+            items[self.attr('data-legend')] = {
+                pos: self.attr('data-legend-pos') || this.getBBox().y,
+                color: self.attr('data-legend-color') != undefined ? self.attr('data-legend-color') : self.style('fill') != 'none' ? self.style('fill') : self.style('stroke'),
+                textcolor: g.attr('textcolor') != undefined ? g.attr('textcolor') : self.attr('data-legend-textcolor') != undefined ? self.attr('data-legend-textcolor') : self.style('fill') != 'none' ? self.style('fill') : self.style('stroke'),
+            };
+        });
+
+        items = d3.entries(items).sort(function (a, b) {
+            return a.value.pos - b.value.pos;
+        });
+
+        let text = li.selectAll('text')
+            .data(items, function (d) {
+                return d;
+            });
+
+        text.call(function (d) {
+                d.enter().append('text').merge(text)
+                    .attr('y', function (d, i) {
+                        return i + 'em';
+                    })
+                    .attr('x', '1em')
+                    .attr('fill', function (d) {
+                        return d.value.textcolor;
+                    })
+                    .text(function (d) {
+                        return d.key;
+                    });
+            })
+            .call(function (d) {
+                d.exit().remove();
+            });
+
+        let circle = li.selectAll('circle')
+            .data(items, function (d) {
+                return d;
+            });
+
+        circle.call(function (d) {
+                d.enter().append('circle')
+                    .merge(circle)
+                    .attr('cy', function (d, i) {
+                        return i - 0.25 + 'em';
+                    })
+                    .attr('cx', 0)
+                    .attr('r', '0.4em')
+                    .style('fill', function (d) {
+                        return d.value.color;
+                    });
+            })
+            .call(function (d) {
+                d.exit().remove();
+            });
+
+        // Reposition and resize the box
+        let lbbox = li.node().getBBox();
+        // console.log(items, li, text, circle, lbbox);
+        lb.attr('x', (lbbox.x - legendPadding))
+            .attr('y', (lbbox.y - legendPadding))
+            .attr('height', (lbbox.height + 2 * legendPadding))
+            .attr('width', (lbbox.width + 2 * legendPadding));
+    });
+    return g;
+};

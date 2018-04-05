@@ -148,6 +148,9 @@ function overview(data, select) {
         .data(ovdata)
         .enter().append('rect')
         .attr('class', 'A')
+        .attr('data-legend', function (d) {
+            return data.query.page1;
+        })
         .attr('fill', (d, i) => {
             let diff = getBaseLog(10, d[1]) > 5 ? 5 : getBaseLog(10, d[1]);
             let cvalue = 0.5 - (diff / 10);
@@ -197,6 +200,9 @@ function overview(data, select) {
         .data(ovdata)
         .enter().append('rect')
         .attr('class', 'B')
+        .attr('data-legend', function (d) {
+            return data.query.page2;
+        })
         .attr('fill', (d, i) => {
             let diff = getBaseLog(10, d[2]) > 5 ? 5 : getBaseLog(10, d[2]);
             let cvalue = diff / 10 + 0.5;
@@ -255,12 +261,17 @@ function overview(data, select) {
         .append('g')
         .data(ovdata)
         .enter().append('rect')
-        .attr('class', 'B')
+        .attr('class', 'C')
+        .attr('data-legend', function (d) {
+            return data.query.page1 + ' & ' + data.query.page2;
+        })
         .attr('fill', (d, i) => {
             if (i === 1) {
                 let diff = getBaseLog(10, d[1] + d[2] - d[3]) > 5 ? 5 : getBaseLog(10, d[1] + d[2] - d[3]);
                 let cvalue = diff / 10 + 0.5;
                 return colorC(cvalue);
+            } else {
+                return colorC(0.75);
             }
         })
         .attr('stroke', 'white 5px')
@@ -295,10 +306,10 @@ function overview(data, select) {
                 tooltip2.transition()
                     .duration(200)
                     .style('opacity', .9);
-                tooltip2.html('Page= ' + data.query.page2 + '<br/>' +
-                        'Type = ' + axis[i] + '<br/>' +
-                        'Count = ' + d[2] + '<br/>' +
-                        '% = ' + d[2] / d[3] * 100 + '%')
+                tooltip2.html('Page= ' + data.query.page1 + '&' + data.query.page2 + '<br/>' +
+                        'Type = ' + 'overlap ' + axis[i] + '<br/>' +
+                        'Count = ' + (d[1] + d[2] - d[3]) + '<br/>' +
+                        '% = ' + (d[1] + d[2] - d[3]) / d[3] * 100 + '%')
                     .style('left', (d3.event.pageX + 5) + 'px')
                     .style('top', (d3.event.pageY - 30) + 'px');
             }
@@ -354,8 +365,9 @@ function overview(data, select) {
 
     let legend = svg.append('g')
         .attr('class', 'legend')
-        .attr('transform', 'translate(50,30)')
+        .attr('transform', 'translate(20,20)')
         .style('font-size', '12px')
+        .attr('textcolor', 'black')
         .call(d3.legend);
 
     /* let line = g.append('line')
