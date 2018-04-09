@@ -174,10 +174,12 @@
                 <h2>PageView</h2>
                 <div id="page"></div>
                 <form>
-                    <label>
-                        <input type="radio" name="mode" value="treemap" checked> Treemap</label>
-                    <label>
-                        <input type="radio" name="mode" value="pack"> Circle Packing</label>
+                    <fieldset id="pagemode">
+                        <label for="mode1">Treemap</label>
+                        <input type="radio" id="mode1" name="mode" value="treemap" checked>
+                        <label for="mode2">Sunburst</label>
+                        <input type="radio" id="mode2" name="mode" value="sunburst">
+                    </fieldset>
                 </form>
             </div>
             <div class="box detailview">

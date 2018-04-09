@@ -417,222 +417,443 @@ function showselect(data, select) {
 function pageview(data, pagedata, select) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
+    let mode = document.querySelector('input[type="radio"]:checked').value;
     let ptt = data.query.posttype === 'PTT';
     let height = '100%';
     let width = height;
     let w = 500;
     let h = 500;
+    let radius = Math.min(w, h) / 2;
+    let n = 100;
     // let wx = w / ovdata.length;
 
     if (d3.select('#page').select('svg')._groups[0][0] !== undefined) {
         d3.select('#page').select('svg')._groups[0][0].remove();
     }
 
-    let zoom = d3.zoom()
-        .scaleExtent([1, 5])
-        .on('zoom', function () {
-            g.attr('transform', d3.event.transform);
-            let k = this.__zoom.k;
-            g.attr('r', 5 / k)
-                .attr('stroke-width', 1 / k);
-        });
+    console.log(mode);
+    if (mode === 'sunburst') {
+        drawsb();
+    } else if (mode === 'treemap') {
+        drawtm();
+    }
 
-    let svg = d3.select('#page')
-        .append('svg')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('viewBox', '0 0 500 500')
-        .attr('preserveAspectRatio', 'xMinYMin')
-        .style('fill', 'none')
-        .style('pointer-events', 'all')
-        .call(zoom);
+    function drawsb() {
+        let svg = d3.select('#page')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', '0 0 500 500')
+            .attr('preserveAspectRatio', 'xMinYMin')
+            .style('fill', 'none')
+            .style('pointer-events', 'all');
 
-    let g = svg.append('g')
-        .attr('id', 'pagepmap');
+        let g = svg.append('g')
+            .attr('id', 'pagepmap')
+            .attr('transform', 'translate(' + w / 2 + ',' + h / 2 + ')');
 
-    let format = d3.format(',d');
+        let partition = d3.partition()
+            .size([2 * Math.PI, radius * radius]);
 
-    let treemap = d3.treemap()
-        .tile(d3.treemapSquarify)
-        .size([w, h])
-        .round(false)
-        .paddingInner(1);
-    // .paddingOuter(1);
-
-    let n = 100;
-
-    let root = d3.hierarchy(pagedata)
-        .eachBefore(function (d) {
-            d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
-            let page = d.data.id.split('.')[1];
-            let post = d.data.id.split('.')[2];
-            d.data.page = page === undefined ? 0 : page === pagedata.children[0].name ? 1 : 2;
-            d.data.post = post === undefined ? 0 : post.match(/\d{1,}/);
-            d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
-            // console.log(d.data.post[0]);
-            if (d.data.post[0] > n) {
-                n = d.data.post[0];
-            }
-        })
-        .sum(sumBySize)
-        .sort(function (a, b) {
-            return b.height - a.height || b.value - a.value;
-        });
-
-    let focus = root;
-    let view;
-
-    treemap(root);
-
-    let cell = g.selectAll('g')
-        .data(root.descendants())
-        .enter().append('g')
-        .attr('class', (d) => {
-            return 'page' + d.data.page + ' p' + d.data.post + ' depth' + d.depth;
-        })
-        .attr('transform', function (d) {
-            return 'translate(' + d.x0 + ',' + d.y0 + ')';
-        });
-
-    let rect = cell.append('rect')
-        // .data(root.leaves())
-        .datum(function (d) {
-            d.width = d.x1 - d.x0;
-            d.height = d.y1 - d.y0;
-            // console.log(d);
-            return d;
-        })
-        .attr('id', function (d) {
-            return d.data.id;
-        })
-        .attr('width', (d) => d.width)
-        .attr('height', (d) => d.height)
-        .attr('stroke', (d) => {
-            if (d.depth >= 2) {
-                return '#000';
-            }
-        })
-        .attr('stroke-dasharray', (d) => {
-            if (d.depth > 2) {
-                return 1, 1;
-            }
-        }).attr('fill', function (d) {
-            if (d === d.leaves()[0]) {
-                return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
-            } else {
-                return null;
-            }
-        })
-        .on('click', (d) => {
-            d3.event.preventDefault();
-            console.log('click', d);
-            selectivepost(d.data.page, d.data.post);
-            let pagedata = data.data[0];
-            // d.data.id.split('.');
-            // create preselect obj
-            let preselect = {};
-            let post = [];
-            let actuser = [];
-            for (let i = 0, l = select.post.length; i < l; i++) {
-                post.push(select.post[i]);
-            }
-            for (let i = 0, l = select.actuser.length; i < l; i++) {
-                let user = select.actuser[i];
-                actuser.push(user);
-            }
-            preselect.post = post;
-            preselect.actuser = actuser;
-            // select postobj manipulate
-            let selectobj = {};
-            let idarray = d.data.id.split('.');
-            selectobj.page = idarray[1];
-            selectobj.post = idarray[2];
-            if (select.post.length !== 0) {
-                for (let i = 0, l = select.post.length; i < l;) {
-                    if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
-                        select.post.splice(i, 1);
-                        select.ci.post = i - 1 > 0 ? i - 1 : 0;
-                        i = l + 1;
-                    } else {
-                        i++;
-                    }
-                    if (i === l) {
-                        select.post.push(selectobj);
-                        select.ci.post = l;
-                    }
+        let root = d3.hierarchy(pagedata)
+            .eachBefore(function (d) {
+                d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
+                let page = d.data.id.split('.')[1];
+                let post = d.data.id.split('.')[2];
+                d.data.page = page === undefined ? 0 : page === pagedata.children[0].name ? 1 : 2;
+                d.data.post = post === undefined ? 0 : post.match(/\d{1,}/);
+                d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
+                // console.log(d.data.post[0]);
+                if (d.data.post[0] > n) {
+                    n = d.data.post[0];
                 }
-            } else {
-                select.post.push(selectobj);
-            }
-            console.log(select);
-            postdetailview(data, select);
-            showselect(data, select);
-            let mode = 'intersection';
-            select.actuser = activeuser(data, preselect, select, mode);
-            // detailview(data, d.data.id.split('.'));
-            /* if (focus !== d) zoom(d);
-            else zoom(root);*/
-            // console.log(s._groups);
-        });
+            })
+            .sum(sumBySize)
+            .sort(function (a, b) {
+                return b.height - a.height || b.value - a.value;
+            });
 
-    cell.append('clipPath')
-        .attr('id', function (d) {
-            return 'clip-' + d.data.id;
-        })
-        .append('use')
-        .attr('href', function (d) {
-            return '#' + d.data.id;
-        });
+        partition(root);
 
-    let text = cell.append('text')
-        .attr('clip-path', function (d) {
-            return 'url(#clip-' + d.data.id + ')';
-        })
-        .datum(function (d) {
-            d.size = Math.sqrt(d.value);
-            let arr = d.data.id.split('.');
-            // console.log(d, arr);
-            if (ptt) {
-                d.text = d.depth === 4 && d.data.name === 'push' ? arr[2] : '';
-            } else {
-                d.text = d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
-            }
-            // console.log(d);
-            return d;
-        })
-        /* .selectAll('tspan')*/
-        /* .data(function (d) {
-            // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
-            console.log(d);
-            let arr = d.data.id.split('.');
-            // console.log(d, arr);
-            return d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
-        })*/
-        /* .enter().append('tspan')*/
-        .text(function (d) {
-            return d.text;
-            // return d;
-        })
-        .attr('font-size', (d) => {
-            return d.size;
-        })
-        .attr('x', (d, i) => {
-            return d.size / 5;
-            // return 9 * i + 4;
-        })
-        .attr('y', function (d, i) {
-            return d.size;
-            // return 13 + i * 10;
-        })
-        .attr('fill', '#000');
+        let arc = d3.arc()
+            .startAngle(function (d) {
+                return d.x0;
+            })
+            .endAngle(function (d) {
+                return d.x1;
+            })
+            .innerRadius(function (d) {
+                return Math.sqrt(d.y0);
+            })
+            .outerRadius(function (d) {
+                return Math.sqrt(d.y1);
+            });
 
-    /* rect.selectAll('.depth2')
-        .moveToFront();*/
+        let nodes = g.selectAll('path')
+            .data(root.descendants())
+            .enter().append('path')
+            .attr('display', function (d) {
+                return d.depth ? null : 'none';
+            })
+            .attr('d', arc)
+            .attr('class', (d) => {
+                return 'page' + d.data.page + ' p' + d.data.post + ' depth' + d.depth;
+            })
+            .attr('id', function (d) {
+                return d.data.id;
+            })
+            .style('stroke', '#000')
+            .style('fill', function (d) {
+                return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+            })
+            .on('click', (d) => {
+                d3.event.preventDefault();
+                console.log('click', d);
+                selectivepost(d.data.page, d.data.post);
+                let pagedata = data.data[0];
+                // d.data.id.split('.');
+                // create preselect obj
+                let preselect = {};
+                let post = [];
+                let actuser = [];
+                for (let i = 0, l = select.post.length; i < l; i++) {
+                    post.push(select.post[i]);
+                }
+                for (let i = 0, l = select.actuser.length; i < l; i++) {
+                    let user = select.actuser[i];
+                    actuser.push(user);
+                }
+                preselect.post = post;
+                preselect.actuser = actuser;
+                // select postobj manipulate
+                let selectobj = {};
+                let idarray = d.data.id.split('.');
+                selectobj.page = idarray[1];
+                selectobj.post = idarray[2];
+                if (select.post.length !== 0) {
+                    for (let i = 0, l = select.post.length; i < l;) {
+                        if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
+                            select.post.splice(i, 1);
+                            select.ci.post = i - 1 > 0 ? i - 1 : 0;
+                            i = l + 1;
+                        } else {
+                            i++;
+                        }
+                        if (i === l) {
+                            select.post.push(selectobj);
+                            select.ci.post = l;
+                        }
+                    }
+                } else {
+                    select.post.push(selectobj);
+                }
+                console.log(select);
+                postdetailview(data, select);
+                showselect(data, select);
+                let mode = 'intersection';
+                select.actuser = activeuser(data, preselect, select, mode);
+                // detailview(data, d.data.id.split('.'));
+                /* if (focus !== d) zoom(d);
+                else zoom(root);*/
+                // console.log(s._groups);
+            });
 
-    cell.append('title')
-        .text(function (d) {
-            return d.data.id + '\n' + format(d.value);
-        });
+        let text = d3.select('.box postview')
+            .append('div')
+            .attr('id', 'explanation')
+            .style('visibility', 'hidden');
+        /*g.selectAll('.node')
+        .append('text')
+        .attr('transform', )*/
+    }
+
+    function drawtm() {
+        let zoom = d3.zoom()
+            .scaleExtent([1, 5])
+            .on('zoom', function () {
+                g.attr('transform', d3.event.transform);
+                let k = this.__zoom.k;
+                g.attr('r', 5 / k)
+                    .attr('stroke-width', 1 / k);
+            });
+
+        let svg = d3.select('#page')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', '0 0 500 500')
+            .attr('preserveAspectRatio', 'xMinYMin')
+            .style('fill', 'none')
+            .style('pointer-events', 'all')
+            .call(zoom);
+
+        let g = svg.append('g')
+            .attr('id', 'pagepmap');
+
+        let format = d3.format(',d');
+
+        let treemap = d3.treemap()
+            .tile(d3.treemapSquarify)
+            .size([w, h])
+            .round(false)
+            .paddingInner(1);
+        // .paddingOuter(1);
+
+        let root = d3.hierarchy(pagedata)
+            .eachBefore(function (d) {
+                d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
+                let page = d.data.id.split('.')[1];
+                let post = d.data.id.split('.')[2];
+                d.data.page = page === undefined ? 0 : page === pagedata.children[0].name ? 1 : 2;
+                d.data.post = post === undefined ? 0 : post.match(/\d{1,}/);
+                d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
+                // console.log(d.data.post[0]);
+                if (d.data.post[0] > n) {
+                    n = d.data.post[0];
+                }
+            })
+            .sum(sumBySize)
+            .sort(function (a, b) {
+                return b.height - a.height || b.value - a.value;
+            });
+
+        let focus = root;
+        let view;
+
+        treemap(root);
+
+        let cell = g.selectAll('g')
+            .data(root.descendants())
+            .enter().append('g')
+            .attr('class', (d) => {
+                return 'page' + d.data.page + ' p' + d.data.post + ' depth' + d.depth;
+            })
+            .attr('transform', function (d) {
+                return 'translate(' + d.x0 + ',' + d.y0 + ')';
+            });
+
+        let rect = cell.append('rect')
+            // .data(root.leaves())
+            .datum(function (d) {
+                d.width = d.x1 - d.x0;
+                d.height = d.y1 - d.y0;
+                // console.log(d);
+                return d;
+            })
+            .attr('id', function (d) {
+                return d.data.id;
+            })
+            .attr('width', (d) => d.width)
+            .attr('height', (d) => d.height)
+            .attr('stroke', (d) => {
+                if (d.depth >= 2) {
+                    return '#000';
+                }
+            })
+            .attr('stroke-dasharray', (d) => {
+                if (d.depth > 2) {
+                    return 1, 1;
+                }
+            }).attr('fill', function (d) {
+                if (d === d.leaves()[0]) {
+                    return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                } else {
+                    return null;
+                }
+            })
+            .on('click', (d) => {
+                d3.event.preventDefault();
+                console.log('click', d);
+                selectivepost(d.data.page, d.data.post);
+                let pagedata = data.data[0];
+                // d.data.id.split('.');
+                // create preselect obj
+                let preselect = {};
+                let post = [];
+                let actuser = [];
+                for (let i = 0, l = select.post.length; i < l; i++) {
+                    post.push(select.post[i]);
+                }
+                for (let i = 0, l = select.actuser.length; i < l; i++) {
+                    let user = select.actuser[i];
+                    actuser.push(user);
+                }
+                preselect.post = post;
+                preselect.actuser = actuser;
+                // select postobj manipulate
+                let selectobj = {};
+                let idarray = d.data.id.split('.');
+                selectobj.page = idarray[1];
+                selectobj.post = idarray[2];
+                if (select.post.length !== 0) {
+                    for (let i = 0, l = select.post.length; i < l;) {
+                        if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
+                            select.post.splice(i, 1);
+                            select.ci.post = i - 1 > 0 ? i - 1 : 0;
+                            i = l + 1;
+                        } else {
+                            i++;
+                        }
+                        if (i === l) {
+                            select.post.push(selectobj);
+                            select.ci.post = l;
+                        }
+                    }
+                } else {
+                    select.post.push(selectobj);
+                }
+                console.log(select);
+                postdetailview(data, select);
+                showselect(data, select);
+                let mode = 'intersection';
+                select.actuser = activeuser(data, preselect, select, mode);
+                // detailview(data, d.data.id.split('.'));
+                /* if (focus !== d) zoom(d);
+                else zoom(root);*/
+                // console.log(s._groups);
+            });
+
+        cell.append('clipPath')
+            .attr('id', function (d) {
+                return 'clip-' + d.data.id;
+            })
+            .append('use')
+            .attr('href', function (d) {
+                return '#' + d.data.id;
+            });
+
+        let text = cell.append('text')
+            .attr('clip-path', function (d) {
+                return 'url(#clip-' + d.data.id + ')';
+            })
+            .datum(function (d) {
+                d.size = Math.sqrt(d.value);
+                let arr = d.data.id.split('.');
+                // console.log(d, arr);
+                if (ptt) {
+                    d.text = d.depth === 4 && d.data.name === 'push' ? arr[2] : '';
+                } else {
+                    d.text = d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
+                }
+                // console.log(d);
+                return d;
+            })
+            /* .selectAll('tspan')*/
+            /* .data(function (d) {
+                // return d.data.name.split(/(?=[A-Z][^A-Z])/g);
+                console.log(d);
+                let arr = d.data.id.split('.');
+                // console.log(d, arr);
+                return d.depth === 4 && d.data.name === 'like' ? arr[2] : '';
+            })*/
+            /* .enter().append('tspan')*/
+            .text(function (d) {
+                return d.text;
+                // return d;
+            })
+            .attr('font-size', (d) => {
+                return d.size;
+            })
+            .attr('x', (d, i) => {
+                return d.size / 5;
+                // return 9 * i + 4;
+            })
+            .attr('y', function (d, i) {
+                return d.size;
+                // return 13 + i * 10;
+            })
+            .attr('fill', '#000');
+
+        /* rect.selectAll('.depth2')
+            .moveToFront();*/
+
+        cell.append('title')
+            .text(function (d) {
+                return d.data.id + '\n' + format(d.value);
+            });
+
+        // console.log('root', root);
+        // zoomTo([root.x0, root.y0, getr(root)]);
+        /*
+        d3.selectAll('input')
+            .data([sumBySize, sumByCount], function (d) {
+                return d ? d.name : this.value;
+            })
+            .on('change', changed);
+
+        let timeout = d3.timeout(function () {
+            d3.select('input[value=\"sumByCount\"]')
+                .property('checked', true)
+                .dispatch('change');
+        }, 2000);
+
+        function changed(sum) {
+            timeout.stop();
+
+            treemap(root.sum(sum));
+
+            cell.transition()
+                .duration(750)
+                .attr('transform', function (d) {
+                    return 'translate(' + d.x0 + ',' + d.y0 + ')';
+                })
+                .select('rect')
+                .attr('width', function (d) {
+                    return d.x1 - d.x0;
+                })
+                .attr('height', function (d) {
+                    return d.y1 - d.y0;
+                });
+        }
+
+        function sumByCount(d) {
+            return d.children ? 0 : 1;
+        }*/
+
+        /* function zoom(d) {
+            let focus0 = focus;
+            focus = d;
+            // console.log(view);
+            let x = focus.x1 - focus.x0;
+            let y = focus.y1 - focus.y0;
+            let r = x === w && y === w ? w : x > y ? 2 * x : 2 * y;
+            d3.transition()
+                .duration(d3.event.altKey ? 7500 : 750)
+                .tween('zoom', (d) => {
+                    let i = d3.interpolateZoom(view, [focus.x0, focus.y0, r]);
+                    return function (t) {
+                        zoomTo(i(t));
+                    };
+                });
+        }
+
+        function zoomTo(v) {
+            let k = w / v[2];
+            view = v;
+            // console.log(v);
+            cell.attr('transform', function (d) {
+                // console.log(d);
+                return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
+            });
+            rect.attr('width', function (d) {
+                    return d.width * k;
+                })
+                .attr('height', function (d) {
+                    return d.height * k;
+                });
+            text.attr('font-size', (d) => {
+                    return d.size * k;
+                })
+                .attr('x', (d, i) => {
+                    return d.size * k;
+                    // return 9 * i + 4;
+                })
+                .attr('y', function (d, i) {
+                    return d.size * k;
+                    // return 13 + i * 10;
+                });
+        }*/
+    }
 
     function getr(d) {
         let focus = d;
@@ -641,91 +862,10 @@ function pageview(data, pagedata, select) {
         let r = Math.sqrt(x * y);
         return r;
     }
-    // console.log('root', root);
-    // zoomTo([root.x0, root.y0, getr(root)]);
-    /*
-    d3.selectAll('input')
-        .data([sumBySize, sumByCount], function (d) {
-            return d ? d.name : this.value;
-        })
-        .on('change', changed);
-
-    let timeout = d3.timeout(function () {
-        d3.select('input[value=\"sumByCount\"]')
-            .property('checked', true)
-            .dispatch('change');
-    }, 2000);
-
-    function changed(sum) {
-        timeout.stop();
-
-        treemap(root.sum(sum));
-
-        cell.transition()
-            .duration(750)
-            .attr('transform', function (d) {
-                return 'translate(' + d.x0 + ',' + d.y0 + ')';
-            })
-            .select('rect')
-            .attr('width', function (d) {
-                return d.x1 - d.x0;
-            })
-            .attr('height', function (d) {
-                return d.y1 - d.y0;
-            });
-    }
-
-    function sumByCount(d) {
-        return d.children ? 0 : 1;
-    }*/
 
     function sumBySize(d) {
         return d.size;
     }
-
-    /* function zoom(d) {
-        let focus0 = focus;
-        focus = d;
-        // console.log(view);
-        let x = focus.x1 - focus.x0;
-        let y = focus.y1 - focus.y0;
-        let r = x === w && y === w ? w : x > y ? 2 * x : 2 * y;
-        d3.transition()
-            .duration(d3.event.altKey ? 7500 : 750)
-            .tween('zoom', (d) => {
-                let i = d3.interpolateZoom(view, [focus.x0, focus.y0, r]);
-                return function (t) {
-                    zoomTo(i(t));
-                };
-            });
-    }
-
-    function zoomTo(v) {
-        let k = w / v[2];
-        view = v;
-        // console.log(v);
-        cell.attr('transform', function (d) {
-            // console.log(d);
-            return 'translate(' + ((d.x0 - v[0]) * k) + ',' + ((d.y0 - v[1]) * k) + ')';
-        });
-        rect.attr('width', function (d) {
-                return d.width * k;
-            })
-            .attr('height', function (d) {
-                return d.height * k;
-            });
-        text.attr('font-size', (d) => {
-                return d.size * k;
-            })
-            .attr('x', (d, i) => {
-                return d.size * k;
-                // return 9 * i + 4;
-            })
-            .attr('y', function (d, i) {
-                return d.size * k;
-                // return 13 + i * 10;
-            });
-    }*/
 }
 
 /**
@@ -1405,7 +1545,10 @@ function overlapvis(data, select, mode) {
             d3.event.preventDefault();
             // console.log(d, this);
             /* let i = selectobj.page === data.query.page1 ? 0 : 1;
-            let j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
+            let j = 0;
+            if (selectobj.post !== 0) {
+                j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
+            }
             // console.log(i, j);*/
             let preselect = {};
             let user = [];
@@ -1661,7 +1804,10 @@ function postdetail(data, select) {
         let page = select.post[index].page;
         let post = select.post[index].post;
         let i = page === data.query.page1 ? 0 : 1;
-        let j = parseInt(post.match(/\d{1,}/)[0]) - 1;
+        let j = 0;
+        if (post !== undefined) {
+            j = parseInt(post.match(/\d{1,}/)[0]) - 1;
+        }
         // console.log(i, j);
         content.page = data.query.page1;
         content.post = post;
@@ -1868,7 +2014,10 @@ function activeuser(data, preselect, postselect, mode) {
                 for (let i = 0, l = d.posts.A.length; i < l; i++) {
                     for (let j = 0, l = postchange.length; j < l; j++) {
                         let x = postchange[j].page === data.query.page1 ? 0 : 1;
-                        let y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
+                        let y = 0;
+                        if (postchange[j].post !== undefined) {
+                            y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
+                        }
                         console.log(x, y);
                         let id;
                         let eqid;
@@ -1892,7 +2041,10 @@ function activeuser(data, preselect, postselect, mode) {
                 for (let i = 0, l = d.posts.B.length; i < l; i++) {
                     for (let j = 0, l = postchange.length; j < l; j++) {
                         let x = postchange[j].page === data.query.page1 ? 0 : 1;
-                        let y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
+                        let y = 0;
+                        if (postchange[j].post !== undefined) {
+                            y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
+                        }
                         // console.log(x, y);
                         let id;
                         let eqid;
@@ -2339,13 +2491,22 @@ function activepost(data, preselect, postselect, mode) {
  */
 function selectivepost(page, post) {
     let sel = d3.selectAll('.page' + page + '.p' + post);
-    let rect = sel.select('rect')._groups[0];
-    let text = sel.select('text')._groups[0];
-    // console.log(rect[2], text);
-    for (let i = 2, l = rect.length; i < l; i++) {
-        rect[i].classList.toggle('selective');
+    let mode = document.querySelector('input[type="radio"]:checked').value;
+    if (mode === 'sunburst') {
+        let node = sel.select('path')._groups[0];
+        let text = sel.select('text')._groups[0];
+        for (let i = 2, l = node.length; i < l; i++) {
+            rect[i].classList.toggle('selective');
+        }
+    } else if (mode === 'treemap') {
+        let rect = sel.select('rect')._groups[0];
+        let text = sel.select('text')._groups[0];
+        // console.log(rect[2], text);
+        for (let i = 2, l = rect.length; i < l; i++) {
+            rect[i].classList.toggle('selective');
+        }
+        text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text}
     }
-    text[4].classList.toggle('selectext'); // text[4] is 'like' rect's text
 }
 
 /**
