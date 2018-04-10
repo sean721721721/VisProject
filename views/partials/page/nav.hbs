@@ -172,23 +172,31 @@
             </div>
             <div class="box postview">
                 <h2>PageView</h2>
-                <div id="page"></div>
                 <form>
                     <fieldset id="pagemode">
+                        <legend>mode</legend>
                         <label for="mode1">Treemap</label>
                         <input type="radio" id="mode1" name="mode" value="treemap" checked>
                         <label for="mode2">Sunburst</label>
                         <input type="radio" id="mode2" name="mode" value="sunburst">
                     </fieldset>
+                    <fieldset>
+                        <legend>sort</legend>
+                        <label for="sort1">Time</label>
+                        <input type="radio" id="sort1" name="sort" value="time">
+                        <label for="sort2">Size</label>
+                        <input type="radio" id="sort2" name="sort" value="size" checked>
+                    </fieldset>
                 </form>
+                <div id="page"></div>
             </div>
             <div class="box detailview">
                 <h2>detailview</h2>
-                <div id="detail"></div>
                 <div class="pagination">
                     <button class="detail previous round">&#8249;</button>
                     <button class="detail next round">&#8250;</button>
                 </div>
+                <div id="detail"></div>
             </div>
         </div>
         <div class="box userview" id="table">

@@ -83,7 +83,7 @@ function overview(data, select) {
     // graph draw
     // let width = document.querySelector('#over').offsetWidth;
     let width = '100%';
-    let height = '50%';
+    let height = '100%';
     let margin = {
         top: 30,
         right: 60,
@@ -243,9 +243,9 @@ function overview(data, select) {
                 .duration(200)
                 .style('opacity', .9);
             tooltip2.html('Page= ' + data.query.page2 + '<br/>' +
-                    'Type = ' + axis[i] + '<br/>' +
-                    'Count = ' + d[2] + '<br/>' +
-                    '% = ' + d[2] / d[3] * 100 + '%')
+                    'Activities Type = ' + axis[i] + '<br/>' +
+                    'Activities Count = ' + d[2] + '<br/>' +
+                    'Activities % = ' + d[2] / d[3] * 100 + '%')
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
         })
@@ -307,9 +307,9 @@ function overview(data, select) {
                     .duration(200)
                     .style('opacity', .9);
                 tooltip2.html('Page= ' + data.query.page1 + '&' + data.query.page2 + '<br/>' +
-                        'Type = ' + 'overlap ' + axis[i] + '<br/>' +
-                        'Count = ' + (d[1] + d[2] - d[3]) + '<br/>' +
-                        '% = ' + (d[1] + d[2] - d[3]) / d[3] * 100 + '%')
+                        'Activities Type = ' + 'overlap ' + axis[i] + '<br/>' +
+                        'Activities Count = ' + (d[1] + d[2] - d[3]) + '<br/>' +
+                        'Activities % = ' + (d[1] + d[2] - d[3]) / d[3] * 100 + '%')
                     .style('left', (d3.event.pageX + 5) + 'px')
                     .style('top', (d3.event.pageY - 30) + 'px');
             }
@@ -417,7 +417,6 @@ function showselect(data, select) {
 function pageview(data, pagedata, select) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
-    let mode = document.querySelector('input[type="radio"]:checked').value;
     let ptt = data.query.posttype === 'PTT';
     let height = '100%';
     let width = height;
@@ -427,18 +426,20 @@ function pageview(data, pagedata, select) {
     let n = 100;
     // let wx = w / ovdata.length;
 
-    if (d3.select('#page').select('svg')._groups[0][0] !== undefined) {
-        d3.select('#page').select('svg')._groups[0][0].remove();
-    }
+    d3.selectAll('input')
+        .on('change', changed);
 
-    console.log(mode);
-    if (mode === 'sunburst') {
-        drawsb();
-    } else if (mode === 'treemap') {
-        drawtm();
-    }
+    let timeout = d3.timeout(function () {
+        d3.select('input[value=\"sunburst\"]')
+            .property('checked', true)
+            .dispatch('change');
+    }, 0);
 
-    function drawsb() {
+    function changed() {
+        if (d3.select('#page').select('svg')._groups[0][0] !== undefined) {
+            d3.select('#page').select('svg')._groups[0][0].remove();
+        }
+
         let svg = d3.select('#page')
             .append('svg')
             .attr('width', width)
@@ -449,11 +450,11 @@ function pageview(data, pagedata, select) {
             .style('pointer-events', 'all');
 
         let g = svg.append('g')
-            .attr('id', 'pagepmap')
-            .attr('transform', 'translate(' + w / 2 + ',' + h / 2 + ')');
+            .attr('id', 'pagepmap');
 
-        let partition = d3.partition()
-            .size([2 * Math.PI, radius * radius]);
+        let mode = document.querySelector('input[name="mode"]:checked').value;
+        let sorting = document.querySelector('input[name="sort"]:checked').value;
+        console.log('change mode', mode, sorting);
 
         let root = d3.hierarchy(pagedata)
             .eachBefore(function (d) {
@@ -468,10 +469,25 @@ function pageview(data, pagedata, select) {
                     n = d.data.post[0];
                 }
             })
-            .sum(sumBySize)
-            .sort(function (a, b) {
-                return b.height - a.height || b.value - a.value;
-            });
+            .sum(sumBySize);
+
+        if (mode === 'sunburst') {
+            if (sorting === 'time') {
+                drawsb(g, root.sort(sortByTime));
+            } else if (sorting === 'size') {
+                drawsb(g, root.sort(sortBySize));
+            }
+        } else if (mode === 'treemap') {
+            drawtm(g, root.sort(sortBySize));
+        }
+    }
+
+    function drawsb(g, root) {
+        let totalSize = 0;
+        g.attr('transform', 'translate(' + w / 2 + ',' + h / 2 + ')');
+
+        let partition = d3.partition()
+            .size([2 * Math.PI, radius * radius]);
 
         partition(root);
 
@@ -502,72 +518,31 @@ function pageview(data, pagedata, select) {
             .attr('id', function (d) {
                 return d.data.id;
             })
-            .style('stroke', '#000')
-            .style('fill', function (d) {
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 0.5)
+            .attr('fill', function (d) {
                 return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
             })
+            .on('mouseover', (d) => {
+                mouseover(d, totalSize);
+            })
             .on('click', (d) => {
-                d3.event.preventDefault();
-                console.log('click', d);
-                selectivepost(d.data.page, d.data.post);
-                let pagedata = data.data[0];
-                // d.data.id.split('.');
-                // create preselect obj
-                let preselect = {};
-                let post = [];
-                let actuser = [];
-                for (let i = 0, l = select.post.length; i < l; i++) {
-                    post.push(select.post[i]);
-                }
-                for (let i = 0, l = select.actuser.length; i < l; i++) {
-                    let user = select.actuser[i];
-                    actuser.push(user);
-                }
-                preselect.post = post;
-                preselect.actuser = actuser;
-                // select postobj manipulate
-                let selectobj = {};
-                let idarray = d.data.id.split('.');
-                selectobj.page = idarray[1];
-                selectobj.post = idarray[2];
-                if (select.post.length !== 0) {
-                    for (let i = 0, l = select.post.length; i < l;) {
-                        if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
-                            select.post.splice(i, 1);
-                            select.ci.post = i - 1 > 0 ? i - 1 : 0;
-                            i = l + 1;
-                        } else {
-                            i++;
-                        }
-                        if (i === l) {
-                            select.post.push(selectobj);
-                            select.ci.post = l;
-                        }
-                    }
-                } else {
-                    select.post.push(selectobj);
-                }
-                console.log(select);
-                postdetailview(data, select);
-                showselect(data, select);
-                let mode = 'intersection';
-                select.actuser = activeuser(data, preselect, select, mode);
-                // detailview(data, d.data.id.split('.'));
-                /* if (focus !== d) zoom(d);
-                else zoom(root);*/
-                // console.log(s._groups);
+                click(d);
             });
 
-        let text = d3.select('.box postview')
-            .append('div')
-            .attr('id', 'explanation')
-            .style('visibility', 'hidden');
-        /*g.selectAll('.node')
-        .append('text')
-        .attr('transform', )*/
+        totalSize = nodes.datum().value;
+
+        let tw = 100;
+        let th = 100;
+        let text = g.append('text')
+            .attr('x', - th / 2)
+            .attr('y', - tw / 2)
+            .style('visibility', 'hidden')
+            .attr('id', 'percentage');
+        console.log(text);
     }
 
-    function drawtm() {
+    function drawtm(g, root) {
         let zoom = d3.zoom()
             .scaleExtent([1, 5])
             .on('zoom', function () {
@@ -577,18 +552,7 @@ function pageview(data, pagedata, select) {
                     .attr('stroke-width', 1 / k);
             });
 
-        let svg = d3.select('#page')
-            .append('svg')
-            .attr('width', width)
-            .attr('height', height)
-            .attr('viewBox', '0 0 500 500')
-            .attr('preserveAspectRatio', 'xMinYMin')
-            .style('fill', 'none')
-            .style('pointer-events', 'all')
-            .call(zoom);
-
-        let g = svg.append('g')
-            .attr('id', 'pagepmap');
+        g.call(zoom);
 
         let format = d3.format(',d');
 
@@ -598,24 +562,6 @@ function pageview(data, pagedata, select) {
             .round(false)
             .paddingInner(1);
         // .paddingOuter(1);
-
-        let root = d3.hierarchy(pagedata)
-            .eachBefore(function (d) {
-                d.data.id = (d.parent ? d.parent.data.id + '.' : '') + d.data.name;
-                let page = d.data.id.split('.')[1];
-                let post = d.data.id.split('.')[2];
-                d.data.page = page === undefined ? 0 : page === pagedata.children[0].name ? 1 : 2;
-                d.data.post = post === undefined ? 0 : post.match(/\d{1,}/);
-                d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
-                // console.log(d.data.post[0]);
-                if (d.data.post[0] > n) {
-                    n = d.data.post[0];
-                }
-            })
-            .sum(sumBySize)
-            .sort(function (a, b) {
-                return b.height - a.height || b.value - a.value;
-            });
 
         let focus = root;
         let view;
@@ -662,55 +608,7 @@ function pageview(data, pagedata, select) {
                 }
             })
             .on('click', (d) => {
-                d3.event.preventDefault();
-                console.log('click', d);
-                selectivepost(d.data.page, d.data.post);
-                let pagedata = data.data[0];
-                // d.data.id.split('.');
-                // create preselect obj
-                let preselect = {};
-                let post = [];
-                let actuser = [];
-                for (let i = 0, l = select.post.length; i < l; i++) {
-                    post.push(select.post[i]);
-                }
-                for (let i = 0, l = select.actuser.length; i < l; i++) {
-                    let user = select.actuser[i];
-                    actuser.push(user);
-                }
-                preselect.post = post;
-                preselect.actuser = actuser;
-                // select postobj manipulate
-                let selectobj = {};
-                let idarray = d.data.id.split('.');
-                selectobj.page = idarray[1];
-                selectobj.post = idarray[2];
-                if (select.post.length !== 0) {
-                    for (let i = 0, l = select.post.length; i < l;) {
-                        if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
-                            select.post.splice(i, 1);
-                            select.ci.post = i - 1 > 0 ? i - 1 : 0;
-                            i = l + 1;
-                        } else {
-                            i++;
-                        }
-                        if (i === l) {
-                            select.post.push(selectobj);
-                            select.ci.post = l;
-                        }
-                    }
-                } else {
-                    select.post.push(selectobj);
-                }
-                console.log(select);
-                postdetailview(data, select);
-                showselect(data, select);
-                let mode = 'intersection';
-                select.actuser = activeuser(data, preselect, select, mode);
-                // detailview(data, d.data.id.split('.'));
-                /* if (focus !== d) zoom(d);
-                else zoom(root);*/
-                // console.log(s._groups);
+                click(d);
             });
 
         cell.append('clipPath')
@@ -855,6 +753,70 @@ function pageview(data, pagedata, select) {
         }*/
     }
 
+    function mouseover(d, totalSize) {
+        let percentage = (100 * d.value / totalSize).toPrecision(3);
+        let string = percentage + '%';
+        if (percentage < 0.01) {
+            string = '< 0.01%';
+        }
+        d3.select('#percentage')
+            .text(string)
+            .style('visibility', '')
+            .attr('fill', 'red');
+    }
+
+    function click(d) {
+        d3.event.preventDefault();
+        console.log('click', d);
+        selectivepost(d.data.page, d.data.post);
+        let pagedata = data.data[0];
+        // d.data.id.split('.');
+        // create preselect obj
+        let preselect = {};
+        let post = [];
+        let actuser = [];
+        for (let i = 0, l = select.post.length; i < l; i++) {
+            post.push(select.post[i]);
+        }
+        for (let i = 0, l = select.actuser.length; i < l; i++) {
+            let user = select.actuser[i];
+            actuser.push(user);
+        }
+        preselect.post = post;
+        preselect.actuser = actuser;
+        // select postobj manipulate
+        let selectobj = {};
+        let idarray = d.data.id.split('.');
+        selectobj.page = idarray[1];
+        selectobj.post = idarray[2];
+        if (select.post.length !== 0) {
+            for (let i = 0, l = select.post.length; i < l;) {
+                if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
+                    select.post.splice(i, 1);
+                    select.ci.post = i - 1 > 0 ? i - 1 : 0;
+                    i = l + 1;
+                } else {
+                    i++;
+                }
+                if (i === l) {
+                    select.post.push(selectobj);
+                    select.ci.post = l;
+                }
+            }
+        } else {
+            select.post.push(selectobj);
+        }
+        console.log(select);
+        postdetailview(data, select);
+        showselect(data, select);
+        let mode = 'intersection';
+        select.actuser = activeuser(data, preselect, select, mode);
+        // detailview(data, d.data.id.split('.'));
+        /* if (focus !== d) zoom(d);
+        else zoom(root);*/
+        // console.log(s._groups);
+    }
+
     function getr(d) {
         let focus = d;
         let x = focus.x1 - focus.x0;
@@ -865,6 +827,14 @@ function pageview(data, pagedata, select) {
 
     function sumBySize(d) {
         return d.size;
+    }
+
+    function sortByTime(d) {
+        return d;
+    }
+
+    function sortBySize(a, b) {
+        return b.height - a.height || b.value - a.value;
     }
 }
 
@@ -1590,7 +1560,7 @@ function overlapvis(data, select, mode) {
             }
             console.log(select.user);
             // user color update
-            let bug = d3.selectAll('.user')
+            let bug = d3.selectAll('.user');
             console.log(bug);
             bug.attr('fill', (d) => {
                 console.log(d);
@@ -1809,7 +1779,7 @@ function postdetail(data, select) {
             j = parseInt(post.match(/\d{1,}/)[0]) - 1;
         }
         // console.log(i, j);
-        content.page = data.query.page1;
+        content.page = page;
         content.post = post;
         content.id = pagedata[i][j].id;
         content.word = pagedata[i][j].word;
@@ -2491,12 +2461,13 @@ function activepost(data, preselect, postselect, mode) {
  */
 function selectivepost(page, post) {
     let sel = d3.selectAll('.page' + page + '.p' + post);
-    let mode = document.querySelector('input[type="radio"]:checked').value;
+    let mode = document.querySelector('input[name="mode"]:checked').value;
     if (mode === 'sunburst') {
-        let node = sel.select('path')._groups[0];
+        let node = sel._groups[0];
         let text = sel.select('text')._groups[0];
+        console.log(mode, node);
         for (let i = 2, l = node.length; i < l; i++) {
-            rect[i].classList.toggle('selective');
+            node[i].classList.toggle('selective');
         }
     } else if (mode === 'treemap') {
         let rect = sel.select('rect')._groups[0];
