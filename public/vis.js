@@ -454,7 +454,6 @@ function pageview(data, pagedata, select) {
 
         let mode = document.querySelector('input[name="mode"]:checked').value;
         let sorting = document.querySelector('input[name="sort"]:checked').value;
-        console.log('change mode', mode, sorting);
 
         let root = d3.hierarchy(pagedata)
             .eachBefore(function (d) {
@@ -470,6 +469,8 @@ function pageview(data, pagedata, select) {
                 }
             })
             .sum(sumBySize);
+
+        console.log('change mode', mode, sorting, root);
 
         if (mode === 'sunburst') {
             if (sorting === 'time') {
@@ -532,12 +533,13 @@ function pageview(data, pagedata, select) {
 
         totalSize = nodes.datum().value;
 
-        let tw = 100;
-        let th = 100;
         let text = g.append('text')
-            .attr('x', - th / 2)
-            .attr('y', - tw / 2)
             .style('visibility', 'hidden')
+            .style('text-anchor', 'middle')
+            .attr('id', 'info');
+        text.append('tspan')
+            .attr('id', 'id');
+        text.append('tspan')
             .attr('id', 'percentage');
         console.log(text);
     }
@@ -754,15 +756,27 @@ function pageview(data, pagedata, select) {
     }
 
     function mouseover(d, totalSize) {
+        // console.log(d);
+        let id = d.data.id;
         let percentage = (100 * d.value / totalSize).toPrecision(3);
         let string = percentage + '%';
         if (percentage < 0.01) {
             string = '< 0.01%';
         }
+        d3.select('#info').style('visibility', '');
         d3.select('#percentage')
-            .text(string)
-            .style('visibility', '')
-            .attr('fill', 'red');
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('fill', 'red')
+            .text(string);
+
+        d3.select('#id')
+            .attr('x', 0)
+            .attr('y', 20)
+            .attr('fill', 'red')
+            .text((d) => {
+                return id;
+            });
     }
 
     function click(d) {
@@ -847,6 +861,126 @@ function pageview(data, pagedata, select) {
 function showmodes(overlap, mode) {
     let show = [];
     switch (mode) {
+        case 'push':
+            // do another thing
+            for (let i = 0, l = overlap.length; i < l; i++) { // degree
+                if (overlap[i].length > 0) {
+                    let degree = [];
+                    let find = false;
+                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                        let group = [];
+                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                            let user = overlap[i][j][k];
+                            // console.log(user);
+                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                                if (user.posts.A[a].pushing.length !== 0) {
+                                    find = true;
+                                    a = al;
+                                }
+                            }
+                            if (!find) {
+                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                    if (user.posts.B[b].pushing.length !== 0) {
+                                        find = true;
+                                        b = bl;
+                                    }
+                                }
+                            }
+                            if (find) {
+                                group.push(user);
+                            }
+                        }
+                        if (group.length != 0) {
+                            degree.push(group);
+                        }
+                    }
+                    if (degree.length != 0) {
+                        show.push(degree);
+                    }
+                }
+            }
+            return show;
+            break;
+        case 'neutral':
+            // do another thing
+            for (let i = 0, l = overlap.length; i < l; i++) { // degree
+                if (overlap[i].length > 0) {
+                    let degree = [];
+                    let find = false;
+                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                        let group = [];
+                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                            let user = overlap[i][j][k];
+                            // console.log(user);
+                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                                if (user.posts.A[a].neutral.length !== 0) {
+                                    find = true;
+                                    a = al;
+                                }
+                            }
+                            if (!find) {
+                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                    if (user.posts.B[b].neutral.length !== 0) {
+                                        find = true;
+                                        b = bl;
+                                    }
+                                }
+                            }
+                            if (find) {
+                                group.push(user);
+                            }
+                        }
+                        if (group.length != 0) {
+                            degree.push(group);
+                        }
+                    }
+                    if (degree.length != 0) {
+                        show.push(degree);
+                    }
+                }
+            }
+            return show;
+            break;
+        case 'boo':
+            // do another thing
+            for (let i = 0, l = overlap.length; i < l; i++) { // degree
+                if (overlap[i].length > 0) {
+                    let degree = [];
+                    let find = false;
+                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                        let group = [];
+                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                            let user = overlap[i][j][k];
+                            // console.log(user);
+                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                                if (user.posts.A[a].boo.length !== 0) {
+                                    find = true;
+                                    a = al;
+                                }
+                            }
+                            if (!find) {
+                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                    if (user.posts.B[b].boo.length !== 0) {
+                                        find = true;
+                                        b = bl;
+                                    }
+                                }
+                            }
+                            if (find) {
+                                group.push(user);
+                            }
+                        }
+                        if (group.length != 0) {
+                            degree.push(group);
+                        }
+                    }
+                    if (degree.length != 0) {
+                        show.push(degree);
+                    }
+                }
+            }
+            return show;
+            break;
         case 'reaction':
             // do something
             for (let i = 0, l = overlap.length; i < l; i++) { // degree
@@ -976,22 +1110,45 @@ function showmodes(overlap, mode) {
  * showcomments in detail
  * @param {object} data - inputdata
  * @param {object} select - selectobj
- * @param {string} mode -mode
  */
 function userview(data, select) {
+    let ptt = data.query.posttype === 'PTT';
+    let div = d3.select('#olbutton');
+    div.append('button').attr('class', 'overlap default').text('default');
     overlapvis(data, select, 'default');
-    document.querySelector('.overlap.default').onclick = function () {
-        overlapvis(data, select, 'default');
-    };
-    document.querySelector('.overlap.reaction').onclick = function () {
-        overlapvis(data, select, 'reaction');
-    };
-    document.querySelector('.overlap.comment').onclick = function () {
-        overlapvis(data, select, 'comment');
-    };
-    document.querySelector('.overlap.share').onclick = function () {
-        overlapvis(data, select, 'share');
-    };
+    if (ptt) {
+        div.append('button').attr('class', 'overlap push').text('push');
+        div.append('button').attr('class', 'overlap neutral').text('neutral');
+        div.append('button').attr('class', 'overlap boo').text('boo');
+        document.querySelector('.overlap.default').onclick = function () {
+            overlapvis(data, select, 'default');
+        };
+        document.querySelector('.overlap.push').onclick = function () {
+            overlapvis(data, select, 'push');
+        };
+        document.querySelector('.overlap.neutral').onclick = function () {
+            overlapvis(data, select, 'neutral');
+        };
+        document.querySelector('.overlap.boo').onclick = function () {
+            overlapvis(data, select, 'boo');
+        };
+    } else {
+        div.append('button').attr('class', 'overlap reaction').text('reaction');
+        div.append('button').attr('class', 'overlap comment').text('comment');
+        div.append('button').attr('class', 'overlap share').text('share');
+        document.querySelector('.overlap.default').onclick = function () {
+            overlapvis(data, select, 'default');
+        };
+        document.querySelector('.overlap.reaction').onclick = function () {
+            overlapvis(data, select, 'reaction');
+        };
+        document.querySelector('.overlap.comment').onclick = function () {
+            overlapvis(data, select, 'comment');
+        };
+        document.querySelector('.overlap.share').onclick = function () {
+            overlapvis(data, select, 'share');
+        };
+    }
     console.log(select);
 }
 
