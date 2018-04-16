@@ -85,10 +85,10 @@ function overview(data, select) {
     let width = '100%';
     let height = '100%';
     let margin = {
-        top: 30,
-        right: 60,
+        top: 80,
+        right: 80,
         bottom: 30,
-        left: 60,
+        left: 80,
     };
 
     let zoom = d3.zoom()
@@ -105,14 +105,14 @@ function overview(data, select) {
         .attr('id', 'barchart')
         .attr('width', width)
         .attr('height', height)
-        .attr('viewBox', '0 0 500 250')
+        .attr('viewBox', '0 0 500 400')
         .attr('preserveAspectRatio', 'xMinYMin')
         .style('fill', 'none')
         .style('pointer-events', 'all');
     // .call(zoom);
 
     let w = 500 - margin.left - margin.right;
-    let h = 250 - margin.top - margin.bottom;
+    let h = 400 - margin.top - margin.bottom;
     let wx = w / ovdata.length;
     let hy = h / ovdata.length;
 
@@ -149,7 +149,10 @@ function overview(data, select) {
         .enter().append('rect')
         .attr('class', 'A')
         .attr('data-legend', function (d) {
-            return data.query.page1;
+            return `${data.query.page1} from ${data.query.time1} to ${data.query.time2}`;
+        })
+        .attr('data-legend-color', function (d) {
+            return colorA(0.75);
         })
         .attr('fill', (d, i) => {
             let diff = getBaseLog(10, d[1]) > 5 ? 5 : getBaseLog(10, d[1]);
@@ -201,7 +204,10 @@ function overview(data, select) {
         .enter().append('rect')
         .attr('class', 'B')
         .attr('data-legend', function (d) {
-            return data.query.page2;
+            return `${data.query.page2} from ${data.query.time3} to ${data.query.time4}`;
+        })
+        .attr('data-legend-color', function (d) {
+            return colorB(0.25);
         })
         .attr('fill', (d, i) => {
             let diff = getBaseLog(10, d[2]) > 5 ? 5 : getBaseLog(10, d[2]);
@@ -263,7 +269,10 @@ function overview(data, select) {
         .enter().append('rect')
         .attr('class', 'C')
         .attr('data-legend', function (d) {
-            return data.query.page1 + ' & ' + data.query.page2;
+            return `${data.query.page1} & ${data.query.page2} 's overlaps`;
+        })
+        .attr('data-legend-color', function (d) {
+            return colorC(0.75);
         })
         .attr('fill', (d, i) => {
             if (i === 1) {
@@ -365,8 +374,8 @@ function overview(data, select) {
 
     let legend = svg.append('g')
         .attr('class', 'legend')
-        .attr('transform', 'translate(20,20)')
-        .style('font-size', '12px')
+        .attr('transform', 'translate(60,30)')
+        .style('font-size', '20px')
         .attr('textcolor', 'black')
         .call(d3.legend);
 
@@ -397,8 +406,9 @@ function showselect(data, select) {
         // userstr += '_';
         if (ptt) {
             userstr += select.user[i].id;
+        } else {
+            userstr += select.user[i].name;
         }
-        userstr += select.user[i].name;
         userstr += i < l ? ', ' : '';
     }
     let sdiv = document.getElementById('select');
@@ -860,249 +870,73 @@ function pageview(data, pagedata, select) {
  */
 function showmodes(overlap, mode) {
     let show = [];
+
     switch (mode) {
         case 'push':
-            // do another thing
-            for (let i = 0, l = overlap.length; i < l; i++) { // degree
-                if (overlap[i].length > 0) {
-                    let degree = [];
-                    let find = false;
-                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
-                        let group = [];
-                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
-                            let user = overlap[i][j][k];
-                            // console.log(user);
-                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
-                                if (user.posts.A[a].pushing.length !== 0) {
-                                    find = true;
-                                    a = al;
-                                }
-                            }
-                            if (!find) {
-                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
-                                    if (user.posts.B[b].pushing.length !== 0) {
-                                        find = true;
-                                        b = bl;
-                                    }
-                                }
-                            }
-                            if (find) {
-                                group.push(user);
-                            }
-                        }
-                        if (group.length != 0) {
-                            degree.push(group);
-                        }
-                    }
-                    if (degree.length != 0) {
-                        show.push(degree);
-                    }
-                }
-            }
+            makeshow('pushing.length');
             return show;
             break;
         case 'neutral':
-            // do another thing
-            for (let i = 0, l = overlap.length; i < l; i++) { // degree
-                if (overlap[i].length > 0) {
-                    let degree = [];
-                    let find = false;
-                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
-                        let group = [];
-                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
-                            let user = overlap[i][j][k];
-                            // console.log(user);
-                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
-                                if (user.posts.A[a].neutral.length !== 0) {
-                                    find = true;
-                                    a = al;
-                                }
-                            }
-                            if (!find) {
-                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
-                                    if (user.posts.B[b].neutral.length !== 0) {
-                                        find = true;
-                                        b = bl;
-                                    }
-                                }
-                            }
-                            if (find) {
-                                group.push(user);
-                            }
-                        }
-                        if (group.length != 0) {
-                            degree.push(group);
-                        }
-                    }
-                    if (degree.length != 0) {
-                        show.push(degree);
-                    }
-                }
-            }
+            makeshow('neutral.length');
             return show;
             break;
         case 'boo':
-            // do another thing
-            for (let i = 0, l = overlap.length; i < l; i++) { // degree
-                if (overlap[i].length > 0) {
-                    let degree = [];
-                    let find = false;
-                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
-                        let group = [];
-                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
-                            let user = overlap[i][j][k];
-                            // console.log(user);
-                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
-                                if (user.posts.A[a].boo.length !== 0) {
-                                    find = true;
-                                    a = al;
-                                }
-                            }
-                            if (!find) {
-                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
-                                    if (user.posts.B[b].boo.length !== 0) {
-                                        find = true;
-                                        b = bl;
-                                    }
-                                }
-                            }
-                            if (find) {
-                                group.push(user);
-                            }
-                        }
-                        if (group.length != 0) {
-                            degree.push(group);
-                        }
-                    }
-                    if (degree.length != 0) {
-                        show.push(degree);
-                    }
-                }
-            }
+            makeshow('boo.length');
             return show;
             break;
         case 'reaction':
-            // do something
-            for (let i = 0, l = overlap.length; i < l; i++) { // degree
-                if (overlap[i].length > 0) {
-                    let degree = [];
-                    let find = false;
-                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
-                        let group = [];
-                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
-                            let user = overlap[i][j][k];
-                            // console.log(user);
-                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
-                                if (user.posts.A[a].like !== 0) {
-                                    find = true;
-                                    a = al;
-                                }
-                            }
-                            if (!find) {
-                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
-                                    if (user.posts.B[b].like !== 0) {
-                                        find = true;
-                                        b = bl;
-                                    }
-                                }
-                            }
-                            if (find) {
-                                group.push(user);
-                            }
-                        }
-                        if (group.length != 0) {
-                            degree.push(group);
-                        }
-                    }
-                    if (degree.length != 0) {
-                        show.push(degree);
-                    }
-                }
-            }
+            makeshow('reaction');
             return show;
             break;
         case 'comment':
-            // do another thing
-            for (let i = 0, l = overlap.length; i < l; i++) { // degree
-                if (overlap[i].length > 0) {
-                    let degree = [];
-                    let find = false;
-                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
-                        let group = [];
-                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
-                            let user = overlap[i][j][k];
-                            // console.log(user);
-                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
-                                if (user.posts.A[a].commentcount !== 0) {
-                                    find = true;
-                                    a = al;
-                                }
-                            }
-                            if (!find) {
-                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
-                                    if (user.posts.B[b].commentcount !== 0) {
-                                        find = true;
-                                        b = bl;
-                                    }
-                                }
-                            }
-                            if (find) {
-                                group.push(user);
-                            }
-                        }
-                        if (group.length != 0) {
-                            degree.push(group);
-                        }
-                    }
-                    if (degree.length != 0) {
-                        show.push(degree);
-                    }
-                }
-            }
+            makeshow('comment');
             return show;
             break;
         case 'share':
-            // do yet another thing
-            for (let i = 0, l = overlap.length; i < l; i++) { // degree
-                if (overlap[i].length > 0) {
-                    let degree = [];
-                    let find = false;
-                    for (let j = 0, l = overlap[i].length; j < l; j++) { // group
-                        let group = [];
-                        for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
-                            let user = overlap[i][j][k];
-                            // console.log(user);
-                            for (let a = 0, al = user.posts.A.length; a < al; a++) {
-                                if (user.posts.A[a].share !== false) {
-                                    find = true;
-                                    a = al;
-                                }
-                            }
-                            if (!find) {
-                                for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
-                                    if (user.posts.B[b].share !== false) {
-                                        find = true;
-                                        b = bl;
-                                    }
-                                }
-                            }
-                            if (find) {
-                                group.push(user);
-                            }
-                        }
-                        if (group.length != 0) {
-                            degree.push(group);
-                        }
-                    }
-                    if (degree.length != 0) {
-                        show.push(degree);
-                    }
-                }
-            }
+            makeshow('share');
             return show;
             break;
         default:
             return overlap;
+    }
+
+    function makeshow(propname) {
+        for (let i = 0, l = overlap.length; i < l; i++) { // degree
+            if (overlap[i].length > 0) {
+                let degree = [];
+                let find = false;
+                for (let j = 0, l = overlap[i].length; j < l; j++) { // group
+                    let group = [];
+                    for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
+                        let user = overlap[i][j][k];
+                        // console.log(user);
+                        for (let a = 0, al = user.posts.A.length; a < al; a++) {
+                            if (getProperty(propname, user.posts.A[a]) !== 0) {
+                                find = true;
+                                a = al;
+                            }
+                        }
+                        if (!find) {
+                            for (let b = 0, bl = user.posts.B.length; b < bl; b++) {
+                                if (getProperty(propname, user.posts.B[b]) !== 0) {
+                                    find = true;
+                                    b = bl;
+                                }
+                            }
+                        }
+                        if (find) {
+                            group.push(user);
+                        }
+                    }
+                    if (group.length != 0) {
+                        degree.push(group);
+                    }
+                }
+                if (degree.length != 0) {
+                    show.push(degree);
+                }
+            }
+        }
     }
 }
 
@@ -1234,12 +1068,15 @@ function overlapvis(data, select, mode) {
 
     for (let i = 0, l = overlap.length; i < l; i++) {
         if (overlap[i].length > 0) {
-            oucount += overlap[i].length;
+            let degl = overlap[i].length;
+            for (let j = 0; j < degl; j++) {
+                oucount += overlap[i][j].length;
+            }
         }
     }
 
     // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
-    let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 1 : overlap.length + 1;
+    let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 2 : overlap.length + 1;
     let ratio = (1000 * 0.95) / (nextline * 50);
     let cellSize1 = 50 * ratio;
     let cellSize2 = 40 * ratio;
@@ -3086,6 +2923,24 @@ function numoffset(numarray) {
         offset++;
     }
     return offset;
+}
+
+/**
+ * property string bind to object
+ * @param {string} propertyName - string
+ * @param {object} object - target obj
+ * @return {object}
+ */
+function getProperty(propertyName, object) {
+    let parts = propertyName.split('.');
+    let length = parts.length;
+    let i;
+    let property = object || this;
+
+    for (i = 0; i < length; i++) {
+        property = property[parts[i]];
+    }
+    return property;
 }
 
 // https://github.com/wbkd/d3-extended
