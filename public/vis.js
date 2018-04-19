@@ -395,7 +395,7 @@ function overview(data, select) {
  */
 function showselect(data, select) {
     let ptt = data.query.posttype === 'PTT';
-    let poststr = '';
+    /*let poststr = '';
     let userstr = '';
     for (let i = 0, l = select.post.length; i < l; i++) {
         // poststr += '_';
@@ -410,12 +410,135 @@ function showselect(data, select) {
             userstr += select.user[i].name;
         }
         userstr += i < l ? ', ' : '';
-    }
+    }*/
     let sdiv = document.getElementById('select');
-    sdiv.innerHTML = '';
+    /*sdiv.innerHTML = '';
     sdiv.innerHTML += '<h1>posts: ' + poststr + '</h1>';
     sdiv.innerHTML += '<h1>users: ' + userstr + '</h1>';
-    console.log(poststr, userstr);
+    console.log(poststr, userstr);*/
+    let color = d3.scaleQuantize()
+        .domain([0, 10])
+        .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
+            '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
+        ]);
+    sdiv = d3.select('#select');
+    console.log(sdiv);
+    let userdiv = sdiv.selectAll('.showuser').data(select.user);
+    userdiv.exit().remove();
+    userdiv.enter().append('button').merge(userdiv)
+        .attr('class', 'showuser').text(function (d) {
+            if (ptt) {
+                return d.id;
+            } else {
+                return d.name;
+            }
+        })
+        .on('click', function (d) {
+            d3.event.preventDefault();
+            let preselect = {};
+            let user = [];
+            let actpost = [
+                [],
+                [],
+            ];
+            for (let i = 0, l = select.user.length; i < l; i++) {
+                user.push(select.user[i]);
+            }
+            for (let i = 0, l = select.actpost.length; i < l; i++) {
+                for (let j = 0, l = select.actpost[i].length; j < l; j++) {
+                    let post = select.actpost[i][j];
+                    actpost[i].push(post);
+                }
+            }
+            preselect.user = user;
+            preselect.actpost = actpost;
+            let selectobj = d;
+            for (let i = 0, l = select.user.length; i < l;) {
+                if (select.user[i].id === selectobj.id) {
+                    select.user.splice(i, 1);
+                    select.ci.user = i - 1 > 0 ? i - 1 : 0;
+                    i = l + 1;
+                } else {
+                    i++;
+                }
+                if (i === l) {
+                    select.user.push(selectobj);
+                    select.ci.user = l;
+                }
+            }
+            console.log(select.user);
+            // user color update
+            let bug = d3.selectAll('.user');
+            console.log(bug);
+            bug.attr('fill', (d) => {
+                console.log(d);
+                let rcolor;
+                if (ptt) {
+                    rcolor = color(Math.sqrt(d.posts.A.length));
+                } else {
+                    rcolor = color(Math.sqrt(d.posts.A.length));
+                }
+                for (let i = 0, l = select.user.length; i < l; i++) {
+                    if (d.id === select.user[i].id) {
+                        rcolor = '#000';
+                    }
+                }
+                return rcolor;
+            });
+            // activepost(data, preselect, select);
+            select.actpost = activepost(data, preselect, select, 'intersection');
+            userdetailview(data, select);
+            overview(data, select);
+            showselect(data, select);
+        });
+    // document.querySelector('.showuser').onclick = function () {};
+    let postdiv = sdiv.selectAll('.showpost').data(select.post);
+    postdiv.exit().remove();
+    postdiv.enter().append('button').merge(postdiv)
+        .attr('class', 'showpost').text(function (d) {
+            return `${d.page}_${d.post}`;
+        })
+        .on('click', function (d) {
+            d3.event.preventDefault();
+            console.log('click', d);
+            let pagenum = d.page === data.query.page1 ? 1 : 2;
+            let postnum = d.post.match(/\d{1,}/)[0];
+            selectivepost(pagenum, postnum);
+            let preselect = {};
+            let post = [];
+            let actuser = [];
+            for (let i = 0, l = select.post.length; i < l; i++) {
+                post.push(select.post[i]);
+            }
+            for (let i = 0, l = select.actuser.length; i < l; i++) {
+                let user = select.actuser[i];
+                actuser.push(user);
+            }
+            preselect.post = post;
+            preselect.actuser = actuser;
+            // select postobj manipulate
+            let selectobj = {};
+            selectobj.page = d.page;
+            selectobj.post = d.post;
+            for (let i = 0, l = select.post.length; i < l;) {
+                if (select.post[i].page === selectobj.page && select.post[i].post === selectobj.post) {
+                    select.post.splice(i, 1);
+                    select.ci.post = i - 1 > 0 ? i - 1 : 0;
+                    i = l + 1;
+                } else {
+                    i++;
+                }
+                if (i === l) {
+                    select.post.push(selectobj);
+                    select.ci.post = l;
+                }
+            }
+            console.log(select);
+            postdetailview(data, select);
+            showselect(data, select);
+            let mode = 'intersection';
+            select.actuser = activeuser(data, preselect, select, mode);
+        });
 }
 
 /**
@@ -947,6 +1070,7 @@ function showmodes(overlap, mode) {
  */
 function userview(data, select) {
     let ptt = data.query.posttype === 'PTT';
+    document.querySelector('#olbutton').innerHTML = '';
     let div = d3.select('#olbutton');
     div.append('button').attr('class', 'overlap default').text('default');
     overlapvis(data, select, 'default');
@@ -1057,15 +1181,16 @@ function overlapvis(data, select, mode) {
     let posts = data.data[0];
     let users = data.data[1];
     let overlap = [];
-    let oucount = 0;
+    let oucount = 0; // to decide nextline
+    // make overlap array
     for (let i = 0, l = data.data[2].O.length; i < l; i++) {
         if (data.data[2].O[i].length > 0) {
             overlap.push(data.data[2].O[i]);
         }
     }
-
     overlap = showmodes(overlap, mode);
 
+    // count elements in overlap
     for (let i = 0, l = overlap.length; i < l; i++) {
         if (overlap[i].length > 0) {
             let degl = overlap[i].length;
@@ -1075,9 +1200,10 @@ function overlapvis(data, select, mode) {
         }
     }
 
+    // how many elements in one line
     // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
     let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 2 : overlap.length + 1;
-    let ratio = (1000 * 0.95) / (nextline * 50);
+    let ratio = (1000 * 0.9) / (nextline * 50);
     let cellSize1 = 50 * ratio;
     let cellSize2 = 40 * ratio;
     let cellSize3 = 30 * ratio;
@@ -1085,7 +1211,7 @@ function overlapvis(data, select, mode) {
     let initx = 1000 * 0.025 + cellSize1 * 2;
     let inity = 1000 * 0.025;
 
-    // construct degree y checklist
+    // construct degree[i]'s y checklist
     let degylist = [];
     for (let i = 0; i < overlap.length; i++) {
         let deg = overlap[i];
@@ -1109,14 +1235,16 @@ function overlapvis(data, select, mode) {
         uclist.push(temp);
     }
 
+    // list[index]'s y value
     function gety(list, index) {
         let result = 0;
         for (let i = 0; i < index; i++) {
             result += list[i];
         }
-        return result;
+        return result + index; // one line space between degrees
     }
 
+    // modify elements' dy in the same degree
     function modify(list, datasource, index) {
         let l = datasource.length;
         let count = 0;
@@ -1133,6 +1261,7 @@ function overlapvis(data, select, mode) {
         return list;
     }
 
+    // elements' (x,y) corrdinate array
     function uccount(check, list) {
         let result = [];
         let l = check.length;
@@ -1156,6 +1285,7 @@ function overlapvis(data, select, mode) {
         return result;
     }
 
+    // count elements in array
     function count(data) {
         let c = 0;
         let l = data.length;
@@ -1164,6 +1294,21 @@ function overlapvis(data, select, mode) {
         }
         return c;
     }
+
+    // users' x
+    function xof(k) {
+        result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+        return result;
+
+    }
+
+    // users' y
+    function yof(k) {
+        let offsety = parseInt(k / nextline, 10);
+        result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+        return result + inity;
+    }
+
 
     let rect = g.selectAll('g')
         .data(overlap)
@@ -1196,12 +1341,18 @@ function overlapvis(data, select, mode) {
         .attr('fill', '#aaa')
         .attr('stroke', '#f00')
         .attr('opacity', 1)
-        .attr('width', cellSize1 * 2)
+        .attr('width', cellSize1 * nextline)
+        .attr('height', (d, i) => {
+            return cellSize1;
+        })
+        .attr('x', initx)
+        .attr('y', inity - cellSize1 * 1)
+        /* .attr('width', cellSize1 * 2)
         .attr('height', (d, i) => {
             return cellSize1 * degylist[i];
         })
         .attr('x', initx - cellSize1 * 2)
-        .attr('y', inity)
+        .attr('y', inity)*/
         .on('click', function (d, k) {
             d3.event.preventDefault();
             degylist = modify(degylist, d, k);
@@ -1214,13 +1365,13 @@ function overlapvis(data, select, mode) {
                 .attr('height', (d, i) => {
                     return cellSize1 * degylist[i];
                 });
-            d3.selectAll('.botton')
+            /* d3.selectAll('.botton')
                 .attr('height', (d, i) => {
                     return cellSize1 * degylist[i];
                 });
             text.attr('y', (d, i) => {
                 return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-            });
+            });*/
 
             for (let i = 0; i < degcounts; i++) {
                 let did = '#degree' + i;
@@ -1248,33 +1399,49 @@ function overlapvis(data, select, mode) {
                 for (let j = 0; j < gcount; j++) {
                     let gid = '#d' + i + 'g' + j;
                     d3.selectAll(gid).selectAll('.user')
-                        .attr('y', (d, k) => {
-                            function usery(check, index) {
-                                if (check === 1) {
-                                    return (cellSize2 - cellSize3) / 2;
-                                } else {
-                                    let offsety = parseInt(index / nextline, 10);
-                                    let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                                    return result;
-                                }
+                        .attr('transform', (d, k) => {
+                            resultx = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                            let offsety = parseInt(k / nextline, 10);
+                            if (degylist[i] === 1) {
+                                resulty = inity;
+                            } else {
+                                resulty = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                resulty += inity;
                             }
-                            return usery(degylist[i], k) + inity;
+                            return 'translate(' + resultx + ',' + resulty + ')';
                         });
+                    /* .attr('y', (d, k) => {
+                        // calculate users' y
+                        function usery(check, index) {
+                            if (check === 1) {
+                                return (cellSize2 - cellSize3) / 2;
+                            } else {
+                                let offsety = parseInt(index / nextline, 10);
+                                let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                return result;
+                            }
+                        }
+                        return usery(degylist[i], k) + inity;
+                    });*/
                 }
             }
         });
 
     let maxi = overlap.length - 1;
-    let num = [];
+    let num = []; // degrees' degree value
     let maxd = overlap[maxi][0][0].posts;
     num.push(getlength(maxd, 'A') + getlength(maxd, 'B'));
     let offset = numoffset(num);
     // console.log(offset);
     let text = rect.append('text')
-        .attr('x', initx - cellSize1 * 2)
+        .attr('x', initx)
+        .attr('y', (d, i) => {
+            return (cellSize1 * (-1 + 0.66)) / 2 + inity;
+        })
+        /* .attr('x', initx - cellSize1 * 2)
         .attr('y', (d, i) => {
             return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-        })
+        })*/
         // .attr('dy', '.35em')
         .attr('font-size', 50 * ratio)
         .attr('fill', '#aaa')
@@ -1284,7 +1451,6 @@ function overlapvis(data, select, mode) {
             let len = getlength(data, 'A') + getlength(data, 'B');
             return numalign(len, offset);
         });
-
 
     let interactionLabel = d3.select('.c').select('.interaction.label');
 
@@ -1334,18 +1500,6 @@ function overlapvis(data, select, mode) {
         for (let j = 0; j < gcount; j++) {
             let group = degree[j];
             let gid = '#d' + i + 'g' + j;
-
-            function xof(k) {
-                result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
-                return result;
-
-            }
-
-            function yof(k) {
-                let offsety = parseInt(k / nextline, 10);
-                result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                return result + inity;
-            }
 
             if (group.length > 0) {
                 function glyphmargin(k) {
@@ -2454,6 +2608,7 @@ function activepost(data, preselect, postselect, mode) {
  * @param {number} post - postnum
  */
 function selectivepost(page, post) {
+    console.log(page, post);
     let sel = d3.selectAll('.page' + page + '.p' + post);
     let mode = document.querySelector('input[name="mode"]:checked').value;
     if (mode === 'sunburst') {
