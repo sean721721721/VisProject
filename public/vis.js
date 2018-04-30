@@ -152,10 +152,10 @@ function overview(data, select) {
             return `${data.query.page1} from ${data.query.time1} to ${data.query.time2}`;
         })
         .attr('data-legend-color', function (d) {
-            return colorA(0.75);
+            return colorA(0.25);
         })
         .attr('fill', (d, i) => {
-            let diff = getBaseLog(10, d[1]) > 5 ? 5 : getBaseLog(10, d[1]);
+            let diff = getBaseLog(10, d[1]) > 5 ? 5 : getBaseLog(10, d[1]) < 1 ? 1 : getBaseLog(10, d[1]);
             let cvalue = 0.5 - (diff / 10);
             return colorA(cvalue);
         })
@@ -207,10 +207,10 @@ function overview(data, select) {
             return `${data.query.page2} from ${data.query.time3} to ${data.query.time4}`;
         })
         .attr('data-legend-color', function (d) {
-            return colorB(0.25);
+            return colorB(0.75);
         })
         .attr('fill', (d, i) => {
-            let diff = getBaseLog(10, d[2]) > 5 ? 5 : getBaseLog(10, d[2]);
+            let diff = getBaseLog(10, d[2]) > 5 ? 5 : getBaseLog(10, d[2]) < 1 ? 1 : getBaseLog(10, d[2]);
             let cvalue = diff / 10 + 0.5;
             return colorB(cvalue);
         })
@@ -276,7 +276,7 @@ function overview(data, select) {
         })
         .attr('fill', (d, i) => {
             if (i === 1) {
-                let diff = getBaseLog(10, d[1] + d[2] - d[3]) > 5 ? 5 : getBaseLog(10, d[1] + d[2] - d[3]);
+                let diff = getBaseLog(10, d[1] + d[2] - d[3]) > 5 ? 5 : getBaseLog(10, d[1] + d[2] - d[3]) < 1 ? 1 : getBaseLog(10, d[1] + d[2] - d[3]);
                 let cvalue = diff / 10 + 0.5;
                 return colorC(cvalue);
             } else {
@@ -395,7 +395,7 @@ function overview(data, select) {
  */
 function showselect(data, select) {
     let ptt = data.query.posttype === 'PTT';
-    /*let poststr = '';
+    /* let poststr = '';
     let userstr = '';
     for (let i = 0, l = select.post.length; i < l; i++) {
         // poststr += '_';
@@ -412,7 +412,7 @@ function showselect(data, select) {
         userstr += i < l ? ', ' : '';
     }*/
     let sdiv = document.getElementById('select');
-    /*sdiv.innerHTML = '';
+    /* sdiv.innerHTML = '';
     sdiv.innerHTML += '<h1>posts: ' + poststr + '</h1>';
     sdiv.innerHTML += '<h1>users: ' + userstr + '</h1>';
     console.log(poststr, userstr);*/
@@ -1309,7 +1309,6 @@ function overlapvis(data, select, mode) {
         return result + inity;
     }
 
-
     let rect = g.selectAll('g')
         .data(overlap)
         .enter().append('g')
@@ -1888,6 +1887,22 @@ function nextpost(data, select, count) {
  */
 function postdetailview(data, select) {
     postdetail(data, select);
+    let spl = select.post.length;
+    let button = d3.select('.btn-group').selectAll('button').data(select.post, (d) => {
+        return d;
+    });
+    button.enter().append('button').merge(button)
+        .style('width', (d) => {
+            return 100 / spl + '%';
+        })
+        .text((d) => {
+            return `${d.page} ${d.post}`;
+        })
+        .on('click', function (d, i) {
+            select.ci.post = i;
+            postdetail(data, select);
+        });
+    button.exit().remove();
     document.querySelector('.next').onclick = function () {
         nextpost(data, select, 1);
     };
@@ -2653,6 +2668,23 @@ function nextuser(data, select, count) {
  */
 function userdetailview(data, select) {
     userdetail(data, select);
+    console.log(select);
+    let sul = select.user.length;
+    let button = d3.select('.btn-group').selectAll('button').data(select.user, (d) => {
+        return d;
+    });
+    button.enter().append('button').merge(button)
+        .style('width', (d) => {
+            return 100 / sul + '%';
+        })
+        .text((d) => {
+            return `${d.id}`;
+        })
+        .on('click', function (d, i) {
+            select.ci.user = i;
+            userdetail(data, select);
+        });
+    button.exit().remove();
     document.querySelector('.next').onclick = function () {
         nextuser(data, select, 1);
     };
