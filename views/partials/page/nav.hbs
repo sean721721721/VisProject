@@ -14,15 +14,39 @@
             <span onclick="this.parentElement.style.display='none'" class="topright">x</span>
             <fieldset>
                 <legend>Set query Parameters</legend>
-                <label for="x">minlike:</label>
-                <input name="minlike" id="minlike" type="number" min="0" placeholder="minlike" value="0"></input>
+                <label for="x">var 1:</label>
+                <input name="varname1" id="varname1" type="text" list="varname1list" value="reaction"></input>
+                <datalist id="varname1list">
+                    <select multiple id="varname1" name="varname1">
+                        <option>reaction</option>
+                        <option>comment</option>
+                        <option>share</option>
+                        <option>push</option>
+                        <option>boo</option>
+                        <option>neutral</option>
+                    </select>
+                </datalist>
+                <label for="x">from</label>
+                <input name="minvar1" id="minvar1" type="number" min="0" placeholder="minvar1" value="0"></input>
+                <label for="x">to</label>
+                <input name="maxvar1" id="maxvar1" type="number" min="0" placeholder="maxvar1" value="0"></input>
+                <label for="x">var 2:</label>
+                <input name="varname2" id="varname2" type="text" list="varname2list" value="comment"></input>
+                <datalist id="varname2list">
+                    <select multiple id="varname2" name="varname2">
+                        <option>reaction</option>
+                        <option>comment</option>
+                        <option>share</option>
+                        <option>push</option>
+                        <option>boo</option>
+                        <option>neutral</option>
+                    </select>
+                </datalist>
+                <label for="x">from</label>
+                <input name="minvar2" id="minvar2" type="number" min="0" placeholder="minvar2" value="0"></input>
+                <label for="x">to</label>
+                <input name="maxvar2" id="maxvar2" type="number" min="0" placeholder="maxvar2" value="0"></input>
                 <!--<input name="dim" id="dim" type="number" placeholder="dim" value="2">dimention</input>-->
-                <label for="x">maxlike:</label>
-                <input name="maxlike" id="maxlike" type="number" min="0"></input>
-                <label for="x">mincomment:</label>
-                <input name="mincomment" id="mincomment" type="number" min="0" placeholder="mincomment" value="0"></input>
-                <label for="x">maxcomment:</label>
-                <input name="maxcomment" id="maxcomment" type="number" min="0"></input>
                 <label for="x">posttype:</label>
                 <input name="posttype" id="posttype" type="text" list="posttypelist" value="PTT"></input>
                 <datalist id="posttypelist">

@@ -27,10 +27,9 @@ function getCR(type) {
     let loading = '<div class="wrapperloading"><div class="loading up"></div><div class="loading down"></div></div>';
     slideList.innerHTML += loading;
 
-    let minlike = document.getElementById('minlike');
-    let maxlike = document.getElementById('maxlike');
-    let mincomment = document.getElementById('mincomment');
-    let maxcomment = document.getElementById('maxcomment');
+    let varname1 = document.getElementById('varname1');
+    let minvar1 = document.getElementById('minvar1');
+    let maxvar1 = document.getElementById('maxvar1');
     let posttype = document.getElementById('posttype');
     let pagename1 = document.getElementById('pagename1');
     let date1 = document.getElementById('date1');
@@ -43,10 +42,8 @@ function getCR(type) {
     let coshare = document.getElementById('coshare');
 
     // make url string for request data
-    let strminlike = 'minlike=' + minlike.value;
-    let strmaxlike = 'maxlike=' + maxlike.value;
-    let strmincomment = 'mincomment=' + mincomment.value;
-    let strmaxcomment = 'maxcomment=' + maxcomment.value;
+    let strminvar1 = 'min' + varname1.value + '=' + minvar1.value;
+    let strmaxvar1 = 'max' + varname1.value + '=' + maxvar1.value;
     let strposttype = 'posttype=' + posttype.value;
     let strpage1 = 'page1=' + pagename1.value;
     let strtime1 = 'time1=' + date1.value;
@@ -57,9 +54,8 @@ function getCR(type) {
     let strco = 'co=' + type;
     let searchurl = 'http://140.119.164.22:3000/searching?';
     // let searchurl = 'http://140.119.164.166:8000/searching?';
-    let str = searchurl + strminlike + '&' + strmaxlike + '&' + strmincomment + '&' + strmaxcomment + '&' + strposttype + '&' +
+    let str = searchurl + strminvar1 + '&' + strmaxvar1 + '&' + strposttype + '&' +
         strpage1 + '&' + strpage2 + '&' + strtime1 + '&' + strtime2 + '&' + strtime3 + '&' + strtime4 + '&' + strco;
-
     // let form = new FormData(document.getElementById('para'));
     // let url ='/searching';
     let url = encodeURI(str);

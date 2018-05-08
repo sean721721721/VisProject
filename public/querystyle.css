@@ -226,6 +226,10 @@ div.tab button.active {
     border-top: none;
 }
 
+.tabcontent input {
+    width: 100px;
+}
+
 /* Style the close button */
 
 .topright {

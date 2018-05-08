@@ -21,7 +21,7 @@ var LocalStrategy = require('passport-local').Strategy;
 
 
 function urlhandle(req, res, next) {
-    //console.log(req.query);
+    console.log(req.query);
     var hasquery = false;
     //var postid = req.params.postid;
     if (req.query['postid']) {
@@ -86,6 +86,30 @@ function urlhandle(req, res, next) {
     }
     if (req.query['maxcomment']) {
         req.params.maxcomment = req.query['maxcomment'];
+        hasquery = true;
+    }
+    if (req.query['minpush']) {
+        req.params.mincomment = req.query['minpush'];
+        hasquery = true;
+    }
+    if (req.query['maxpush']) {
+        req.params.maxcomment = req.query['maxpush'];
+        hasquery = true;
+    }
+    if (req.query['minboo']) {
+        req.params.mincomment = req.query['minboo'];
+        hasquery = true;
+    }
+    if (req.query['maxboo']) {
+        req.params.maxcomment = req.query['maxboo'];
+        hasquery = true;
+    }
+    if (req.query['minneutral']) {
+        req.params.mincomment = req.query['minneutral'];
+        hasquery = true;
+    }
+    if (req.query['maxneutral']) {
+        req.params.maxcomment = req.query['maxneutral'];
         hasquery = true;
     }
     if (req.query['co']) {

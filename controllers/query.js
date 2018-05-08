@@ -143,6 +143,51 @@ var queryobj = function queryobj(req, res, time1, time2) {
             };
         }
     }
+    if (req.params.minpush || req.params.maxpush) {
+        if (req.params.maxpush) {
+            if (!req.params.minpush) {
+                req.params.minpush = 0;
+            }
+            queryobj['message_count.push'] = {
+                $gte: Number(req.params.minpush),
+                $lt: Number(req.params.maxpush),
+            };
+        } else {
+            queryobj['message_count.push'] = {
+                $gte: Number(req.params.minpush),
+            };
+        }
+    }
+    if (req.params.minboo || req.params.maxboo) {
+        if (req.params.maxboo) {
+            if (!req.params.minboo) {
+                req.params.minboo = 0;
+            }
+            queryobj['message_count.boo'] = {
+                $gte: Number(req.params.minboo),
+                $lt: Number(req.params.maxboo),
+            };
+        } else {
+            queryobj['message_count.boo'] = {
+                $gte: Number(req.params.minlike),
+            };
+        }
+    }
+    if (req.params.minneutral || req.params.maxneutral) {
+        if (req.params.maxneutral) {
+            if (!req.params.minneutral) {
+                req.params.minneutral = 0;
+            }
+            queryobj['message_count.like'] = {
+                $gte: Number(req.params.minneutral),
+                $lt: Number(req.params.maxneutral),
+            };
+        } else {
+            queryobj['message_count.like'] = {
+                $gte: Number(req.params.minneutral),
+            };
+        }
+    }
     return queryobj;
 };
 
