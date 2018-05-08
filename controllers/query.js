@@ -36,7 +36,7 @@ var logger = new(winston.Logger)({
 });
 
 var queryobj = function queryobj(req, res, time1, time2) {
-    //console.log(req.params);
+    //console.log('req.params= ', req.params);
     //var url = req.params.url;
     /*
     var res = [];
@@ -71,29 +71,29 @@ var queryobj = function queryobj(req, res, time1, time2) {
                         $lt: time2,
                     }
                 }
-                return queryobj;
             } else {
-                queryobj['type'] = req.params.posttype;
+                if (time1 || time2) {
+                    if (time1) {
+                        if (!time2) {
+                            time2 = Date(Date.now());
+                        }
+                        queryobj['created_time'] = {
+                            $gte: time1,
+                            $lt: time2,
+                        };
+                    } else {
+                        queryobj['created_time'] = {
+                            $lt: time2,
+                        }
+                    }
+                }
             }
+        } else {
+            queryobj['type'] = req.params.posttype;
         }
     }
     if (req.params.postid) {
         queryobj['id'] = req.params.postid;
-    }
-    if (time1 || time2) {
-        if (time1) {
-            if (!time2) {
-                time2 = Date(Date.now());
-            }
-            queryobj['created_time'] = {
-                $gte: time1,
-                $lt: time2,
-            };
-        } else {
-            queryobj['created_time'] = {
-                $lt: time2,
-            }
-        }
     }
     if (req.params.fromname) {
         queryobj['from.name'] = req.params.fromname;
@@ -188,6 +188,7 @@ var queryobj = function queryobj(req, res, time1, time2) {
             };
         }
     }
+    console.log('queryobj= ', queryobj);
     return queryobj;
 };
 
@@ -309,7 +310,7 @@ var callback = function callback(req, res) {
         if (req.params.posttype === 'PTT') {
             ptt = true;
         }
-        console.log(queryobj1);
+        console.log('queryobj1= ', queryobj1);
         if (page1 === page2 && time1 === time3 && time2 === time4) {
             return new Promise((resolve, reject) => {
                     findquery(page1, queryobj1, ptt).then(result => {

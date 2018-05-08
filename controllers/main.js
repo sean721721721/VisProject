@@ -89,27 +89,27 @@ function urlhandle(req, res, next) {
         hasquery = true;
     }
     if (req.query['minpush']) {
-        req.params.mincomment = req.query['minpush'];
+        req.params.minpush = req.query['minpush'];
         hasquery = true;
     }
     if (req.query['maxpush']) {
-        req.params.maxcomment = req.query['maxpush'];
+        req.params.maxpush = req.query['maxpush'];
         hasquery = true;
     }
     if (req.query['minboo']) {
-        req.params.mincomment = req.query['minboo'];
+        req.params.minboo = req.query['minboo'];
         hasquery = true;
     }
     if (req.query['maxboo']) {
-        req.params.maxcomment = req.query['maxboo'];
+        req.params.maxboo = req.query['maxboo'];
         hasquery = true;
     }
     if (req.query['minneutral']) {
-        req.params.mincomment = req.query['minneutral'];
+        req.params.minneutral = req.query['minneutral'];
         hasquery = true;
     }
     if (req.query['maxneutral']) {
-        req.params.maxcomment = req.query['maxneutral'];
+        req.params.maxneutral = req.query['maxneutral'];
         hasquery = true;
     }
     if (req.query['co']) {
