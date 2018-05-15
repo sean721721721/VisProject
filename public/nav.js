@@ -84,7 +84,7 @@ function getCR(type) {
                 // console.log(csv1(json.data[1]));
                 slideList.innerHTML += html;
                 let csv = document.querySelector('div#csv');
-                if (posttype !== 'PTT') {
+                if (posttype.value !== 'PTT') {
                     csv.innerHTML += download(json);
                 }
                 submissions.push(json);

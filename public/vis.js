@@ -1205,11 +1205,11 @@ function overlapvis(data, select, mode) {
     let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 2 : overlap.length + 1;
     let ratio = (1000 * 0.9) / (nextline * 50);
     let cellSize1 = 50 * ratio;
-    let cellSize2 = 40 * ratio;
-    let cellSize3 = 30 * ratio;
+    let cellSize2 = 45 * ratio;
+    let cellSize3 = 40 * ratio;
 
-    let initx = 1000 * 0.025 + cellSize1 * 2;
-    let inity = 1000 * 0.025;
+    let initx = 1000 * 0.025; // + cellSize1 * 2;
+    let inity = 1000 * 0.025 + cellSize1;
 
     // construct degree[i]'s y checklist
     let degylist = [];
@@ -1499,7 +1499,6 @@ function overlapvis(data, select, mode) {
         for (let j = 0; j < gcount; j++) {
             let group = degree[j];
             let gid = '#d' + i + 'g' + j;
-
             if (group.length > 0) {
                 function glyphmargin(k) {
                     let result = {
@@ -1515,27 +1514,17 @@ function overlapvis(data, select, mode) {
                     .domain([1, 32])
                     .range([0, 100]);
 
-                function glyph(k) {
-                    let glyph = d3.starglyph()
+                function glyph(k, properties, labels) {
+                    let glyph = d3.starglyph(k)
                         .width(cellSize3)
-                        .properties([
-                            'A',
-                            'B',
-                            'C',
-                            /* function (d) {
-                                return scale(d.Smoky);
-                            },*/
-                        ])
-                        .scales(scale)
-                        .labels([
-                            'A',
-                            'B',
-                            'C',
-                            /* 'Smoky',*/
-                        ])
+                        .properties(properties)
+                        // .scales(scale)
+                        .labels(labels)
                         .title(function (d) {
                             return d.name;
                         })
+                        .maxattr(num[num.length - 1])
+                        .width(cellSize3)
                         .ratio(ratio)
                         .margin(glyphmargin(k))
                         .labelMargin(labelMargin);
@@ -1547,6 +1536,9 @@ function overlapvis(data, select, mode) {
                     .data(group)
                     .enter().append('g')
                     .attr('class', 'user')
+                    .attr('id', (d, i) => {
+                        return 'u' + i;
+                    })
                     .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
                     // .attr('stroke', '#00f')
                     .attr('opacity', 1)
@@ -1562,18 +1554,31 @@ function overlapvis(data, select, mode) {
                         return result + inity;
                     });*/
                     .each(function (d, i) {
-                        let star = glyph(i);
+                        d.count = docount(d, {});
+                        // reaction count: sum, like, love, haha, wow, sad, angry, others || push count: sum, pushing, neutral, boo
+                        // comment count || push count
+                        // share count || publish count
+                        let properties;
+                        let labels;
+                        if (ptt) {
+                            properties = ['arc.1', 'arc.2', 'arc.3', 'brc.1', 'brc.2', 'brc.3'];
+                            labels = ['A.push', 'A.neutral', 'A.boo', 'B.push', 'B.neutral', 'B.boo'];
+                        } else {
+                            properties = ['arc.1', 'acc', 'asc', 'brc.1', 'bcc', 'bsc'];
+                            labels = ['A.reaction', 'A.comment', 'A.share', 'B.reaction', 'B.comment', 'B.share'];
+                        }
+                        let star = glyph(i, properties, labels);
                         d3.select(this)
                             .datum(d)
                             .call(star)
                             .call(star.interaction);
                     });
 
-                let circle = usergrid.append('circle')
+                /* let circle = usergrid.append('circle')
                     .attr('class', (d, i) => {
                         return 'interaction circle ' + gid + i;
                     })
-                    .attr('r', 1 * ratio);
+                    .attr('r', 1 * ratio);*/
 
                 let interaction = svg.selectAll('.interaction')
                     .style('display', 'none');
@@ -1582,28 +1587,28 @@ function overlapvis(data, select, mode) {
 
                 usergrid.selectAll('.star-interaction')
                     .on('mouseover', function (d) {
-                        // console.log(this);
-                        usergrid.selectAll('.star-title')
+                        let hover = d3.select(this.parentNode);
+                        hover.selectAll('.star-title')
                             .style('display', 'block');
 
-                        usergrid.selectAll('.star-label')
+                        hover.selectAll('.star-label')
                             .style('display', 'block');
 
-                        usergrid.selectAll('.interaction')
+                        hover.selectAll('.interaction')
                             .style('display', 'block');
 
-                        usergrid.selectAll('circle')
+                        /* hover.selectAll('circle')
                             .attr('cx', d.x)
-                            .attr('cy', d.y);
+                            .attr('cy', d.y);*/
 
                         // interactionLabel = interactionLabel.node();
                         interactionLabel
                             .datum(d)
                             .text((d) => {
                                 // console.log(d);
-                                let post = d.datum.posts[d.key];
-                                let value = post === undefined ? 0 : post.length;
-                                return d.key + ':' + value;
+                                /* let post = d.datum.posts[d.key];
+                                let value = post === undefined ? 0 : post.length;*/
+                                return d.key + ':' + d.value;
                             });
                         /* .style('left', function (d) {
                             console.log(svg.node(), transform);
@@ -1627,8 +1632,8 @@ function overlapvis(data, select, mode) {
                         interaction
                             .style('display', 'none');
 
-                        usergrid.selectAll('circle')
-                            .style('display', 'none');
+                        /* usergrid.selectAll('circle')
+                            .style('display', 'none');*/
                     });
             }
         }
@@ -1740,10 +1745,14 @@ function overlapvis(data, select, mode) {
             g.attr('transform', d3.event.transform);
             let k = this.__zoom.k;
             g.attr('stroke-width', 1 / k);
-            g.selectAll('.star-path')
-                .attr('stroke-width', 2 / k);
             g.selectAll('.star-axis')
                 .attr('stroke-width', 2 / k);
+            g.selectAll('.star-guideline')
+                .attr('stroke-width', 1 / k);
+            g.selectAll('.star-path')
+                .attr('stroke-width', 2 / k);
+            g.selectAll('.star-line')
+                .attr('stroke-width', 3 / k);
             strokewidth = 1 / k;
         });
 
@@ -2854,185 +2863,6 @@ function pagedata(data) {
 function countactivities(data, select) {
     // let posts = data[0];
     // let users = data[1];let overlap = data[2].O;
-    /**
-     * get subdata activities count
-     * @param {object} sub - subdata A/B/O
-     * @param {object} select - selectuser
-     * @return {object}
-     */
-    function subcount(sub, select) {
-        let count = {};
-        // sum, like, love, haha, wow, sad, angry, others
-        let oarc = [0, 0, 0, 0, 0, 0, 0, 0];
-        let oacc = 0;
-        let oasc = 0;
-        let obrc = [0, 0, 0, 0, 0, 0, 0, 0];
-        let obcc = 0;
-        let obsc = 0;
-        let l = sub.length;
-        let dtemp = [];
-        for (let i = 0; i < l; i++) { // degree
-            let degree = sub[i];
-            let deg = {};
-            let darc = [0, 0, 0, 0, 0, 0, 0, 0];
-            let dacc = 0;
-            let dasc = 0;
-            let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
-            let dbcc = 0;
-            let dbsc = 0;
-            let dl = degree.length;
-            let gtemp = [];
-            for (let j = 0; j < dl; j++) { // group
-                let group = degree[j];
-                let g = {};
-                let garc = [0, 0, 0, 0, 0, 0, 0, 0];
-                let gacc = 0;
-                let gasc = 0;
-                let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
-                let gbcc = 0;
-                let gbsc = 0;
-                let gl = group.length;
-                let utemp = [];
-                for (let k = 0; k < gl; k++) { // user
-                    let user = group[k];
-                    let arc = [0, 0, 0, 0, 0, 0, 0, 0];
-                    let acc = 0;
-                    let asc = 0;
-                    let brc = [0, 0, 0, 0, 0, 0, 0, 0];
-                    let bcc = 0;
-                    let bsc = 0;
-                    let pa = user.posts;
-
-                    function docount() {
-                        if (pa.A instanceof Array) {
-                            let al = pa.A.length;
-                            for (let a = 0; a < al; a++) {
-                                if (pa.A[a].commentcount) {
-                                    acc += pa.A[a].commentcount;
-                                }
-                                if (pa.A[a].like) {
-                                    let num = pa.A[a].like;
-                                    arc[0]++;
-                                    arc[num]++;
-                                }
-                                if (pa.A[a].share === true) {
-                                    asc++;
-                                }
-                                // for ptt data below
-                                if (pa.A[a].pushing) {
-                                    acc += pa.A[a].pushing.length;
-                                    arc[0] += pa.A[a].pushing.length;
-                                    arc[1] += pa.A[a].pushing.length;
-                                }
-                                if (pa.A[a].neutral) {
-                                    acc += pa.A[a].neutral.length;
-                                    arc[2] += pa.A[a].neutral.length;
-                                }
-                                if (pa.A[a].boo) {
-                                    acc += pa.A[a].boo.length;
-                                    arc[0] -= pa.A[a].boo.length;
-                                    arc[3] += pa.A[a].boo.length;
-                                }
-                                if (pa.A[a].publish === true) {
-                                    asc++;
-                                }
-                            }
-                        }
-                        if (pa.B instanceof Array) {
-                            let bl = pa.B.length;
-                            for (let b = 0; b < bl; b++) {
-                                if (pa.B[b].commentcount) {
-                                    bcc += pa.B[b].commentcount;
-                                }
-                                if (pa.B[b].like) {
-                                    let num = pa.B[b].like;
-                                    brc[0]++;
-                                    brc[num]++;
-                                }
-                                if (pa.B[b].share === true) {
-                                    bsc++;
-                                } // for ptt data below
-                                if (pa.B[b].pushing) {
-                                    bcc += pa.B[b].pushing.length;
-                                    brc[0] += pa.B[b].pushing.length;
-                                    brc[1] += pa.B[b].pushing.length;
-                                }
-                                if (pa.B[b].neutral) {
-                                    bcc += pa.B[b].neutral.length;
-                                    brc[2] += pa.B[b].neutral.length;
-                                }
-                                if (pa.B[b].boo) {
-                                    bcc += pa.B[b].boo.length;
-                                    brc[0] -= pa.B[b].boo.length;
-                                    brc[3] += pa.B[b].boo.length;
-                                }
-                                if (pa.B[b].publish === true) {
-                                    bsc++;
-                                }
-                            }
-                        }
-                    }
-                    if (select.user.length === 0) {
-                        docount();
-                    } else {
-                        for (let x = 0, sl = select.user.length; x < sl;) {
-                            if (select.user[x].id === user.id) {
-                                docount();
-                                x = sl;
-                            } else {
-                                x++;
-                            }
-                        }
-                    }
-                    let temp = {
-                        'A': [arc, acc, asc],
-                        'B': [brc, bcc, bsc],
-                    };
-                    // console.log(temp);
-                    utemp.push(temp);
-                    for (let i = 0; i < 7; i++) {
-                        garc[i] += arc[i];
-                        gbrc[i] += brc[i];
-                    }
-                    gacc += acc;
-                    gasc += asc;
-                    gbcc += bcc;
-                    gbsc += bsc;
-                    // user.id;
-                    // user.name;
-                }
-                g.A = [garc, gacc, gasc];
-                g.B = [gbrc, gbcc, gbsc];
-                g.user = utemp;
-                gtemp.push(g);
-                for (let i = 0; i < 7; i++) {
-                    darc[i] += garc[i];
-                    dbrc[i] += gbrc[i];
-                }
-                dacc += gacc;
-                dasc += gasc;
-                dbcc += gbcc;
-                dbsc += gbsc;
-            }
-            deg.A = [darc, dacc, dasc];
-            deg.B = [dbrc, dbcc, dbsc];
-            deg.group = gtemp;
-            dtemp.push(deg);
-            for (let i = 0; i < 7; i++) {
-                oarc[i] += darc[i];
-                obrc[i] += dbrc[i];
-            }
-            oacc += dacc;
-            oasc += dasc;
-            obcc += dbcc;
-            obsc += dbsc;
-        }
-        count.A = [oarc, oacc, oasc];
-        count.B = [obrc, obcc, obsc];
-        count.degree = dtemp;
-        return count;
-    }
-
     let result = {};
     if (select.user.length === 0) {
         result.O = subcount(data[2].O, select);
@@ -3057,6 +2887,221 @@ function countactivities(data, select) {
         result.B = zerodegree;
     }
     return result;
+}
+
+/**
+ * get subdata activities count
+ * @param {object} sub - subdata A/B/O
+ * @param {object} select - selectuser
+ * @return {object}
+ */
+function subcount(sub, select) {
+    let count = {};
+    // sum, like, love, haha, wow, sad, angry, others
+    let oarc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let oacc = 0;
+    let oasc = 0;
+    let obrc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let obcc = 0;
+    let obsc = 0;
+    let l = sub.length;
+    let dtemp = [];
+    for (let i = 0; i < l; i++) { // degree
+        let degree = sub[i];
+        let deg = {};
+        let darc = [0, 0, 0, 0, 0, 0, 0, 0];
+        let dacc = 0;
+        let dasc = 0;
+        let dbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+        let dbcc = 0;
+        let dbsc = 0;
+        let dl = degree.length;
+        let gtemp = [];
+        for (let j = 0; j < dl; j++) { // group
+            let group = degree[j];
+            let g = {};
+            let garc = [0, 0, 0, 0, 0, 0, 0, 0];
+            let gacc = 0;
+            let gasc = 0;
+            let gbrc = [0, 0, 0, 0, 0, 0, 0, 0];
+            let gbcc = 0;
+            let gbsc = 0;
+            let gl = group.length;
+            let utemp = [];
+            for (let k = 0; k < gl; k++) { // user
+                let user = group[k];
+                let uac = {};
+                uac.arc = [0, 0, 0, 0, 0, 0, 0, 0];
+                uac.acc = 0;
+                uac.asc = 0;
+                uac.brc = [0, 0, 0, 0, 0, 0, 0, 0];
+                uac.bcc = 0;
+                uac.bsc = 0;
+                uac.pa = user.posts;
+                if (select.user.length === 0) {
+                    uac = docount(user, uac);
+                } else {
+                    for (let x = 0, sl = select.user.length; x < sl;) {
+                        console.log(user.id, select.user[x].id, 'in');
+                        if (select.user[x].id === user.id) {
+                            uac = docount(user, uac);
+                            x = sl;
+                        } else {
+                            x++;
+                        }
+                    }
+                }
+                let temp = {
+                    'A': [uac.arc, uac.acc, uac.asc],
+                    'B': [uac.brc, uac.bcc, uac.bsc],
+                };
+                // console.log(temp);
+                utemp.push(temp);
+                for (let i = 0; i < 7; i++) {
+                    garc[i] += uac.arc[i];
+                    gbrc[i] += uac.brc[i];
+                }
+                gacc += uac.acc;
+                gasc += uac.asc;
+                gbcc += uac.bcc;
+                gbsc += uac.bsc;
+                // user.id;
+                // user.name;
+            }
+            g.A = [garc, gacc, gasc];
+            g.B = [gbrc, gbcc, gbsc];
+            g.user = utemp;
+            gtemp.push(g);
+            for (let i = 0; i < 7; i++) {
+                darc[i] += garc[i];
+                dbrc[i] += gbrc[i];
+            }
+            dacc += gacc;
+            dasc += gasc;
+            dbcc += gbcc;
+            dbsc += gbsc;
+        }
+        deg.A = [darc, dacc, dasc];
+        deg.B = [dbrc, dbcc, dbsc];
+        deg.group = gtemp;
+        dtemp.push(deg);
+        for (let i = 0; i < 7; i++) {
+            oarc[i] += darc[i];
+            obrc[i] += dbrc[i];
+        }
+        oacc += dacc;
+        oasc += dasc;
+        obcc += dbcc;
+        obsc += dbsc;
+    }
+    count.A = [oarc, oacc, oasc];
+    count.B = [obrc, obcc, obsc];
+    count.degree = dtemp;
+    return count;
+}
+
+
+/**
+ * count single user activitues
+ * @param {object} user - count user
+ * @param {object} uac - count result
+ * @return {object}
+ */
+function docount(user, uac) {
+    // reaction count: sum, like, love, haha, wow, sad, angry, others || push count: sum, pushing, neutral, boo
+    let arc = [0, 0, 0, 0, 0, 0, 0, 0];
+    let brc = [0, 0, 0, 0, 0, 0, 0, 0];
+    // comment count || push count
+    let acc = 0;
+    let bcc = 0;
+    // share count || publish count
+    let asc = 0;
+    let bsc = 0;
+    let pa = user.posts;
+    if (uac.pa !== undefined) {
+        arc = uac.arc;
+        brc = uac.brc;
+        acc = uac.acc;
+        bcc = uac.bcc;
+        asc = uac.asc;
+        bsc = uac.bsc;
+        pa = uac.pa;
+    }
+    if (pa.A instanceof Array) {
+        let al = pa.A.length;
+        for (let a = 0; a < al; a++) {
+            if (pa.A[a].commentcount) {
+                acc += pa.A[a].commentcount;
+            }
+            if (pa.A[a].like) {
+                let num = pa.A[a].like;
+                arc[0]++;
+                arc[num]++;
+            }
+            if (pa.A[a].share === true) {
+                asc++;
+            }
+            // for ptt data below
+            if (pa.A[a].pushing) {
+                acc += pa.A[a].pushing.length;
+                arc[0] += pa.A[a].pushing.length;
+                arc[1] += pa.A[a].pushing.length;
+            }
+            if (pa.A[a].neutral) {
+                acc += pa.A[a].neutral.length;
+                arc[2] += pa.A[a].neutral.length;
+            }
+            if (pa.A[a].boo) {
+                acc += pa.A[a].boo.length;
+                arc[0] -= pa.A[a].boo.length;
+                arc[3] += pa.A[a].boo.length;
+            }
+            if (pa.A[a].publish === true) {
+                asc++;
+            }
+        }
+    }
+    if (pa.B instanceof Array) {
+        let bl = pa.B.length;
+        for (let b = 0; b < bl; b++) {
+            if (pa.B[b].commentcount) {
+                bcc += pa.B[b].commentcount;
+            }
+            if (pa.B[b].like) {
+                let num = pa.B[b].like;
+                brc[0]++;
+                brc[num]++;
+            }
+            if (pa.B[b].share === true) {
+                bsc++;
+            } // for ptt data below: count, pushing, neutral, boo
+            if (pa.B[b].pushing) {
+                bcc += pa.B[b].pushing.length;
+                brc[0] += pa.B[b].pushing.length;
+                brc[1] += pa.B[b].pushing.length;
+            }
+            if (pa.B[b].neutral) {
+                bcc += pa.B[b].neutral.length;
+                brc[2] += pa.B[b].neutral.length;
+            }
+            if (pa.B[b].boo) {
+                bcc += pa.B[b].boo.length;
+                brc[0] -= pa.B[b].boo.length;
+                brc[3] += pa.B[b].boo.length;
+            }
+            if (pa.B[b].publish === true) {
+                bsc++;
+            }
+        }
+    }
+    uac.arc = arc;
+    uac.acc = acc;
+    uac.asc = asc;
+    uac.brc = brc;
+    uac.bcc = bcc;
+    uac.bsc = bsc;
+    uac.pa = pa;
+    return uac;
 }
 
 /**

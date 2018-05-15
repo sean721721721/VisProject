@@ -430,6 +430,12 @@ a:hover {
 .star-axis {
     stroke: #ccc;
     stroke-dasharray: 4 5;
+    opacity: 0.5;
+}
+
+.star-guideline {
+    stroke: #888;
+    opacity: 0.5;
 }
 
 .star-path {
@@ -438,7 +444,17 @@ a:hover {
     fill-opacity: 0.6;
 }
 
+.star-line {
+    stroke: #000;
+}
+
 .star-interaction {
+    opacity: 0.1;
+}
+
+.star-interaction:hover {
+    fill-opacity: 0.8;
+    stroke: none;
     opacity: 0.1;
 }
 

@@ -1,5 +1,7 @@
 d3.starglyph = function () {
+    let star = false; // true: starglyph, false: whisker
     let width = 200;
+    let maxattr = 100;
     let margin = {
         top: 0,
         right: 0,
@@ -14,20 +16,36 @@ d3.starglyph = function () {
     let labels = [];
     let title = nop;
     let ratio = 1;
-
     let g;
     let datum;
-    let radius = width / 2;
-    let origin = [radius, radius];
+    let radius;
+    let origin;
+    let scale;
     let radii = properties.length;
     let radians = 2 * Math.PI / radii;
-    let scale = d3.scaleLinear()
-        .domain([0, 100])
-        .range([1, radius]);
+    let scalelog = d3.scaleLog()
+        .domain([1, 32])
+        .range([0, 100]);
+    scales.push(scalelog);
+
+    /** */
+    function setscale() {
+        scalelog = d3.scaleLog()
+            .domain([0, maxattr])
+            .range([0, 100]);
+        scale = d3.scaleLinear()
+            .domain([0, 100])
+            .range([0.2 * radius, radius]);
+        // console.log(maxattr);
+    }
 
     /** */
     function chart(selection) {
         datum = selection.datum();
+        // set variable
+        radius = width / 2;
+        origin = [radius, radius];
+        setscale();
         // console.log(datum);
         g = selection
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -38,13 +56,13 @@ d3.starglyph = function () {
         if (includeLabels) {
             drawLabels();
         }
-        // console.log('chart', scale, origin, radius, radii, radians);
+        // console.log('chart', datum, origin, radius, radii, radians, ratio);
         drawChart();
     }
 
     /** */
     function drawGuidelines() {
-        let r = 0;
+        /* let r = 0;
         properties.forEach(function (d, i) {
             let l = radius;
             let x = l * Math.cos(r);
@@ -58,8 +76,18 @@ d3.starglyph = function () {
                 .attr('stroke-width', 2);
 
             r += radians;
-        });
-        // console.log('drawGuidelines', origin);
+        });*/
+        let ticks = 5;
+        for (let i = 0; i < ticks; i++) {
+            g.append('circle')
+                .attr('class', 'star-guideline')
+                .attr('cx', origin[0])
+                .attr('cy', origin[1])
+                .attr('r', i * radius / ticks)
+                .attr('fill', 'none')
+                .attr('stroke-width', 1);
+        }
+        // console.log('drawGuidelines' /* , origin, guidelineData*/ );
     }
 
     /** */
@@ -74,11 +102,10 @@ d3.starglyph = function () {
                 .attr('x', origin[0] + x)
                 .attr('y', origin[1] + y)
                 .text(labels[i])
-                .attr('font-size', 11 * ratio)
+                .attr('font-size', 5 * ratio)
                 .style('display', 'none')
                 .style('text-anchor', 'middle')
                 .style('dominant-baseline', 'central');
-
             r += radians;
         });
         // console.log('drawLabels');
@@ -86,34 +113,61 @@ d3.starglyph = function () {
 
     /** */
     function drawChart() {
+        let path = d3.lineRadial();
+        let pathData = [];
+        let r = Math.PI / 2;
+        properties.forEach(function (d, i) {
+            let userScale = scales[i] || scales[0];
+            let value;
+            let property = d.split('.');
+            // console.log(property);
+            if (property.length === 1) {
+                value = datum.count[property[0]];
+            } else {
+                value = datum.count[property[0]][parseInt(property[1], 10)];
+            }
+            /* let value = datum.count[d];
+            if (value === undefined) {
+                value = [0];
+            }*/
+            let axisvalue = scale(userScale(value + 1 /* .length*/ ));
+            // console.log(scale(userScale(1)), scale(userScale(2)), scale(userScale(4)), scale(userScale(8)));
+            pathData.push([
+                r,
+                axisvalue,
+            ]);
+            if (!star) {
+                g.append('line')
+                    .attr('class', 'star-line')
+                    .attr('x1', origin[0])
+                    .attr('y1', origin[1])
+                    .attr('x2', (d, i) => {
+                        let x = axisvalue * Math.cos(r - Math.PI / 2);
+                        return origin[0] + x;
+                    })
+                    .attr('y2', (d, i) => {
+                        let y = axisvalue * Math.sin(r - Math.PI / 2);
+                        return origin[1] + y;
+                    })
+                    .attr('stroke-width', 3);
+            }
+            r += radians;
+            // console.log('drawChart', origin, d, i, scale(userScale(value.length)), margin);
+        });
+
+        if (star) {
+            g.append('path')
+                .attr('class', 'star-path')
+                .attr('transform', 'translate(' + origin[0] + ',' + origin[1] + ')')
+                .attr('d', path(pathData) + 'Z')
+                .attr('stroke-width', 2);
+        }
+
         g.append('circle')
             .attr('class', 'star-origin')
             .attr('cx', origin[0])
             .attr('cy', origin[1])
             .attr('r', 1 * ratio);
-
-        let path = d3.lineRadial();
-
-        let pathData = [];
-        let r = Math.PI / 2;
-        properties.forEach(function (d, i) {
-            let userScale = scales[i] || scales[0];
-            let value = datum.posts[d];
-            if (value === undefined) {
-                value = [0];
-            }
-            pathData.push([
-                r,
-                scale(userScale(value.length)),
-            ]);
-            r += radians;
-            // console.log('drawChart', origin, d, i, scale(userScale(value.length)), margin);
-        });
-        g.append('path')
-            .attr('class', 'star-path')
-            .attr('transform', 'translate(' + origin[0] + ',' + origin[1] + ')')
-            .attr('d', path(pathData) + 'Z')
-            .attr('stroke-width', 2);
 
         g.append('text')
             .attr('class', 'star-title')
@@ -121,7 +175,7 @@ d3.starglyph = function () {
             .attr('y', -(margin.top / 2))
             .text(title(datum))
             .style('display', 'none')
-            .attr('font-size', 12 * ratio)
+            .attr('font-size', 5 * ratio)
             .style('text-anchor', 'middle');
     }
 
@@ -146,11 +200,18 @@ d3.starglyph = function () {
 
             let userScale = scales[i] || scales[0];
             // lValue = scale(userScale(datum[d]));
-            let value = datum.posts[d];
+            let value;
+            let property = d.split('.');
+            if (property.length === 1) {
+                value = datum.count[property[0]];
+            } else {
+                value = datum.count[property[0]][parseInt(property[1], 10)];
+            }
+            /* let value = datum.posts[d];
             if (value === undefined) {
                 value = [0];
-            }
-            let lValue = scale(userScale(value.length));
+            }*/
+            let lValue = scale(userScale(value + 1 /* .length*/ ));
             // let x = lValue * Math.cos(rExtent) + origin[0] + margin.left;
             // let y = lValue * Math.sin(rExtent) + origin[1] + margin.top;
             let x = lValue * Math.cos(rExtent) + origin[0];
@@ -169,8 +230,9 @@ d3.starglyph = function () {
                 yExtent: yExtent,
                 x: x,
                 y: y,
-                key: properties[i],
+                key: labels[i],
                 datum: datum,
+                value: value,
             };
 
             g.append('path')
@@ -212,12 +274,16 @@ d3.starglyph = function () {
         return chart;
     };
 
+    chart.maxattr = function (_) {
+        if (!arguments.length) return maxattr;
+        maxattr = _;
+        return chart;
+    };
+
     chart.width = function (_) {
         if (!arguments.length) return width;
         width = _;
-        radius = width / 2;
-        origin = [radius, radius];
-        scale.range([0, radius]);
+        // scale.range([0, radius]);
         return chart;
     };
 
