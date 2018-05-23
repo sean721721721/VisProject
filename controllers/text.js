@@ -63,12 +63,23 @@ if (os.platform() === "linux") {
     });
 }
 
+function filter(pattern ,str){
+    let word = [];
+    for (let i = 0; i < str.length; i++) {
+        // console.log(str[i].word,pattern.test(str[i].word));
+        if (pattern.test(str[i].word) !== true) {
+            word.push(str[i]);
+        }
+    }
+    return word;
+}
+
 var cut = function cut(posts, callback) {
     var data = posts;
     var result = [];
     //var test =[];
-
     var pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）&;|{}【】‘；：”“'。，、？ ↵「」]");
+    var http = new RegExp(/http/);
     console.log(pattern);
     var p = 0,
         time = posts.length;
@@ -85,7 +96,6 @@ var cut = function cut(posts, callback) {
             //temp = temp.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g,'');
             var message_length = str.length;
             str = nodejieba.extract(str, 10);
-            var word = str;
             //test.push(word[0]);
             /*result.push({
                 "id": data[i].id,
@@ -102,7 +112,7 @@ var cut = function cut(posts, callback) {
                 "word": word
             });*/
             var post = data[i];
-            post.word = str;
+            post.word = filter(http,str);;
             result.push(post);
 
             next();
@@ -117,9 +127,8 @@ var cut = function cut(posts, callback) {
             //temp = temp.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g,'');
             var message_length = str.length;
             str = nodejieba.extract(str, 10);
-            var word = str;
             var post = data[i];
-            post.word = str;
+            post.word = filter(http,str);
             result.push(post);
 
             next();
