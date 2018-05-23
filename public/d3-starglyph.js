@@ -172,7 +172,7 @@ d3.starglyph = function () {
         g.append('text')
             .attr('class', 'star-title')
             .attr('x', origin[0])
-            .attr('y', -(margin.top / 2))
+            .attr('y', -radius / 5)
             .text(title(datum))
             .style('display', 'none')
             .attr('font-size', 5 * ratio)
