@@ -197,44 +197,40 @@ function messaageuserlist(files, userlist) {
     var filelength = files.length;
     for (var i = 0; i < filelength; i++) {
         data = files[i];
-        var id = data.author.split(" ")[0];
-        post = {};
-        post["article_id"] = data.article_id;
-        post["article_title"] = data.article_title;
-        post["author"] = data.author;
-        post["board"] = data.board;
-        post["content"] = data.content;
-        post["word"] = data.word;
-        post["date"] = data.date;
-        post["ip"] = data.ip;
-        post["url"] = data.url;
-        post["publish"] = false;
-        post["message_count"] = data.message_count;
-        post["pushing"] = [];
-        post["boo"] = [];
-        post["neutral"] = [];
         if (data.messages !== undefined) {
             messageslength = data.messages.length;
             if (messageslength !== 0) {
                 for (var j = 0; j < messageslength; j++) {
                     message = data.messages[j];
                     find = false;
-                    user = {};
-                    user["id"] = message.push_userid;
-                    user["posts"] = [];
-                    post.publish = false;
                     for (var a = 0; a < userlist.length; a++) {
                         if (userlist[a].id === message.push_userid) { // insert message into user's posts obj
                             pushtype(userlist[a].posts, message);
-                            //console.log(userlist[a], message);
+                            //console.log(userlist[a].id, message, userlist.length);
                             a = userlist.length;
                             find = true;
                         }
                     }
                     if (!find) { // create new user
+                        user = {};
+                        user["id"] = message.push_userid;
+                        user["posts"] = [];
+                        post = {};
+                        post["article_id"] = data.article_id;
+                        post["article_title"] = data.article_title;
+                        post["author"] = data.author;
+                        post["board"] = data.board;
+                        post["content"] = data.content;
+                        post["word"] = data.word;
+                        post["date"] = data.date;
+                        post["ip"] = data.ip;
+                        post["url"] = data.url;
+                        post["publish"] = false;
+                        post["message_count"] = data.message_count;
                         post["pushing"] = [];
                         post["boo"] = [];
                         post["neutral"] = [];
+                        post.publish = false;
                         pushtype(post, message);
                         user.posts.push(post);
                         userlist.push(user);
