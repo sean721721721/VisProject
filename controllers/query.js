@@ -35,7 +35,7 @@ var logger = new(winston.Logger)({
     exitOnError: false
 });
 
-var queryobj = function queryobj(req, res, time1, time2) {
+var queryobj = function queryobj(req, res, time1, time2, keyword) {
     //console.log('req.params= ', req.params);
     //var url = req.params.url;
     /*
@@ -91,6 +91,11 @@ var queryobj = function queryobj(req, res, time1, time2) {
         } else {
             queryobj['type'] = req.params.posttype;
         }
+    }
+    if (keyword !== undefined) {
+        queryobj['article_title'] = {
+            $regex: keyword
+        };
     }
     if (req.params.postid) {
         queryobj['id'] = req.params.postid;
@@ -300,12 +305,14 @@ var callback = function callback(req, res) {
     } else {
         console.log("go db")
         var page1 = req.params.page1;
+        var keyword1 = req.params.keyword1;
         var page2 = req.params.page2;
+        var keyword2 = req.params.keyword2;
         var time1 = req.params.time1;
         var time2 = req.params.time2;
         var time3 = req.params.time3;
         var time4 = req.params.time4;
-        var queryobj1 = queryobj(req, res, time1, time2);
+        var queryobj1 = queryobj(req, res, time1, time2, keyword1);
         var ptt = false;
         if (req.params.posttype === 'PTT') {
             ptt = true;
@@ -342,7 +349,7 @@ var callback = function callback(req, res) {
                     logger.log('error', err);
                 })
         } else {
-            var queryobj2 = queryobj(req, res, time3, time4);
+            var queryobj2 = queryobj(req, res, time3, time4, keyword2);
             console.log(queryobj2);
             return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {
@@ -381,6 +388,7 @@ var callback = function callback(req, res) {
                         ],
                         data: [postlist, oldata, sortdata],
                     };
+                    //console.log(queryresult);
                     return queryresult;
                     //res.send(result);
                 })

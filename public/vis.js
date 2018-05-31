@@ -15,11 +15,11 @@ function visMain(data) {
         [],
     ];
     select.actuser = [];
-    userview(data, select);
     overview(data, select);
     // data manipulate
     let pd = pagedata(data);
     pageview(data, pd, select);
+    userview(data, select);
 }
 
 /**
@@ -1212,7 +1212,8 @@ function overlapvis(data, select, mode) {
 
         // how many elements in one line
         // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
-        let nextline = Math.sqrt(2 * oucount) > overlap.length ? parseInt(Math.sqrt(2 * oucount), 10) - 2 : overlap.length + 1;
+        let basiclength = parseInt(Math.sqrt(2 * oucount), 10) - 2;
+        let nextline = Math.sqrt(2 * oucount) > overlap.length ? basiclength > 2 ? basiclength : 2 : overlap.length + 1;
         let ratio = (1000 * 0.9) / (nextline * 50);
         let cellSize1 = 50 * ratio;
         let cellSize2 = 45 * ratio;
