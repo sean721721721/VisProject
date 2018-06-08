@@ -35,10 +35,12 @@ function getCR(type) {
     let date1 = document.getElementById('date1');
     let date2 = document.getElementById('date2');
     let keyword1 = document.getElementById('keyword1');
+    let keyword3 = document.getElementById('keyword3');
     let pagename2 = document.getElementById('pagename2');
     let date3 = document.getElementById('date3');
     let date4 = document.getElementById('date4');
     let keyword2 = document.getElementById('keyword2');
+    let keyword4 = document.getElementById('keyword4');
     // let coreaction = document.getElementById('coreaction');
     let cocomment = document.getElementById('cocomment');
     let coshare = document.getElementById('coshare');
@@ -51,15 +53,17 @@ function getCR(type) {
     let strtime1 = 'time1=' + date1.value;
     let strtime2 = 'time2=' + date2.value;
     let strkeyword1 = 'keyword1=' + keyword1.value;
+    let strkeyword3 = 'keyword3=' + keyword3.value;
     let strpage2 = 'page2=' + pagename2.value;
     let strtime3 = 'time3=' + date3.value;
     let strtime4 = 'time4=' + date4.value;
     let strkeyword2 = 'keyword2=' + keyword2.value;
+    let strkeyword4 = 'keyword4=' + keyword4.value;
     let strco = 'co=' + type;
     let searchurl = 'http://140.119.164.22:3000/searching?';
     // let searchurl = 'http://140.119.164.166:8000/searching?';
     let str = searchurl + strminvar1 + '&' + strmaxvar1 + '&' + strposttype + '&' +
-        strpage1 + '&'+ strkeyword1 + '&' + strpage2 + '&'+ strkeyword2 + '&' + strtime1 + '&' + strtime2 + '&' + strtime3 + '&' + strtime4 + '&' + strco;
+        strpage1 + '&' + strkeyword1 + '&' + strkeyword3 + '&' + strpage2 + '&' + strkeyword2 + '&' + strkeyword4 + '&' + strtime1 + '&' + strtime2 + '&' + strtime3 + '&' + strtime4 + '&' + strco;
     // let form = new FormData(document.getElementById('para'));
     // let url ='/searching';
     let url = encodeURI(str);

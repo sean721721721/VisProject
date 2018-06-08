@@ -35,7 +35,7 @@ var logger = new(winston.Logger)({
     exitOnError: false
 });
 
-var queryobj = function queryobj(req, res, time1, time2, keyword) {
+var queryobj = function queryobj(req, res, time1, time2, tkeyword, ckeyword) {
     //console.log('req.params= ', req.params);
     //var url = req.params.url;
     /*
@@ -92,10 +92,23 @@ var queryobj = function queryobj(req, res, time1, time2, keyword) {
             queryobj['type'] = req.params.posttype;
         }
     }
-    if (keyword !== undefined) {
+    if (tkeyword !== undefined) {
         queryobj['article_title'] = {
-            $regex: keyword
+            $regex: tkeyword
         };
+    }
+    if (ckeyword !== undefined) {
+        queryobj['$or'] = [{
+                'content': {
+                    $regex: ckeyword
+                }
+            },
+            {
+                'messages.push_content': {
+                    $regex: ckeyword
+                }
+            }
+        ];
     }
     if (req.params.postid) {
         queryobj['id'] = req.params.postid;
@@ -306,13 +319,15 @@ var callback = function callback(req, res) {
         console.log("go db")
         var page1 = req.params.page1;
         var keyword1 = req.params.keyword1;
+        var keyword3 = req.params.keyword3;
         var page2 = req.params.page2;
         var keyword2 = req.params.keyword2;
+        var keyword4 = req.params.keyword4;
         var time1 = req.params.time1;
         var time2 = req.params.time2;
         var time3 = req.params.time3;
         var time4 = req.params.time4;
-        var queryobj1 = queryobj(req, res, time1, time2, keyword1);
+        var queryobj1 = queryobj(req, res, time1, time2, keyword1, keyword3);
         var ptt = false;
         if (req.params.posttype === 'PTT') {
             ptt = true;
@@ -349,7 +364,7 @@ var callback = function callback(req, res) {
                     logger.log('error', err);
                 })
         } else {
-            var queryobj2 = queryobj(req, res, time3, time4, keyword2);
+            var queryobj2 = queryobj(req, res, time3, time4, keyword2, keyword4);
             console.log(queryobj2);
             return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {

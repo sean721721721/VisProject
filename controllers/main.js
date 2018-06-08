@@ -35,12 +35,18 @@ function urlhandle(req, res, next) {
     if(req.query['keyword1']){
         req.params.keyword1 = req.query['keyword1'];
     }
+    if(req.query['keyword3']){
+        req.params.keyword3 = req.query['keyword3'];
+    }
     if (req.query['page2']) {
         req.params.page2 = req.query['page2'];
         hasquery = true;
     }
     if(req.query['keyword2']){
         req.params.keyword2 = req.query['keyword2'];
+    }
+    if(req.query['keyword4']){
+        req.params.keyword4 = req.query['keyword4'];
     }
     //var time1 = req.params.time1;
     if (req.query['time1']) {
@@ -147,8 +153,10 @@ function redirecturl(req, res) {
         "posttype": body.posttype,
         "page1": body.pagename1,
         "keyword1": body.keyword1,
+        "keyword3": body.keyword3,
         "page2": body.pagename2,
         "keyword2": body.keyword2,
+        "keyword4": body.keyword4,
         "time1": body.date1,
         "time2": body.date2,
         "time3": body.date3,
