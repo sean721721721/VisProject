@@ -471,7 +471,7 @@ function showselect(data, select) {
             let bug = d3.selectAll('.user');
             console.log(bug);
             bug.attr('fill', (d) => {
-                console.log(d);
+                // console.log(d);
                 let rcolor;
                 if (ptt) {
                     rcolor = color(Math.sqrt(d.posts.A.length));
@@ -1753,7 +1753,7 @@ function overlapvis(data, select, mode) {
                 let bug = d3.selectAll('.user');
                 console.log(bug);
                 bug.attr('fill', (d) => {
-                    console.log(d);
+                    // console.log(d);
                     let rcolor;
                     if (ptt) {
                         rcolor = color(Math.sqrt(d.posts.A.length));
@@ -1896,16 +1896,18 @@ function paccordion() { // accordion
             let divc = paccordion.parentElement;
             let pre = paccordion.parentElement.parentElement;
             // console.log(paccordion);
-            if (panel.style.maxHeight) {
-                panel.style.maxHeight = null;
-                paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
-                divc.style.maxHeight = (divc.scrollHeight - panel.scrollHeight) + 'px';
-                pre.style.maxHeight = (pre.scrollHeight - panel.scrollHeight) + 'px';
-            } else {
-                panel.style.maxHeight = panel.scrollHeight + 'px';
-                paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
-                divc.style.maxHeight = (divc.scrollHeight + panel.scrollHeight) + 'px';
-                pre.style.maxHeight = (pre.scrollHeight + panel.scrollHeight) + 'px';
+            if (panel) {
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                    paccordion.style.maxHeight = (paccordion.scrollHeight - panel.scrollHeight) + 'px';
+                    divc.style.maxHeight = (divc.scrollHeight - panel.scrollHeight) + 'px';
+                    pre.style.maxHeight = (pre.scrollHeight - panel.scrollHeight) + 'px';
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + 'px';
+                    paccordion.style.maxHeight = (paccordion.scrollHeight + panel.scrollHeight) + 'px';
+                    divc.style.maxHeight = (divc.scrollHeight + panel.scrollHeight) + 'px';
+                    pre.style.maxHeight = (pre.scrollHeight + panel.scrollHeight) + 'px';
+                }
             }
         };
     }
@@ -2676,13 +2678,13 @@ function activepost(data, preselect, postselect, mode) {
  * @param {number} post - postnum
  */
 function selectivepost(page, post) {
-    console.log(page, post);
+    console.log('selectivepost: ', page, post);
     let sel = d3.selectAll('.page' + page + '.p' + post);
     let mode = document.querySelector('input[name="mode"]:checked').value;
     if (mode === 'sunburst') {
         let node = sel._groups[0];
         let text = sel.select('text')._groups[0];
-        console.log(mode, node);
+        // console.log(mode, node);
         for (let i = 2, l = node.length; i < l; i++) {
             node[i].classList.toggle('selective');
         }
@@ -2803,7 +2805,6 @@ function userdetail(data, select) {
         detail.innerHTML = initdetail;
         let html = template(content);
         detail.innerHTML += html;
-        paccordion();
         // highlight author if self post
         let author = document.querySelectorAll('#author');
         for (let i = 0; i < author.length; i++) {
@@ -2812,7 +2813,375 @@ function userdetail(data, select) {
                 author[i].classList.toggle('author');
             };
         }
+        timeline(content);
+        paccordion();
     }
+}
+
+function timeline(user) {
+    // combine post list
+    let list = [];
+    let listA = user.posts.A;
+    let listB = user.posts.B;
+    for (let i = 0; i < listA.length; i++) {
+        list.push(listA[i]);
+    }
+    for (let j = 0; j < listB.length; j++) {
+        list.push(listB[j]);
+    }
+    // build entries by post list
+    let entries = d3.nest()
+        .sortValues((a, b) => {
+            return a.date > b.date;
+        })
+        // .key((d)=>{ return d.date;}).sortKeys(d3.ascending)
+        .entries(list);
+
+    let l = entries.length;
+    for (let i = 0; i < l; i++) {
+        function datetransfer(post, property) {
+            if (post[property].length > 0) {
+                for (let j = 0; j < post[property].length; j++) {
+                    let date = post[property][j].push_ipdatetime;
+                    let year = new Date(post.date).getFullYear();
+                    if (typeof (date) !== 'object') {
+                        date = date.split(/\s|\/|\:/);
+                        console.log(date);
+                        date = new Date(year, date[0] - 1, date[1], date[2], date[3]);
+                        console.log(date);
+                    }
+                    post[property][j].push_ipdatetime = date;
+                    post.lastactive = new Date(post.lastactive) > new Date(date) ? post.lastactive : date;
+                }
+            }
+        }
+        let post = entries[i];
+        post.lastactive = post.date;
+        datetransfer(post, 'pushing');
+        datetransfer(post, 'boo');
+        datetransfer(post, 'neutral');
+    }
+    let begin = entries[0].date;
+    let end = function () {
+        let end = begin;
+        for (let i = 0; i < l; i++) {
+            end = new Date(entries[i].date) > new Date(end) ? entries[i].date : end;
+            end = new Date(entries[i].lastactive) > new Date(end) ? entries[i].lastactive : end;
+        }
+        return end;
+    };
+
+    // parameters
+    let rw = document.getElementById('timeline').offsetWidth;
+    let rh = 50;
+    let w = '100%';
+    // let h = (user.activities1 + user.activities2) * rh;
+    let h = 120;
+    let startx = 40;
+    let t = d3.scaleTime()
+        .domain([new Date(begin), new Date(end())])
+        .range([startx, rw - 10]);
+    let actscale = d3.scaleOrdinal()
+        .domain(['A 推', 'A →', 'A 噓', 'A 發', 'B 發', 'B 噓', 'B →', 'B 推'])
+        .range([10, (h - 20) * 1 / 7 + 10, (h - 20) * 2 / 7 + 10, (h - 20) * 3 / 7 + 10, (h - 20) * 4 / 7 + 10, (h - 20) * 5 / 7 + 10, (h - 20) * 6 / 7 + 10, h - 10]);
+
+    let svg = d3.select('#timeline').append('svg')
+        .attr('width', w)
+        .attr('height', h);
+    let svgoffset = getOffset(svg.node());
+    let postg = svg.append('g').attr('class', 'posts').selectAll('g');
+    postg = postg.data(entries).enter().append('g').merge(postg)
+        .attr('class', (d, i) => {
+            return 'post' + i;
+        });
+    let postdiv = d3.select('#posts');
+    let pageA = postdiv.append('div').attr('id', 'pageA').selectAll('div');
+    // let pageA = svg.append('foreignObject').attr('x', 0).selectAll('div');
+    let postcolumnA = pageA.data(listA).enter().append('xhtml:div');
+    postcolumnA
+        // .attr('requiredExtensions', 'http://www.w3.org/1999/xhtml')
+        .attr('class', (d, i) => {
+            return 'post' + i;
+        })
+        .append('xhtml:div')
+        .attr('class', 'activitiies1')
+        .attr('id', (d) => {
+            return 'a' + d.num;
+        })
+        .attr('fill', '#777')
+        .attr('font-size', '1em')
+        .each(function (p, i) {
+            eachpostdiv(d3.select(this), p, i);
+        });
+    let pageB = postdiv.append('div').attr('id', 'pageB').selectAll('div');
+    // let pageB = svg.append('foreignObject').attr('x', rw * 0.55).selectAll('div');
+    let postcolumnB = pageB.data(listB).enter().append('xhtml:div');
+    postcolumnB
+        // .attr('requiredExtensions', 'http://www.w3.org/1999/xhtml')
+        .attr('class', (d, i) => {
+            return 'post' + i;
+        })
+        .append('xhtml:div')
+        .attr('class', 'activitiies2')
+        .attr('id', (d) => {
+            return 'b' + d.num;
+        })
+        .attr('fill', '#777')
+        .attr('font-size', '1em')
+        .each(function (p, i) {
+            eachpostdiv(d3.select(this), p, i);
+        });
+
+    function eachpostdiv(selection, p, i) {
+        inherit(p.pushing, p, 'board');
+        inherit(p.boo, p, 'board');
+        inherit(p.neutral, p, 'board');
+        // draw postbutton
+        selection.append('xhtml:button')
+            .attr('class', 'accordion pageA')
+            .style('max-width', (d) => {
+                return rw * 0.49 + 'px';
+            })
+            .text(p.article_title);
+        // draw postrect
+        selection.append('xhtml:div')
+            .attr('class', 'panel')
+            .style('max-width', (d) => {
+                return rw * 0.49 + 'px';
+            })
+            .html((d) => {
+                let author = '<p id="author">' + d.author + '</p>';
+                let date = '<p>' + d.date + '</p>';
+                let wordstr = '';
+                for (let i = 0; i < d.word.length; i++) {
+                    wordstr += ' ' + d.word[i].word;
+                }
+                let word = '<p>' + wordstr + '</p>';
+                let url = '<a href="' + d.url + '" target="_blank">' + d.url + '</a>';
+                let push = '<div id="pushing"></div>';
+                let neutral = '<div id="neutral"></div>';
+                let boo = '<div id="boo"></div>';
+                return author + date + word + url + push + neutral + boo;
+            })
+            .each(function (p, i) {
+                console.log(p);
+                // draw pushbutton
+                d3.select(this).selectAll('#pushing')
+                    .append('xhtml:button')
+                    .attr('class', 'subaccordion commentA')
+                    .text((d) => {
+                        return p.pushing.length + ' 推';
+                    });
+
+                let push = d3.select(this).selectAll('#pushing');
+                push.data(p.pushing).enter().append('xhtml:#pushing').merge(push)
+                    .append('xhtml:div')
+                    .attr('class', 'panel')
+                    .attr('id', (d, i) => {
+                        return 'push' + i;
+                    })
+                    .html((d) => {
+                        let timeID = d.push_ipdatetime + ' ' + d.push_userid;
+                        let content = d.push_content;
+                        return timeID + content;
+                    });
+
+                // draw boobutton
+                d3.select(this).selectAll('#boo')
+                    .append('xhtml:button')
+                    .attr('class', 'subaccordion commentA')
+                    .text((d) => {
+                        return p.boo.length + ' 噓';
+                    });
+                let boo = d3.select(this).selectAll('#boo');
+                boo.data(p.boo).enter().append('xhtml:#boo').merge(boo)
+                    .append('xhtml:div')
+                    .attr('class', 'panel')
+                    .attr('id', (d, i) => {
+                        return 'boo' + i;
+                    })
+                    .html((d) => {
+                        let timeID = d.push_ipdatetime + ' ' + d.push_userid;
+                        let content = d.push_content;
+                        return timeID + content;
+                    });
+
+                // draw neutralbutton
+                d3.select(this).selectAll('#neutral')
+                    .append('xhtml:button')
+                    .attr('class', 'subaccordion commentA')
+                    .text((d) => {
+                        return p.neutral.length + ' →';
+                    });
+                let neutral = d3.select(this).selectAll('#neutral');
+                neutral.data(p.neutral).enter().append('xhtml:#neutral').merge(neutral)
+                    .append('xhtml:div')
+                    .attr('class', 'panel')
+                    .attr('id', (d, i) => {
+                        return 'neutral' + i;
+                    })
+                    .html((d) => {
+                        let timeID = d.push_ipdatetime + ' ' + d.push_userid;
+                        let content = d.push_content;
+                        return timeID + content;
+                    });
+            });
+    }
+
+    let timeaxis = d3.axisBottom().scale(t).tickFormat(d3.timeFormat('%m/%d'));
+    svg.append('g')
+        .attr('class', 'timeaxis')
+        // .attr('transform', 'translate(' + rw / 2 + ', 0 )')
+        .attr('transform', 'translate( 0, ' + h / 2 + ' )')
+        .call(timeaxis);
+    let actaxis = d3.axisLeft().scale(actscale);
+    svg.append('g')
+        .attr('class', 'timeaxis')
+        .attr('transform', 'translate( ' + startx + ', 0 )')
+        .call(actaxis);
+    let tooltip1 = d3.select('body').select('.a');
+    // draw postdot
+    postg.each(function (p) {
+            function mouseover(d) {
+                d3.event.preventDefault();
+                let time = d.date !== undefined ? d.date : d.push_ipdatetime;
+                let type = d.push_tag !== undefined ? d.push_tag : '發文';
+                let content = d.push_content !== undefined ? d.push_content : d.article_title;
+                tooltip1.transition()
+                    .duration(200)
+                    .style('opacity', .9);
+                tooltip1.html(type + ' ' + time + '<br/>' + content + '<br/>')
+                    .style('left', (d3.event.pageX + 5) + 'px')
+                    .style('top', (d3.event.pageY - 30) + 'px');
+            }
+
+            function mouseout() {
+                d3.event.preventDefault();
+                tooltip1.transition()
+                    .duration(500)
+                    .style('opacity', 0);
+            }
+
+            function click(d) {
+                d3.event.preventDefault();
+                let id = d.id !== undefined ? d.id : d.board === user.page1 ? 'a' + d.num : 'b' + d.num;
+                let display = d3.select('#' + id).node().style.display;
+                d3.select('#' + id).style('display', () => {
+                    if (display !== 'none') {
+                        return 'none';
+                    } else {
+                        return 'block';
+                    }
+                });
+            }
+
+            d3.select(this).append('circle')
+                .attr('class', 'postcircle')
+                .attr('fill', '#aaa')
+                .attr('r', 5)
+                // .attr('heigth', 10)
+                .attr('cx', (d) => {
+                    return t(new Date(d.date));
+                })
+                .attr('cy', (d) => {
+                    let board = d.board === user.page1 ? 'A' : 'B';
+                    console.log(board, ' 發', actscale(board + ' 發'));
+                    return actscale(board + ' 發');
+                })
+                .on('mouseover', function (d) {
+                    mouseover(d);
+                })
+                .on('mouseout', function (d) {
+                    mouseout(d);
+                })
+                .on('click', function (d) {
+                    click(d);
+                });
+
+            let pushdot = d3.select(this).selectAll('.pushingcircle');
+            pushdot.data(p.pushing, (d, i) => {
+                    d.id = 'push' + i;
+                    return d;
+                })
+                .enter().append('circle').merge(pushdot)
+                .attr('class', 'pushingcircle')
+                .attr('fill', '#f00')
+                .attr('r', 5)
+                .attr('cx', (d) => {
+                    console.log(d);
+                    return t(new Date(d.push_ipdatetime));
+                })
+                .attr('cy', (d) => {
+                    let board = d.board === user.page1 ? 'A' : 'B';
+                    console.log(board, ' 推', actscale(board + ' 推'));
+                    return actscale(board + ' 推');
+                })
+                .on('mouseover', function (d) {
+                    mouseover(d);
+                })
+                .on('mouseout', function (d) {
+                    mouseout(d);
+                })
+                .on('click', function (d) {
+                    click(d);
+                });
+
+            let boodot = d3.select(this).selectAll('.boocircle');
+            boodot.data(p.boo, (d, i) => {
+                    d.id = 'boo' + i;
+                    return d;
+                })
+                .enter().append('circle').merge(boodot)
+                .attr('class', 'boocircle')
+                .attr('fill', '#0f0')
+                .attr('r', 5)
+                .attr('cx', (d) => {
+                    console.log(d);
+                    return t(new Date(d.push_ipdatetime));
+                })
+                .attr('cy', (d) => {
+                    let board = d.board === user.page1 ? 'A' : 'B';
+                    console.log(board, ' 噓', actscale(board + ' 噓'));
+                    return actscale(board + ' 噓');
+                })
+                .on('mouseover', function (d) {
+                    mouseover(d);
+                })
+                .on('mouseout', function (d) {
+                    mouseout(d);
+                })
+                .on('click', function (d) {
+                    click(d);
+                });
+
+            let neutraldot = d3.select(this).selectAll('.neutralcircle');
+            neutraldot.data(p.neutral, (d, i) => {
+                    d.id = 'neutral' + i;
+                    return d;
+                })
+                .enter().append('circle').merge(neutraldot)
+                .attr('class', 'neutralcircle')
+                .attr('fill', '#00f')
+                .attr('r', 5)
+                .attr('cx', (d) => {
+                    // console.log(d, new Date(d.push_ipdatetime));
+                    return t(new Date(d.push_ipdatetime));
+                })
+                .attr('cy', (d) => {
+                    let board = d.board === user.page1 ? 'A' : 'B';
+                    console.log(board, ' →', actscale(board + ' →'));
+                    return actscale(board + ' →');
+                })
+                .on('mouseover', function (d) {
+                    mouseover(d);
+                })
+                .on('mouseout', function (d) {
+                    mouseout(d);
+                })
+                .on('click', function (d) {
+                    click(d);
+                });
+        });
 }
 
 /**
@@ -3217,6 +3586,35 @@ function getProperty(propertyName, object) {
         property = property[parts[i]];
     }
     return property;
+}
+
+/**
+ * get html element's (x,y) in html
+ * @param {object} element -
+ * @return {object}
+ */
+function getOffset(element) {
+    let bound = element.getBoundingClientRect();
+    let html = document.documentElement;
+
+    return {
+        top: bound.top + window.pageYOffset - html.clientTop,
+        left: bound.left + window.pageXOffset - html.clientLeft,
+    };
+}
+
+/**
+ * inherit property of s to t array
+ * @param {array} t -
+ * @param {object} s -
+ * @param {string} property -
+ */
+function inherit(t, s, property) {
+    if (t.length > 0) {
+        for (let i = 0; i < t.length; i++) {
+            t[i][property] = s[property];
+        }
+    }
 }
 
 // https://github.com/wbkd/d3-extended

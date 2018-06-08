@@ -163,6 +163,17 @@ svg {
     border: 1px solid;
 }
 
+div.tooltip.a {
+    position: absolute;
+    text-align: left;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 1px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
 div.tooltip.b {
     position: absolute;
     text-align: left;
@@ -533,6 +544,17 @@ div.panel {
     float: left;
     border: 1px solid #ccc;
     width: 50%;
+}
+
+.foreignObject {
+    font: 9px sans-serif;
+    text-overflow: ellipsis;
+    text-align: left;
+    word-wrap: break-word;
+}
+.activitiies1 {
+    float: left;
+    border: 1px solid #111;
 }
 
 .author {
