@@ -332,7 +332,6 @@ var callback = function callback(req, res) {
         if (req.params.posttype === 'PTT') {
             ptt = true;
         }
-        console.log('queryobj1= ', queryobj1);
         if (page1 === page2 && time1 === time3 && time2 === time4) {
             return new Promise((resolve, reject) => {
                     findquery(page1, queryobj1, ptt).then(result => {
@@ -365,7 +364,6 @@ var callback = function callback(req, res) {
                 })
         } else {
             var queryobj2 = queryobj(req, res, time3, time4, keyword2, keyword4);
-            console.log(queryobj2);
             return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {
                     console.log("q1 lenght: " + result[0].length);

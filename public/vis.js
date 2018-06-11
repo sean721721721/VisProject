@@ -1998,6 +1998,7 @@ function postdetail(data, select) {
         content.word = pagedata[i][j].word;
         if (ptt) {
             content.url = pagedata[i][j].url;
+            content.title = pagedata[i][j].article_title;
             content.content = pagedata[i][j].content;
             content.message_count = {};
             content.message_count.all = pagedata[i][j].message_count.all;
@@ -2201,7 +2202,7 @@ function activeuser(data, preselect, postselect, mode) {
                         if (postchange[j].post !== undefined) {
                             y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
                         }
-                        console.log(x, y);
+                        // console.log(x, y);
                         let id;
                         let eqid;
                         if (ptt) {
@@ -2254,7 +2255,7 @@ function activeuser(data, preselect, postselect, mode) {
                 return rcolor;
             })
             .attr('stroke-dasharray', (d) => {
-                console.log(d.act);
+                // console.log(d.act);
                 let p = 1 / d.act * 50;
                 return p - 10 + ', ' + 10;
             });
@@ -2678,7 +2679,7 @@ function activepost(data, preselect, postselect, mode) {
  * @param {number} post - postnum
  */
 function selectivepost(page, post) {
-    console.log('selectivepost: ', page, post);
+    // console.log('selectivepost: ', page, post);
     let sel = d3.selectAll('.page' + page + '.p' + post);
     let mode = document.querySelector('input[name="mode"]:checked').value;
     if (mode === 'sunburst') {
@@ -2964,7 +2965,7 @@ function timeline(user) {
                 return author + date + word + url + push + neutral + boo;
             })
             .each(function (p, i) {
-                console.log(p);
+                // console.log(p);
                 // draw pushbutton
                 d3.select(this).selectAll('#pushing')
                     .append('xhtml:button')
@@ -3042,146 +3043,146 @@ function timeline(user) {
     let tooltip1 = d3.select('body').select('.a');
     // draw postdot
     postg.each(function (p) {
-            function mouseover(d) {
-                d3.event.preventDefault();
-                let time = d.date !== undefined ? d.date : d.push_ipdatetime;
-                let type = d.push_tag !== undefined ? d.push_tag : '發文';
-                let content = d.push_content !== undefined ? d.push_content : d.article_title;
-                tooltip1.transition()
-                    .duration(200)
-                    .style('opacity', .9);
-                tooltip1.html(type + ' ' + time + '<br/>' + content + '<br/>')
-                    .style('left', (d3.event.pageX + 5) + 'px')
-                    .style('top', (d3.event.pageY - 30) + 'px');
-            }
+        function mouseover(d) {
+            d3.event.preventDefault();
+            let time = d.date !== undefined ? d.date : d.push_ipdatetime;
+            let type = d.push_tag !== undefined ? d.push_tag : '發文';
+            let content = d.push_content !== undefined ? d.push_content : d.article_title;
+            tooltip1.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip1.html(type + ' ' + time + '<br/>' + content + '<br/>')
+                .style('left', (d3.event.pageX + 5) + 'px')
+                .style('top', (d3.event.pageY - 30) + 'px');
+        }
 
-            function mouseout() {
-                d3.event.preventDefault();
-                tooltip1.transition()
-                    .duration(500)
-                    .style('opacity', 0);
-            }
+        function mouseout() {
+            d3.event.preventDefault();
+            tooltip1.transition()
+                .duration(500)
+                .style('opacity', 0);
+        }
 
-            function click(d) {
-                d3.event.preventDefault();
-                let id = d.id !== undefined ? d.id : d.board === user.page1 ? 'a' + d.num : 'b' + d.num;
-                let display = d3.select('#' + id).node().style.display;
-                d3.select('#' + id).style('display', () => {
-                    if (display !== 'none') {
-                        return 'none';
-                    } else {
-                        return 'block';
-                    }
-                });
-            }
+        function click(d) {
+            d3.event.preventDefault();
+            let id = d.id !== undefined ? d.id : d.board === user.page1 ? 'a' + d.num : 'b' + d.num;
+            let display = d3.select('#' + id).node().style.display;
+            d3.select('#' + id).style('display', () => {
+                if (display !== 'none') {
+                    return 'none';
+                } else {
+                    return 'block';
+                }
+            });
+        }
 
-            d3.select(this).append('circle')
-                .attr('class', 'postcircle')
-                .attr('fill', '#aaa')
-                .attr('r', 5)
-                // .attr('heigth', 10)
-                .attr('cx', (d) => {
-                    return t(new Date(d.date));
-                })
-                .attr('cy', (d) => {
-                    let board = d.board === user.page1 ? 'A' : 'B';
-                    console.log(board, ' 發', actscale(board + ' 發'));
-                    return actscale(board + ' 發');
-                })
-                .on('mouseover', function (d) {
-                    mouseover(d);
-                })
-                .on('mouseout', function (d) {
-                    mouseout(d);
-                })
-                .on('click', function (d) {
-                    click(d);
-                });
+        d3.select(this).append('circle')
+            .attr('class', 'postcircle')
+            .attr('fill', '#aaa')
+            .attr('r', 5)
+            // .attr('heigth', 10)
+            .attr('cx', (d) => {
+                return t(new Date(d.date));
+            })
+            .attr('cy', (d) => {
+                let board = d.board === user.page1 ? 'A' : 'B';
+                console.log(board, ' 發', actscale(board + ' 發'));
+                return actscale(board + ' 發');
+            })
+            .on('mouseover', function (d) {
+                mouseover(d);
+            })
+            .on('mouseout', function (d) {
+                mouseout(d);
+            })
+            .on('click', function (d) {
+                click(d);
+            });
 
-            let pushdot = d3.select(this).selectAll('.pushingcircle');
-            pushdot.data(p.pushing, (d, i) => {
-                    d.id = 'push' + i;
-                    return d;
-                })
-                .enter().append('circle').merge(pushdot)
-                .attr('class', 'pushingcircle')
-                .attr('fill', '#f00')
-                .attr('r', 5)
-                .attr('cx', (d) => {
-                    console.log(d);
-                    return t(new Date(d.push_ipdatetime));
-                })
-                .attr('cy', (d) => {
-                    let board = d.board === user.page1 ? 'A' : 'B';
-                    console.log(board, ' 推', actscale(board + ' 推'));
-                    return actscale(board + ' 推');
-                })
-                .on('mouseover', function (d) {
-                    mouseover(d);
-                })
-                .on('mouseout', function (d) {
-                    mouseout(d);
-                })
-                .on('click', function (d) {
-                    click(d);
-                });
+        let pushdot = d3.select(this).selectAll('.pushingcircle');
+        pushdot.data(p.pushing, (d, i) => {
+                d.id = 'push' + i;
+                return d;
+            })
+            .enter().append('circle').merge(pushdot)
+            .attr('class', 'pushingcircle')
+            .attr('fill', '#f00')
+            .attr('r', 5)
+            .attr('cx', (d) => {
+                console.log(d);
+                return t(new Date(d.push_ipdatetime));
+            })
+            .attr('cy', (d) => {
+                let board = d.board === user.page1 ? 'A' : 'B';
+                console.log(board, ' 推', actscale(board + ' 推'));
+                return actscale(board + ' 推');
+            })
+            .on('mouseover', function (d) {
+                mouseover(d);
+            })
+            .on('mouseout', function (d) {
+                mouseout(d);
+            })
+            .on('click', function (d) {
+                click(d);
+            });
 
-            let boodot = d3.select(this).selectAll('.boocircle');
-            boodot.data(p.boo, (d, i) => {
-                    d.id = 'boo' + i;
-                    return d;
-                })
-                .enter().append('circle').merge(boodot)
-                .attr('class', 'boocircle')
-                .attr('fill', '#0f0')
-                .attr('r', 5)
-                .attr('cx', (d) => {
-                    console.log(d);
-                    return t(new Date(d.push_ipdatetime));
-                })
-                .attr('cy', (d) => {
-                    let board = d.board === user.page1 ? 'A' : 'B';
-                    console.log(board, ' 噓', actscale(board + ' 噓'));
-                    return actscale(board + ' 噓');
-                })
-                .on('mouseover', function (d) {
-                    mouseover(d);
-                })
-                .on('mouseout', function (d) {
-                    mouseout(d);
-                })
-                .on('click', function (d) {
-                    click(d);
-                });
+        let boodot = d3.select(this).selectAll('.boocircle');
+        boodot.data(p.boo, (d, i) => {
+                d.id = 'boo' + i;
+                return d;
+            })
+            .enter().append('circle').merge(boodot)
+            .attr('class', 'boocircle')
+            .attr('fill', '#0f0')
+            .attr('r', 5)
+            .attr('cx', (d) => {
+                console.log(d);
+                return t(new Date(d.push_ipdatetime));
+            })
+            .attr('cy', (d) => {
+                let board = d.board === user.page1 ? 'A' : 'B';
+                console.log(board, ' 噓', actscale(board + ' 噓'));
+                return actscale(board + ' 噓');
+            })
+            .on('mouseover', function (d) {
+                mouseover(d);
+            })
+            .on('mouseout', function (d) {
+                mouseout(d);
+            })
+            .on('click', function (d) {
+                click(d);
+            });
 
-            let neutraldot = d3.select(this).selectAll('.neutralcircle');
-            neutraldot.data(p.neutral, (d, i) => {
-                    d.id = 'neutral' + i;
-                    return d;
-                })
-                .enter().append('circle').merge(neutraldot)
-                .attr('class', 'neutralcircle')
-                .attr('fill', '#00f')
-                .attr('r', 5)
-                .attr('cx', (d) => {
-                    // console.log(d, new Date(d.push_ipdatetime));
-                    return t(new Date(d.push_ipdatetime));
-                })
-                .attr('cy', (d) => {
-                    let board = d.board === user.page1 ? 'A' : 'B';
-                    console.log(board, ' →', actscale(board + ' →'));
-                    return actscale(board + ' →');
-                })
-                .on('mouseover', function (d) {
-                    mouseover(d);
-                })
-                .on('mouseout', function (d) {
-                    mouseout(d);
-                })
-                .on('click', function (d) {
-                    click(d);
-                });
-        });
+        let neutraldot = d3.select(this).selectAll('.neutralcircle');
+        neutraldot.data(p.neutral, (d, i) => {
+                d.id = 'neutral' + i;
+                return d;
+            })
+            .enter().append('circle').merge(neutraldot)
+            .attr('class', 'neutralcircle')
+            .attr('fill', '#00f')
+            .attr('r', 5)
+            .attr('cx', (d) => {
+                // console.log(d, new Date(d.push_ipdatetime));
+                return t(new Date(d.push_ipdatetime));
+            })
+            .attr('cy', (d) => {
+                let board = d.board === user.page1 ? 'A' : 'B';
+                console.log(board, ' →', actscale(board + ' →'));
+                return actscale(board + ' →');
+            })
+            .on('mouseover', function (d) {
+                mouseover(d);
+            })
+            .on('mouseout', function (d) {
+                mouseout(d);
+            })
+            .on('click', function (d) {
+                click(d);
+            });
+    });
 }
 
 /**
@@ -3258,7 +3259,11 @@ function pagedata(data) {
         tmdata.push(page);
     }
     tm.name = 'root';
-    if (tmdata[0].name === tmdata[1].name) {
+    let samepage = (data.query.page1 === data.query.page1);
+    let samestarttime = (data.query.time1 === data.query.time3);
+    let sameendtime = (data.query.time2 === data.query.time4);
+    let sametime = (samestarttime && sameendtime);
+    if (samepage && sametime) {
         tm.children = [tmdata[0]];
     } else {
         tm.children = tmdata;
