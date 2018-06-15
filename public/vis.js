@@ -486,7 +486,7 @@ function showselect(data, select) {
                 return rcolor;
             });
             // activepost(data, preselect, select);
-            select.actpost = activepost(data, preselect, select, 'intersection');
+            select.actpost = activeposts(data, preselect, select, 'union');
             userdetailview(data, select);
             overview(data, select);
             showselect(data, select);
@@ -501,7 +501,7 @@ function showselect(data, select) {
         .on('click', function (d) {
             d3.event.preventDefault();
             console.log('click', d);
-            let pagenum = d.page === data.query.page1 ? 1 : 2;
+            let pagenum = (d.page === data.query.page1) ? 1 : (d.page === data.query.page1 + '1') ? 1 : 2;
             let postnum = d.post.match(/\d{1,}/)[0];
             selectivepost(pagenum, postnum);
             let preselect = {};
@@ -583,7 +583,7 @@ function pageview(data, pagedata, select) {
             .style('pointer-events', 'all');
 
         let g = svg.append('g')
-            .attr('id', 'pagepmap');
+            .attr('id', 'pageview');
 
         let mode = document.querySelector('input[name="mode"]:checked').value;
         let sorting = document.querySelector('input[name="sort"]:checked').value;
@@ -1201,11 +1201,30 @@ function overlapvis(data, select, mode) {
 
     if (overlap.length > 0) {
         // count elements in overlap
+        let attrmax = 0;
         for (let i = 0, l = overlap.length; i < l; i++) {
             if (overlap[i].length > 0) {
                 let degl = overlap[i].length;
                 for (let j = 0; j < degl; j++) {
                     oucount += overlap[i][j].length;
+                    let gl = overlap[i][j].length;
+                    for (let k = 0; k < gl; k++) {
+                        let d = overlap[i][j][k];
+                        d.count = docount(d, {});
+                        maxarc = d3.max(d.count.arc);
+                        maxbrc = d3.max(d.count.brc);
+                        let arr = [];
+                        arr.push(d.count.acc);
+                        arr.push(d.count.asc);
+                        arr.push(d.count.bcc);
+                        arr.push(d.count.bsc);
+                        arr.push(maxarc);
+                        arr.push(maxbrc);
+                        let max = d3.max(arr);
+                        if (max > attrmax) {
+                            attrmax = max;
+                        }
+                    }
                 }
             }
         }
@@ -1542,7 +1561,7 @@ function overlapvis(data, select, mode) {
                             .title(function (d) {
                                 return d.name;
                             })
-                            .maxattr(num[num.length - 1])
+                            .maxattr(attrmax)
                             .width(cellSize3)
                             .ratio(ratio)
                             .margin(glyphmargin(k))
@@ -1573,7 +1592,6 @@ function overlapvis(data, select, mode) {
                             return result + inity;
                         });*/
                         .each(function (d, i) {
-                            d.count = docount(d, {});
                             // reaction count: sum, like, love, haha, wow, sad, angry, others || push count: sum, pushing, neutral, boo
                             // comment count || push count
                             // share count || publish count
@@ -1704,7 +1722,7 @@ function overlapvis(data, select, mode) {
             .on('click', function (d) {
                 d3.event.preventDefault();
                 // console.log(d, this);
-                /* let i = selectobj.page === data.query.page1 ? 0 : 1;
+                /* let i = selectobj.page === data.query.page1) ? 1 : (selectobj.page === data.query.page1 + '1') ? 1 : 2;
                 let j = 0;
                 if (selectobj.post !== 0) {
                     j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
@@ -1770,7 +1788,7 @@ function overlapvis(data, select, mode) {
                 // status(d);
                 console.log('#degree' + deg.toString());
                 // activepost(data, preselect, select);
-                select.actpost = activepost(data, preselect, select, 'intersection');
+                select.actpost = activeposts(data, preselect, select, 'union');
                 userdetailview(data, select);
                 overview(data, select);
                 showselect(data, select);
@@ -1982,11 +2000,12 @@ function postdetail(data, select) {
     let pagedata = data.data[0];
     // d.data.id.split('.');
     let index = select.ci.post;
-    // console.log(index);
+    // console.log(select);
     if (select.post[index] !== undefined) {
         let page = select.post[index].page;
         let post = select.post[index].post;
-        let i = page === data.query.page1 ? 0 : 1;
+        // console.log(page, data.query.page1 + '1');
+        let i = (page === data.query.page1) ? 0 : (page === data.query.page1 + '1') ? 0 : 1;
         let j = 0;
         if (post !== undefined) {
             j = parseInt(post.match(/\d{1,}/)[0]) - 1;
@@ -2139,10 +2158,9 @@ function diffobj(objarray1, objarray2, compare) {
             diff.push(objarray1[i]);
         }
     }
-    // console.log(diff);
+    // console.log(objarray1, objarray2, diff);
     return diff;
 }
-
 
 /**
  * show selective posts' active user
@@ -2165,19 +2183,20 @@ function activeuser(data, preselect, postselect, mode) {
     if (postsl > presl) {
         // get every user obj color index by the intersect counts then read index to color;
         let newpost = diffobj(posts, pres, 'post');
-        modifycolor(newpost, true, mode);
+        modifycolor(newpost, postsl, true, mode);
     } else {
         let delpost = diffobj(pres, posts, 'post');
-        modifycolor(delpost, false, mode);
+        modifycolor(delpost, postsl, false, mode);
     }
 
     /**
      * modify users' color by d.act value
      * @param {array} postchange -
+     * @param {number} maxact
      * @param {boolean} add -
      * @param {string} mode -
      */
-    function modifycolor(postchange, add, mode) {
+    function modifycolor(postchange, maxact, add, mode) {
         console.log(postchange);
         let ptt = data.query.posttype === 'PTT';
         let colormod;
@@ -2197,7 +2216,8 @@ function activeuser(data, preselect, postselect, mode) {
                 let rcolor;
                 for (let i = 0, l = d.posts.A.length; i < l; i++) {
                     for (let j = 0, l = postchange.length; j < l; j++) {
-                        let x = postchange[j].page === data.query.page1 ? 0 : 1;
+                        // console.log(postchange[j].page);
+                        let x = (postchange[j].page === data.query.page1) ? 0 : (postchange[j].page === data.query.page1 + '1') ? 0 : 1;
                         let y = 0;
                         if (postchange[j].post !== undefined) {
                             y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
@@ -2206,6 +2226,7 @@ function activeuser(data, preselect, postselect, mode) {
                         let id;
                         let eqid;
                         if (ptt) {
+                            // console.log(pagedata[x][y]);
                             id = pagedata[x][y].article_id;
                             eqid = d.posts.A[i].article_id === id;
                         } else {
@@ -2224,7 +2245,8 @@ function activeuser(data, preselect, postselect, mode) {
                 }
                 for (let i = 0, l = d.posts.B.length; i < l; i++) {
                     for (let j = 0, l = postchange.length; j < l; j++) {
-                        let x = postchange[j].page === data.query.page1 ? 0 : 1;
+                        // console.log(postchange[j].page);
+                        let x = (postchange[j].page === data.query.page1) ? 0 : (postchange[j].page === data.query.page1 + '1') ? 0 : 1;
                         let y = 0;
                         if (postchange[j].post !== undefined) {
                             y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
@@ -2258,6 +2280,14 @@ function activeuser(data, preselect, postselect, mode) {
                 // console.log(d.act);
                 let p = 1 / d.act * 50;
                 return p - 10 + ', ' + 10;
+            })
+            .attr('fill', (d) => {
+                if (maxact === 0) {
+                    return 'rgba(0, 0, 0, 0)';
+                } else {
+                    let a = 1 - d.act / maxact;
+                    return 'rgba(0, 0, 0, ' + a + ')';
+                }
             });
     }
     return result;
@@ -2284,6 +2314,159 @@ function postidtonum(data, page, postid) {
             return i + 1;
         }
     }
+}
+
+/**
+ * show selective posts' active user
+ * @param {object} data -
+ * @param {object} preselect -
+ * @param {object} postselect -
+ * @param {string} mode -
+ * @return {array} - activeuser
+ */
+function activeposts(data, preselect, postselect, mode) {
+    let pagedata = data.data[0];
+    let result = preselect.actpost;
+    // console.log(preselect, postselect);
+    let pres = preselect.user;
+    let presl = preselect.user.length;
+    let posts = postselect.user;
+    let postsl = postselect.user.length;
+    // console.log(presl, postsl, data);
+    if (postsl > presl) {
+        // get every user obj color index by the intersect counts then read index to color;
+        let newuser = diffobj(posts, pres, 'id');
+        modify(pagedata, newuser, postsl, true, mode);
+    } else {
+        let deluser = diffobj(pres, posts, 'id');
+        modify(pagedata, deluser, postsl, false, mode);
+    }
+
+    /**
+     * modify users' color by d.act value
+     * @param {array} pagedata -
+     * @param {array} userchange -
+     * @param {number} maxact -
+     * @param {boolean} add -
+     * @param {string} mode -
+     */
+    function modify(pagedata, userchange, maxact, add, mode) {
+        console.log(userchange);
+        let n = 100;
+        let ptt = data.query.posttype === 'PTT';
+        let colormod;
+        if (mode === 'intersection') {
+            colormod = postselect.post.length;
+        } else if (mode === 'union') {
+            colormod = 1;
+        }
+
+        // console.log('selectivepost: ', page, post);
+        // let sel = d3.selectAll('.page' + page + '.p' + post);
+        graphmode = document.querySelector('input[name="mode"]:checked').value;
+        console.log(graphmode);
+        if (graphmode === 'sunburst') {
+            let node = d3.select('#pageview').selectAll('path').datum((d) => {
+                    if (!d.act) {
+                        d.act = 0;
+                    }
+                    let page = d.data.page - 1;
+                    let post = d.data.post[0] === undefined ? -1 : parseInt(d.data.post[0], 10) - 1;
+                    if (page >= 0 && post >= 0) {
+                        // console.log(userchange, pagedata[page][post]);
+                        let pname = page === 0 ? 'A' : 'B';
+                        let thispost = pagedata[page][post];
+                        for (let i = 0; i < userchange.length; i++) {
+                            for (let j = 0; j < userchange[i].posts[pname].length; j++) {
+                                if (userchange[i].posts[pname][j].article_id === thispost.article_id) {
+                                    if (add) {
+                                        d.act++;
+                                    } else {
+                                        d.act--;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return d;
+                })
+                .attr('fill', (d) => {
+                    let page = d.data.page - 1;
+                    let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
+                    if (d.act > 0) {
+                        console.log(page, post, d.act);
+                    }
+                    if (d.act === 0) {
+                        // console.log(chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5));
+                        return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                    } else {
+                        let a = d.act / maxact;
+                        return 'rgba(0, 0, 0, ' + a + ')';
+                    }
+                })
+                /* .attr('stroke', (d) => {
+                    let rcolor;
+                    if (d.act >= colormod) {
+                        rcolor = '#000';
+                    }else{
+                        rcolor = '#fff';
+                    }
+                    return rcolor;
+                })*/
+                .attr('stroke-dasharray', (d) => {
+                    // console.log(d.act);
+                    let p = 1 / d.act * 50;
+                    return p - 10 + ', ' + 10;
+                });
+        } else if (graphmode === 'treemap') {
+            console.log('treemap');
+            let node = d3.select('#pageview').selectAll('g').selectAll('rect').datum((d) => {
+                    console.log(d);
+                    if (!d.act) {
+                        d.act = 0;
+                    }
+                    let page = d.data.page - 1;
+                    let post = d.data.post[0] === undefined ? -1 : parseInt(d.data.post[0], 10) - 1;
+                    if (page >= 0 && post >= 0) {
+                        // console.log(userchange, pagedata[page][post]);
+                        let pname = page === 0 ? 'A' : 'B';
+                        let thispost = pagedata[page][post];
+                        for (let i = 0; i < userchange.length; i++) {
+                            for (let j = 0; j < userchange[i].posts[pname].length; j++) {
+                                if (userchange[i].posts[pname][j].article_id === thispost.article_id) {
+                                    if (add) {
+                                        d.act++;
+                                    } else {
+                                        d.act--;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return d;
+                })
+                .attr('fill', (d) => {
+                    let page = d.data.page - 1;
+                    let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
+                    if (d.act > 0) {
+                        console.log(page, post, d.act);
+                    }
+                    if (d.act === 0) {
+                        if (d === d.leaves()[0]) {
+                            return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                            // return '#fff';
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        let a = d.act / maxact;
+                        return 'rgba(0, 0, 0, ' + a + ')';
+                    }
+                });
+            console.log(node);
+        }
+    }
+    return result;
 }
 
 /**
@@ -2791,8 +2974,8 @@ function userdetail(data, select) {
             point.posts.B[i].num = postnum;
         }
         let content = point;
-        content.page1 = data.query.page1;
-        content.page2 = data.query.page2;
+        content.page1 = data.query.page1 + ' : ' + data.query.time1 + ' to ' + data.query.time2;
+        content.page2 = data.query.page2 + ' : ' + data.query.time3 + ' to ' + data.query.time4;
         if (ptt) {
             content.activities1 = point.posts.A.length;
             content.activities2 = point.posts.B.length;
@@ -2814,20 +2997,24 @@ function userdetail(data, select) {
                 author[i].classList.toggle('author');
             };
         }
-        timeline(content);
+        if (ptt) {
+            timeline(content, data.query);
+        }
         paccordion();
     }
 }
 
-function timeline(user) {
+function timeline(user, meta) {
     // combine post list
     let list = [];
     let listA = user.posts.A;
     let listB = user.posts.B;
     for (let i = 0; i < listA.length; i++) {
+        listA[i].query = 'A';
         list.push(listA[i]);
     }
     for (let j = 0; j < listB.length; j++) {
+        listB[j].query = 'B';
         list.push(listB[j]);
     }
     // build entries by post list
@@ -2862,29 +3049,36 @@ function timeline(user) {
         datetransfer(post, 'boo');
         datetransfer(post, 'neutral');
     }
-    let begin = entries[0].date;
-    let end = function () {
+
+    // let begin = entries[0].date;
+    let begin = new Date(meta.time1) < new Date(meta.time3) ? new Date(meta.time1) : new Date(meta.time3);
+    /* let end = function () {
         let end = begin;
         for (let i = 0; i < l; i++) {
             end = new Date(entries[i].date) > new Date(end) ? entries[i].date : end;
             end = new Date(entries[i].lastactive) > new Date(end) ? entries[i].lastactive : end;
         }
         return end;
-    };
+    };*/
+    let end = new Date(meta.time2) < new Date(meta.time4) ? new Date(meta.time4) : new Date(meta.time2);
 
     // parameters
     let rw = document.getElementById('timeline').offsetWidth;
     let rh = 50;
     let w = '100%';
     // let h = (user.activities1 + user.activities2) * rh;
-    let h = 120;
+    let h = 140;
     let startx = 40;
-    let t = d3.scaleTime()
-        .domain([new Date(begin), new Date(end())])
-        .range([startx, rw - 10]);
-    let actscale = d3.scaleOrdinal()
-        .domain(['A 推', 'A →', 'A 噓', 'A 發', 'B 發', 'B 噓', 'B →', 'B 推'])
-        .range([10, (h - 20) * 1 / 7 + 10, (h - 20) * 2 / 7 + 10, (h - 20) * 3 / 7 + 10, (h - 20) * 4 / 7 + 10, (h - 20) * 5 / 7 + 10, (h - 20) * 6 / 7 + 10, h - 10]);
+    let Tscale = d3.scaleTime()
+        // .domain([new Date(begin), new Date(end())])
+        .domain([begin, end])
+        .range([startx, rw - startx]);
+    let Ascale = d3.scaleOrdinal()
+        .domain(['A 推', 'A →', 'A 噓', 'A 發'])
+        .range([10, (h - 20) * 1 / 7 + 10, (h - 20) * 2 / 7 + 10, (h - 20) * 3 / 7 + 10]);
+    let Bscale = d3.scaleOrdinal()
+        .domain(['B 發', 'B 噓', 'B →', 'B 推'])
+        .range([(h - 20) * 4 / 7 + 10, (h - 20) * 5 / 7 + 10, (h - 20) * 6 / 7 + 10, h - 10]);
 
     let svg = d3.select('#timeline').append('svg')
         .attr('width', w)
@@ -2907,12 +3101,13 @@ function timeline(user) {
         .append('xhtml:div')
         .attr('class', 'activitiies1')
         .attr('id', (d) => {
-            return 'a' + d.num;
+            return 'A' + d.num;
         })
         .attr('fill', '#777')
         .attr('font-size', '1em')
         .each(function (p, i) {
-            eachpostdiv(d3.select(this), p, i);
+            let id = 'a' + i;
+            eachpostdiv(d3.select(this), p, id);
         });
     let pageB = postdiv.append('div').attr('id', 'pageB').selectAll('div');
     // let pageB = svg.append('foreignObject').attr('x', rw * 0.55).selectAll('div');
@@ -2925,18 +3120,22 @@ function timeline(user) {
         .append('xhtml:div')
         .attr('class', 'activitiies2')
         .attr('id', (d) => {
-            return 'b' + d.num;
+            return 'B' + d.num;
         })
         .attr('fill', '#777')
         .attr('font-size', '1em')
         .each(function (p, i) {
-            eachpostdiv(d3.select(this), p, i);
+            let id = 'b' + i;
+            eachpostdiv(d3.select(this), p, id);
         });
 
-    function eachpostdiv(selection, p, i) {
-        inherit(p.pushing, p, 'board');
-        inherit(p.boo, p, 'board');
-        inherit(p.neutral, p, 'board');
+    function eachpostdiv(selection, p, id) {
+        inherit(p.pushing, p, 'query');
+        inherit(p.boo, p, 'query');
+        inherit(p.neutral, p, 'query');
+        inherit(p.pushing, p, 'num');
+        inherit(p.boo, p, 'num');
+        inherit(p.neutral, p, 'num');
         // draw postbutton
         selection.append('xhtml:button')
             .attr('class', 'accordion pageA')
@@ -2947,6 +3146,7 @@ function timeline(user) {
         // draw postrect
         selection.append('xhtml:div')
             .attr('class', 'panel')
+            .attr('id', id)
             .style('max-width', (d) => {
                 return rw * 0.49 + 'px';
             })
@@ -3029,18 +3229,44 @@ function timeline(user) {
             });
     }
 
-    let timeaxis = d3.axisBottom().scale(t).tickFormat(d3.timeFormat('%m/%d'));
+    // axises
+    let timetopaxis = d3.axisTop().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
     svg.append('g')
-        .attr('class', 'timeaxis')
+        .attr('class', 'Topaxis')
         // .attr('transform', 'translate(' + rw / 2 + ', 0 )')
-        .attr('transform', 'translate( 0, ' + h / 2 + ' )')
-        .call(timeaxis);
-    let actaxis = d3.axisLeft().scale(actscale);
+        .attr('transform', 'translate( 0, ' + (h / 2) + ' )')
+        .call(customTAxis, timetopaxis, 0, 5, -h / 14, -6 * h / 14);
+    let timebotaxis = d3.axisBottom().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
     svg.append('g')
-        .attr('class', 'timeaxis')
+        .attr('class', 'Bottomaxis')
+        // .attr('transform', 'translate(' + rw / 2 + ', 0 )')
+        .attr('transform', 'translate( 0, ' + (h / 2) + ' )')
+        .call(customTAxis, timebotaxis, 0, 5, h / 14, 6 * h / 14);
+    let Aaxis = d3.axisLeft().scale(Ascale);
+    svg.append('g')
+        .attr('class', 'Aaxis')
         .attr('transform', 'translate( ' + startx + ', 0 )')
-        .call(actaxis);
+        .call(customAxis, Aaxis, 0, (rw - 2 * startx));
+    let Baxis = d3.axisLeft().scale(Bscale);
+    svg.append('g')
+        .attr('class', 'Baxis')
+        .attr('transform', 'translate( ' + (startx) + ', 0 )')
+        .call(customAxis, Baxis, 0, (rw - 2 * startx));
     let tooltip1 = d3.select('body').select('.a');
+
+    function customTAxis(g, axis, y, dy, y1, y2) {
+        g.call(axis);
+        g.select('.domain').remove();
+        g.selectAll('.tick line').attr('stroke', '#777').attr('stroke-dasharray', '2,2').attr('y1', y1).attr('y2', y2);
+        g.selectAll('.tick text').attr('y', y).attr('dy', dy);
+    }
+
+    function customAxis(g, axis, x1, x2) {
+        g.call(axis);
+        g.select('.domain').remove();
+        g.selectAll('.tick line').attr('stroke', '#777').attr('stroke-dasharray', '2,2').attr('x1', x1).attr('x2', x2);
+    }
+
     // draw postdot
     postg.each(function (p) {
         function mouseover(d) {
@@ -3063,12 +3289,31 @@ function timeline(user) {
                 .style('opacity', 0);
         }
 
-        function click(d) {
+        function click(d, selection) {
             d3.event.preventDefault();
-            let id = d.id !== undefined ? d.id : d.board === user.page1 ? 'a' + d.num : 'b' + d.num;
-            let display = d3.select('#' + id).node().style.display;
-            d3.select('#' + id).style('display', () => {
-                if (display !== 'none') {
+            if (d.id !== undefined) {
+                let id = d.id;
+                console.log(d, id, d3.select('#' + id).node());
+                let display = d3.select('#' + id).node().style.display;
+                d3.select('#' + id).style('display', () => {
+                    if (display !== 'none') {
+                        return 'none';
+                    } else {
+                        return 'block';
+                    }
+                });
+                let postdisplay = d3.select(selection.node().parentNode).select('.postcircle').node().style.display;
+                d3.select(selection.node().parentNode).select('.postcircle').style('display', () => {
+                    if (postdisplay !== 'none') {
+                        return 'none';
+                    } else {
+                        return 'block';
+                    }
+                });
+            }
+            let detaildisplay = d3.select('#' + d.query + d.num).node().style.display;
+            d3.select('#' + d.query + d.num).style('display', () => {
+                if (detaildisplay !== 'none') {
                     return 'none';
                 } else {
                     return 'block';
@@ -3082,12 +3327,25 @@ function timeline(user) {
             .attr('r', 5)
             // .attr('heigth', 10)
             .attr('cx', (d) => {
-                return t(new Date(d.date));
+                return Tscale(new Date(d.date));
             })
             .attr('cy', (d) => {
-                let board = d.board === user.page1 ? 'A' : 'B';
-                console.log(board, ' 發', actscale(board + ' 發'));
-                return actscale(board + ' 發');
+                let query = d.query;
+                if (query === 'A') {
+                    console.log('query', ' 發', Ascale(query + ' 發'));
+                    return Ascale(query + ' 發');
+                } else {
+                    console.log('query', ' 發', Bscale(query + ' 發'));
+                    return Bscale(query + ' 發');
+                }
+            })
+            .style('display', (d) => {
+                let author = d.author.split(' ')[0];
+                if (author !== user.id) {
+                    return 'none';
+                } else {
+                    return 'block';
+                }
             })
             .on('mouseover', function (d) {
                 mouseover(d);
@@ -3096,7 +3354,7 @@ function timeline(user) {
                 mouseout(d);
             })
             .on('click', function (d) {
-                click(d);
+                click(d, d3.select(this));
             });
 
         let pushdot = d3.select(this).selectAll('.pushingcircle');
@@ -3110,12 +3368,17 @@ function timeline(user) {
             .attr('r', 5)
             .attr('cx', (d) => {
                 console.log(d);
-                return t(new Date(d.push_ipdatetime));
+                return Tscale(new Date(d.push_ipdatetime));
             })
             .attr('cy', (d) => {
-                let board = d.board === user.page1 ? 'A' : 'B';
-                console.log(board, ' 推', actscale(board + ' 推'));
-                return actscale(board + ' 推');
+                let query = d.query;
+                if (query === 'A') {
+                    console.log('query', ' 推', Ascale(query + ' 推'));
+                    return Ascale(query + ' 推');
+                } else {
+                    console.log('query', ' 推', Bscale(query + ' 推'));
+                    return Bscale(query + ' 推');
+                }
             })
             .on('mouseover', function (d) {
                 mouseover(d);
@@ -3124,7 +3387,7 @@ function timeline(user) {
                 mouseout(d);
             })
             .on('click', function (d) {
-                click(d);
+                click(d, d3.select(this));
             });
 
         let boodot = d3.select(this).selectAll('.boocircle');
@@ -3138,12 +3401,17 @@ function timeline(user) {
             .attr('r', 5)
             .attr('cx', (d) => {
                 console.log(d);
-                return t(new Date(d.push_ipdatetime));
+                return Tscale(new Date(d.push_ipdatetime));
             })
             .attr('cy', (d) => {
-                let board = d.board === user.page1 ? 'A' : 'B';
-                console.log(board, ' 噓', actscale(board + ' 噓'));
-                return actscale(board + ' 噓');
+                let query = d.query;
+                if (query === 'A') {
+                    console.log('query', ' 噓', Ascale(query + ' 噓'));
+                    return Ascale(query + ' 噓');
+                } else {
+                    console.log('query', ' 噓', Bscale(query + ' 噓'));
+                    return Bscale(query + ' 噓');
+                }
             })
             .on('mouseover', function (d) {
                 mouseover(d);
@@ -3152,7 +3420,7 @@ function timeline(user) {
                 mouseout(d);
             })
             .on('click', function (d) {
-                click(d);
+                click(d, d3.select(this));
             });
 
         let neutraldot = d3.select(this).selectAll('.neutralcircle');
@@ -3166,12 +3434,17 @@ function timeline(user) {
             .attr('r', 5)
             .attr('cx', (d) => {
                 // console.log(d, new Date(d.push_ipdatetime));
-                return t(new Date(d.push_ipdatetime));
+                return Tscale(new Date(d.push_ipdatetime));
             })
             .attr('cy', (d) => {
-                let board = d.board === user.page1 ? 'A' : 'B';
-                console.log(board, ' →', actscale(board + ' →'));
-                return actscale(board + ' →');
+                let query = d.query;
+                if (query === 'A') {
+                    console.log('query', ' →', Ascale(query + ' →'));
+                    return Ascale(query + ' →');
+                } else {
+                    console.log('query', ' →', Bscale(query + ' →'));
+                    return Bscale(query + ' →');
+                }
             })
             .on('mouseover', function (d) {
                 mouseover(d);
@@ -3180,7 +3453,7 @@ function timeline(user) {
                 mouseout(d);
             })
             .on('click', function (d) {
-                click(d);
+                click(d, d3.select(this));
             });
     });
 }
@@ -3191,6 +3464,10 @@ function timeline(user) {
  * @return {object}
  */
 function pagedata(data) {
+    let samepage = (data.query.page1 === data.query.page2);
+    let samestarttime = (data.query.time1 === data.query.time3);
+    let sameendtime = (data.query.time2 === data.query.time4);
+    let sametime = (samestarttime && sameendtime);
     let ptt = data.query.posttype === 'PTT';
     let pagedata = data.data[0];
     let tm = {};
@@ -3254,15 +3531,15 @@ function pagedata(data) {
             posttemp.push(post);
         }
         let pi = 'page' + (i + 1);
-        page.name = data.query[pi];
+        if (samepage) {
+            page.name = data.query[pi] + (i + 1);
+        } else {
+            page.name = data.query[pi];
+        }
         page.children = posttemp;
         tmdata.push(page);
     }
     tm.name = 'root';
-    let samepage = (data.query.page1 === data.query.page1);
-    let samestarttime = (data.query.time1 === data.query.time3);
-    let sameendtime = (data.query.time2 === data.query.time4);
-    let sametime = (samestarttime && sameendtime);
     if (samepage && sametime) {
         tm.children = [tmdata[0]];
     } else {
