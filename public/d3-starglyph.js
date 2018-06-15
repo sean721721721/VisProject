@@ -22,21 +22,22 @@ d3.starglyph = function () {
     let origin;
     let scale;
     let radii = properties.length;
+    let sangle = Math.PI / radii;
     let radians = 2 * Math.PI / radii;
     let scalelog = d3.scaleLog()
         .domain([1, 32])
         .range([0, 100]);
-    scales.push(scalelog);
 
     /** */
     function setscale() {
         scalelog = d3.scaleLog()
-            .domain([0, maxattr])
+            .domain([1, maxattr + 1])
             .range([0, 100]);
         scale = d3.scaleLinear()
             .domain([0, 100])
-            .range([0.2 * radius, radius]);
+            .range([/* 0.2 * radius*/0, radius]);
         // console.log(maxattr);
+        scales.push(scalelog);
     }
 
     /** */
@@ -92,7 +93,7 @@ d3.starglyph = function () {
 
     /** */
     function drawLabels() {
-        let r = 0;
+        let r = sangle;
         properties.forEach(function (d, i) {
             let l = radius;
             let x = (l + labelMargin) * Math.cos(r);
@@ -102,7 +103,7 @@ d3.starglyph = function () {
                 .attr('x', origin[0] + x)
                 .attr('y', origin[1] + y)
                 .text(labels[i])
-                .attr('font-size', 5 * ratio)
+                .attr('font-size', 3 * ratio)
                 .style('display', 'none')
                 .style('text-anchor', 'middle')
                 .style('dominant-baseline', 'central');
@@ -115,7 +116,7 @@ d3.starglyph = function () {
     function drawChart() {
         let path = d3.lineRadial();
         let pathData = [];
-        let r = Math.PI / 2;
+        let r = Math.PI / 2 + sangle;
         properties.forEach(function (d, i) {
             let userScale = scales[i] || scales[0];
             let value;
@@ -187,7 +188,7 @@ d3.starglyph = function () {
         // `*Extent` variables are used to compute (and return) the x,y
         // positioning of the attribute extents. `*Value` variables are used
         // for the attribute values.
-        let rInteraction = Math.PI / 2;
+        let rInteraction = Math.PI / 2 + sangle;
         let rExtent = 0;
         properties.forEach(function (d, i) {
             let lInteraction = radius;
@@ -260,6 +261,7 @@ d3.starglyph = function () {
         if (!arguments.length) return properties;
         properties = _;
         radii = properties.length;
+        sangle = Math.PI / radii;
         radians = 2 * Math.PI / radii;
         return chart;
     };
