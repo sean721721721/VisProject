@@ -347,7 +347,7 @@ function csv2(files) {
         }
         return string;
     }
-    for (let i = 0; i < files.lengthl; i++) {
+    for (let i = 0; i < files.length; i++) {
         let page = files[i];
         string = page2csv(page, string);
     }
