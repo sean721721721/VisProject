@@ -105,8 +105,8 @@ d3.starglyph = function () {
                 .text(labels[i])
                 .attr('font-size', 3 * ratio)
                 .style('display', 'none')
-                .style('text-anchor', 'middle')
-                .style('dominant-baseline', 'central');
+                .style('text-anchor', 'middle');
+                // .style('dominant-baseline', 'central');
             r += radians;
         });
         // console.log('drawLabels');

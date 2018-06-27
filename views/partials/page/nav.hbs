@@ -84,7 +84,7 @@
                 <label for="x">until:</label>
                 <input type="date2" name="date2" id="date2" placeholder="date" value="2018-02-01"></input>
                 <label for="x">key word filter:</label>
-                <input type="keyword1" name="keyword1" id="keyword1" placeholder="keyword" value="環保"></input>
+                <input type="keyword1" name="keyword1" id="keyword1" placeholder="keyword" value="柯文哲"></input>
                 <label for="x">content word filter:</label>
                 <input type="keyword3" name="keyword3" id="keyword3" placeholder="keyword" value=""></input>
             </fieldset>
@@ -109,11 +109,11 @@
                     </select>
                 </datalist>
                 <label for="x">since:</label>
-                <input type="date3" name="date3" id="date3" placeholder="date" value="2018-02-01"></input>
+                <input type="date3" name="date3" id="date3" placeholder="date" value="2018-01-01"></input>
                 <label for="x">until:</label>
-                <input type="date4" name="date4" id="date4" placeholder="date" value="2018-03-01"></input>
+                <input type="date4" name="date4" id="date4" placeholder="date" value="2018-02-01"></input>
                 <label for="x">topic word filter:</label>
-                <input type="keyword2" name="keyword2" id="keyword2" placeholder="keyword" value="環保"></input>
+                <input type="keyword2" name="keyword2" id="keyword2" placeholder="keyword" value="丁守中"></input>
                 <label for="x">content word filter:</label>
                 <input type="keyword4" name="keyword4" id="keyword4" placeholder="keyword" value=""></input>
             </fieldset>
@@ -204,8 +204,8 @@
             </div>
             <div class="box postview">
                 <!--h2>PageView</h2-->
-                <form>
-                    <fieldset id="pagemode">
+                <form id="pagemode">
+                    <fieldset>
                         <legend>mode</legend>
                         <label for="mode1">Treemap</label>
                         <input type="radio" id="mode1" name="mode" value="treemap" checked>
@@ -225,18 +225,30 @@
             <div class="box detailview">
                 <!--h2>detailview</h2-->
                 <div class="btn-group" style="width:100%"></div>
-                <div class="pagination">
+                <!--div class="pagination">
                     <button class="detail previous round">&#8249;</button>
                     <button class="detail next round">&#8250;</button>
-                </div>
+                </div-->
                 <div id="detail"></div>
             </div>
         </div>
         <div class="box userview" id="table">
             <!--h2>Userview</h2-->
+            <div id="userdeg">
+                <fieldset>
+                    <legend>Min degree</legend>
+                    <label for="x"></label>
+                    <input name="mindeg" id="mindeg" type="number" min="2" value="2"></input>
+                </fieldset>
+                <fieldset>
+                    <legend>Max degree</legend>
+                    <label for="y"></label>
+                    <input name="maxdeg" id="maxdeg" type="number"></input>
+                </fieldset>
+                <div id="olbutton"></div>
+            </div>
             <div id="overlap">
             </div>
-            <div id="olbutton"></div>
         </div>
     </div>
 </div>

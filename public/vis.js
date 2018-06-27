@@ -115,6 +115,12 @@ function overview(data, select) {
     let h = 400 - margin.top - margin.bottom;
     let wx = w / ovdata.length;
     let hy = h / ovdata.length;
+    let samepage = (data.query.page1 === data.query.page2);
+    let samestarttime = (data.query.time1 === data.query.time3);
+    let sameendtime = (data.query.time2 === data.query.time4);
+    let sametime = (samestarttime && sameendtime);
+    let sametitle = (data.query.keyword1 === data.query.keyword3);
+    let samekey = (data.query.keyword2 === data.query.keyword4);
 
     let axisname = ovdata.map((d) => {
         return d[0];
@@ -124,7 +130,7 @@ function overview(data, select) {
         return d[3];
     });
 
-    console.log(axissum);
+    // console.log(axissum);
 
     let y = d3.scaleBand()
         .domain(axisname)
@@ -149,7 +155,11 @@ function overview(data, select) {
         .enter().append('rect')
         .attr('class', 'A')
         .attr('data-legend', function (d) {
-            return `${data.query.page1} from ${data.query.time1} to ${data.query.time2}`;
+            if (samepage && sametime) {
+                return `${data.query.page1} title: ${data.query.keyword1}`;
+            } else {
+                return `${data.query.page1} from ${data.query.time1} to ${data.query.time2}`;
+            }
         })
         .attr('data-legend-color', function (d) {
             return colorA(0.25);
@@ -204,7 +214,11 @@ function overview(data, select) {
         .enter().append('rect')
         .attr('class', 'B')
         .attr('data-legend', function (d) {
-            return `${data.query.page2} from ${data.query.time3} to ${data.query.time4}`;
+            if (samepage && sametime) {
+                return `${data.query.page2} title: ${data.query.keyword2}`;
+            } else {
+                return `${data.query.page2} from ${data.query.time3} to ${data.query.time4}`;
+            }
         })
         .attr('data-legend-color', function (d) {
             return colorB(0.75);
@@ -422,7 +436,7 @@ function showselect(data, select) {
             '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
         ]);
     sdiv = d3.select('#select');
-    console.log(sdiv);
+    // console.log(sdiv);
     let userdiv = sdiv.selectAll('.showuser').data(select.user);
     userdiv.exit().remove();
     userdiv.enter().append('button').merge(userdiv)
@@ -559,7 +573,7 @@ function pageview(data, pagedata, select) {
     let n = 100;
     // let wx = w / ovdata.length;
 
-    d3.selectAll('input')
+    d3.select('#pagemode').selectAll('fieldset').selectAll('input')
         .on('change', changed);
 
     let timeout = d3.timeout(function () {
@@ -674,6 +688,8 @@ function pageview(data, pagedata, select) {
             .attr('id', 'id');
         text.append('tspan')
             .attr('id', 'percentage');
+        text.append('tspan')
+            .attr('id', 'title');
         console.log(text);
     }
 
@@ -889,8 +905,10 @@ function pageview(data, pagedata, select) {
     }
 
     function mouseover(d, totalSize) {
-        // console.log(d);
+        // console.log(d, data);
         let id = d.data.id;
+        let page = d.data.page;
+        let post = d.data.post !== 0 ? d.data.post[0] : undefined;
         let percentage = (100 * d.value / totalSize).toPrecision(3);
         let string = percentage + '%';
         if (percentage < 0.01) {
@@ -899,16 +917,28 @@ function pageview(data, pagedata, select) {
         d3.select('#info').style('visibility', '');
         d3.select('#percentage')
             .attr('x', 0)
-            .attr('y', 0)
+            .attr('y', -20)
             .attr('fill', 'red')
             .text(string);
 
         d3.select('#id')
             .attr('x', 0)
-            .attr('y', 20)
+            .attr('y', 0)
             .attr('fill', 'red')
-            .text((d) => {
+            .text(() => {
                 return id;
+            });
+
+        d3.select('#title')
+            .attr('x', 0)
+            .attr('y', 20)
+            .attr('fill', 'blue')
+            .text(() => {
+                if (post !== undefined) {
+                    return data.data[0][page - 1][post - 1].article_title;
+                } else {
+                    return '';
+                }
             });
     }
 
@@ -1037,7 +1067,6 @@ function showmodes(overlap, mode) {
                     let group = [];
                     for (let k = 0, gl = overlap[i][j].length; k < gl; k++) { // user
                         let user = overlap[i][j][k];
-                        // console.log(user);
                         for (let a = 0, al = user.posts.A.length; a < al; a++) {
                             if (getProperty(propname, user.posts.A[a]) !== value) {
                                 find = true;
@@ -1054,6 +1083,7 @@ function showmodes(overlap, mode) {
                         }
                         if (find) {
                             group.push(user);
+                            find = false;
                         }
                     }
                     if (group.length != 0) {
@@ -1168,664 +1198,689 @@ function overlapvis(data, select, mode) {
                     return (d.y1 - d.y0) * k;
                 });
         }*/
+    changed();
 
-    if (d3.select('#overlap').select('.wrapper')._groups[0][0] !== undefined) {
-        d3.select('#overlap').select('.wrapper')._groups[0][0].remove();
-    }
-    let svg = d3.select('#overlap')
-        .append('div')
-        .attr('class', 'wrapper')
-        .append('svg')
-        .attr('id', 'user')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('viewBox', '0 0 1000 1000')
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-        .style('fill', 'none')
-        .style('pointer-events', 'all');
-
-    let g = svg.append('g')
-        .attr('id', 'overlapmap');
-
-    let posts = data.data[0];
-    let users = data.data[1];
-    let overlap = [];
-    let oucount = 0; // to decide nextline
-    // make overlap array
-    for (let i = 0, l = data.data[2].O.length; i < l; i++) {
-        if (data.data[2].O[i].length > 0) {
-            overlap.push(data.data[2].O[i]);
+    function changed() {
+        if (d3.select('#overlap').select('.wrapper')._groups[0][0] !== undefined) {
+            d3.select('#overlap').select('.wrapper')._groups[0][0].remove();
         }
-    }
-    overlap = showmodes(overlap, mode);
+        let mindeg = document.querySelector('input[name="mindeg"]').value;
+        let maxdeg = document.querySelector('input[name="maxdeg"]').value;
+        console.log(maxdeg, typeof maxdeg);
+        let svg = d3.select('#overlap')
+            .append('div')
+            .attr('class', 'wrapper')
+            .append('svg')
+            .attr('id', 'user')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', '0 0 1000 1000')
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .style('fill', 'none')
+            .style('pointer-events', 'all');
 
-    if (overlap.length > 0) {
-        // count elements in overlap
-        let attrmax = 0;
-        for (let i = 0, l = overlap.length; i < l; i++) {
-            if (overlap[i].length > 0) {
-                let degl = overlap[i].length;
-                for (let j = 0; j < degl; j++) {
-                    oucount += overlap[i][j].length;
-                    let gl = overlap[i][j].length;
-                    for (let k = 0; k < gl; k++) {
-                        let d = overlap[i][j][k];
-                        d.count = docount(d, {});
-                        maxarc = d3.max(d.count.arc);
-                        maxbrc = d3.max(d.count.brc);
-                        let arr = [];
-                        arr.push(d.count.acc);
-                        arr.push(d.count.asc);
-                        arr.push(d.count.bcc);
-                        arr.push(d.count.bsc);
-                        arr.push(maxarc);
-                        arr.push(maxbrc);
-                        let max = d3.max(arr);
-                        if (max > attrmax) {
-                            attrmax = max;
+        let g = svg.append('g')
+            .attr('id', 'overlapmap');
+
+        let posts = data.data[0];
+        let users = data.data[1];
+        let overlap = [];
+        let l = maxdeg !== '' ? maxdeg : data.data[2].O.length;
+        console.log('deg: ', mindeg, 'to', l);
+        // make overlap array
+        for (let i = mindeg - 1; i < l; i++) {
+            if (data.data[2].O[i].length > 0) {
+                overlap.push(data.data[2].O[i]);
+            }
+        }
+        overlap = showmodes(overlap, mode);
+        let oucount = 0; // to decide nextline
+        if (overlap.length > 0) {
+            // count elements in overlap
+            let attrmax = 0;
+            for (let i = 0, l = overlap.length; i < l; i++) {
+                if (overlap[i].length > 0) {
+                    let degl = overlap[i].length;
+                    for (let j = 0; j < degl; j++) {
+                        oucount += overlap[i][j].length;
+                        let gl = overlap[i][j].length;
+                        for (let k = 0; k < gl; k++) {
+                            let d = overlap[i][j][k];
+                            d.count = docount(d, {});
+                            maxarc = d3.max(d.count.arc);
+                            maxbrc = d3.max(d.count.brc);
+                            let arr = [];
+                            arr.push(d.count.acc);
+                            arr.push(d.count.asc);
+                            arr.push(d.count.bcc);
+                            arr.push(d.count.bsc);
+                            arr.push(maxarc);
+                            arr.push(maxbrc);
+                            let max = d3.max(arr);
+                            if (max > attrmax) {
+                                attrmax = max;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // how many elements in one line
-        // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
-        let basiclength = parseInt(Math.sqrt(2 * oucount), 10) - 2;
-        let nextline = Math.sqrt(2 * oucount) > overlap.length ? basiclength > 2 ? basiclength : 2 : overlap.length + 1;
-        let ratio = (1000 * 0.9) / (nextline * 50);
-        let cellSize1 = 50 * ratio;
-        let cellSize2 = 45 * ratio;
-        let cellSize3 = 40 * ratio;
+            // how many elements in one line
+            // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
+            let basiclength = parseInt(Math.sqrt(2 * oucount), 10) - 2;
+            let nextline = Math.sqrt(2 * oucount) > overlap.length ? basiclength > 2 ? basiclength : 2 : overlap.length + 1;
+            let ratio = (1000 * 0.9) / (nextline * 50);
+            let cellSize1 = 50 * ratio;
+            let cellSize2 = 45 * ratio;
+            let cellSize3 = 40 * ratio;
+            let initx = 1000 * 0.025 + cellSize1 * 2;
+            let inity = 1000 * 0.025 + cellSize1;
 
-        let initx = 1000 * 0.025 + cellSize1 * 2;
-        let inity = 1000 * 0.025 + cellSize1;
-
-        // construct degree[i]'s y checklist
-        let degylist = [];
-        for (let i = 0; i < overlap.length; i++) {
-            let deg = overlap[i];
-            let count = 0;
-            for (let j = 0; j < deg.length; j++) {
-                let group = deg[j];
-                count += group.length;
+            // construct degree[i]'s y checklist
+            let degylist = [];
+            for (let i = 0; i < overlap.length; i++) {
+                let deg = overlap[i];
+                let count = 0;
+                for (let j = 0; j < deg.length; j++) {
+                    let group = deg[j];
+                    count += group.length;
+                }
+                degylist.push(parseInt(count / nextline, 10) + 1);
             }
-            degylist.push(parseInt(count / nextline, 10) + 1);
-        }
 
-        // usercount in degree[i] list
-        let uclist = [];
-        for (let i = 0; i < overlap.length; i++) {
-            let deg = overlap[i];
-            let temp = [];
-            for (let j = 0; j < deg.length; j++) {
-                let group = deg[j];
-                temp.push(group.length);
-            }
-            uclist.push(temp);
-        }
-
-        // list[index]'s y value
-        function gety(list, index) {
-            let result = 0;
-            for (let i = 0; i < index; i++) {
-                result += list[i];
-            }
-            return result; // + index; // one line space between degrees
-        }
-
-        // modify elements' dy in the same degree
-        function modify(list, datasource, index) {
-            let l = datasource.length;
-            let count = 0;
-            for (let j = 0; j < l; j++) {
-                let group = datasource[j];
-                count += group.length;
-            }
-            let yc = parseInt(count / nextline, 10) + 1;
-            if (list[index] === 1) {
-                list[index] = yc;
-            } else {
-                list[index] = 1;
-            }
-            return list;
-        }
-
-        // elements' (x,y) corrdinate array
-        function uccount(check, list) {
-            let result = [];
-            let l = check.length;
-            for (let i = 0; i < l; i++) {
-                let h = list[i].length;
+            // usercount in degree[i] list
+            let uclist = [];
+            for (let i = 0; i < overlap.length; i++) {
+                let deg = overlap[i];
                 let temp = [];
-                let x = 0;
-                let y = 0;
-                for (let j = 0; j < h; j++) {
-                    temp.push({
-                        'x': x,
-                        'y': y,
-                    });
-                    if (check[i] !== 1) {
-                        y += list[i][j];
-                    }
-                    x += list[i][j];
+                for (let j = 0; j < deg.length; j++) {
+                    let group = deg[j];
+                    temp.push(group.length);
                 }
-                result.push(temp);
+                uclist.push(temp);
             }
-            return result;
-        }
 
-        // count elements in array
-        function count(data) {
-            let c = 0;
-            let l = data.length;
-            for (let i = 0; i < l; i++) {
-                c += data[i].length;
-            }
-            return c;
-        }
-
-        // users' x
-        function xof(k) {
-            result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
-            return result;
-        }
-
-        // users' y
-        function yof(k) {
-            let offsety = parseInt(k / nextline, 10);
-            result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-            return result + inity;
-        }
-
-        // button click
-        function buttonclick(d, k) {
-            d3.event.preventDefault();
-            degylist = modify(degylist, d, k);
-            uylist = uccount(degylist, uclist);
-            // console.log(uylist);
-            rect.attr('transform', (d, i) => {
-                return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
-            });
-            d3.selectAll('.degree')
-                .attr('height', (d, i) => {
-                    return cellSize1 * degylist[i] - 2;
-                });
-            d3.selectAll('.botton')
-                .attr('height', (d, i) => {
-                    return cellSize1 * degylist[i] - 2;
-                });
-            text.attr('y', (d, i) => {
-                return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-            });
-
-            for (let i = 0; i < degcounts; i++) {
-                let did = '#degree' + i;
-                d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
-                    let offsetx = uylist[i][j].x % nextline;
-                    let resultx = initx + offsetx * cellSize1 + (cellSize1 - cellSize2) / 2;
-                    let offsety = 0;
-                    if (degylist[i] !== 1) {
-                        offsety = parseInt(uylist[i][j].y / nextline, 10);
-                    }
-                    let resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
-                    // console.log(offsetx);
-                    return 'translate(' + resultx + ',' + resulty + ')';
-                });
-                d3.selectAll(did).selectAll('.grect')
-                    .attr('height', (d) => {
-                        if (degylist[i] === 1) {
-                            return cellSize1 - (cellSize1 - cellSize2);
-                        } else {
-                            let h = parseInt(d.length / nextline, 10) + 1;
-                            return h * cellSize1 - (cellSize1 - cellSize2);
-                        }
-                    });
-                let gcount = overlap[i].length;
-                for (let j = 0; j < gcount; j++) {
-                    let gid = '#d' + i + 'g' + j;
-                    d3.selectAll(gid).selectAll('.user')
-                        .attr('transform', (d, k) => {
-                            resultx = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
-                            let offsety = parseInt(k / nextline, 10);
-                            if (degylist[i] === 1) {
-                                resulty = inity;
-                            } else {
-                                resulty = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                                resulty += inity;
-                            }
-                            resulty += 1; // +1 for align after button click
-                            return 'translate(' + resultx + ',' + resulty + ')';
-                        });
-                    /* .attr('y', (d, k) => {
-                        // calculate users' y
-                        function usery(check, index) {
-                            if (check === 1) {
-                                return (cellSize2 - cellSize3) / 2;
-                            } else {
-                                let offsety = parseInt(index / nextline, 10);
-                                let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                                return result;
-                            }
-                        }
-                        return usery(degylist[i], k) + inity;
-                    });*/
+            // list[index]'s y value
+            function gety(list, index) {
+                let result = 0;
+                for (let i = 0; i < index; i++) {
+                    result += list[i];
                 }
+                return result; // + index; // one line space between degrees
             }
-        }
 
-        let rect = g.selectAll('g')
-            .data(overlap)
-            .enter().append('g')
-            .attr('id', (d, i) => 'degree' + i)
-            .attr('transform', (d, i) => {
-                return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
-            });
-
-        let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
-            .attr('fill', 'none')
-            .attr('stroke', 'none' /* '#f00'*/ )
-            .attr('opacity', 1)
-            .attr('width', (d) => {
-                if (widthcount(d) < nextline) {
-                    return widthcount(d) * cellSize1;
+            // modify elements' dy in the same degree
+            function modify(list, datasource, index) {
+                let l = datasource.length;
+                let count = 0;
+                for (let j = 0; j < l; j++) {
+                    let group = datasource[j];
+                    count += group.length;
+                }
+                let yc = parseInt(count / nextline, 10) + 1;
+                if (list[index] === 1) {
+                    list[index] = yc;
                 } else {
-                    return nextline * cellSize1;
+                    list[index] = 1;
                 }
-            })
-            .attr('height', (d, i) => {
-                return cellSize1 * degylist[i];
-            })
-            .attr('x', initx)
-            .attr('y', inity);
+                return list;
+            }
 
-        let degcounts = overlap.length;
-        let botton = rect.append('rect')
-            .attr('class', (d, i) => 'botton' + ' ' + i)
-            .attr('fill', '#aaa')
-            .attr('stroke', 'none' /* '#f00'*/ )
-            .attr('opacity', 1)
-            /* .attr('width', cellSize1 * nextline)
-            .attr('height', (d, i) => {
-                return cellSize1;
-            })
-            .attr('x', initx)
-            .attr('y', inity - cellSize1 * 1)*/
-            .attr('width', cellSize1 * 2)
-            .attr('height', (d, i) => {
-                return cellSize1 * degylist[i] - 2;
-            })
-            .attr('x', initx - cellSize1 * 2)
-            .attr('y', inity + 1)
-            .on('click', function (d, k) {
-                buttonclick(d, k);
-            });
-
-        let maxi = overlap.length - 1;
-        let num = []; // degrees' degree value
-
-        let maxd = overlap[maxi][0][0].posts;
-        num.push(getlength(maxd, 'A') + getlength(maxd, 'B'));
-        let offset = numoffset(num);
-        // console.log(offset);
-        let text = rect.append('text')
-            /* .attr('x', initx)
-            .attr('y', (d, i) => {
-                return (cellSize1 * (-1 + 0.66)) / 2 + inity;
-            })*/
-            .attr('x', initx - cellSize1 * 2)
-            .attr('y', (d, i) => {
-                return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-            })
-            // .attr('dy', '.35em')
-            .attr('font-size', 50 * ratio)
-            .attr('fill', '#f00')
-            // .attr('stroke', '#f00')
-            .text((d) => {
-                let data = d[0][0].posts;
-                let len = getlength(data, 'A') + getlength(data, 'B');
-                return numalign(len, offset);
-            })
-            .on('click', function (d, k) {
-                buttonclick(d, k);
-            });
-
-        let interactionLabel = d3.select('.c').select('.interaction.label');
-
-        for (let i = 0; i < degcounts; i++) {
-            let degree = overlap[i];
-            let did = '#degree' + i;
-            let x = 0;
-            let yc = 0;
-            let groupgrid = g.selectAll(did)
-                .selectAll('g')
-                .data(degree)
-                .enter().append('g')
-                .attr('class', 'ggrid')
-                .attr('id', (d, l) => 'd' + i + 'g' + l)
-                .attr('transform', (d) => {
-                    resultx = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
-                    x += widthcount(d);
-                    while (x > (nextline - 1)) {
-                        x -= nextline;
+            // elements' (x,y) corrdinate array
+            function uccount(check, list) {
+                let result = [];
+                let l = check.length;
+                for (let i = 0; i < l; i++) {
+                    let h = list[i].length;
+                    let temp = [];
+                    let x = 0;
+                    let y = 0;
+                    for (let j = 0; j < h; j++) {
+                        temp.push({
+                            'x': x,
+                            'y': y,
+                        });
+                        if (check[i] !== 1) {
+                            y += list[i][j];
+                        }
+                        x += list[i][j];
                     }
-                    let offsety = parseInt(yc / nextline, 10);
-                    resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
-                    yc += d.length;
-                    return 'translate(' + resultx + ',' + resulty + ')';
-                })
-                .append('rect')
-                .attr('class', 'grect')
+                    result.push(temp);
+                }
+                return result;
+            }
+
+            // count elements in array
+            function count(data) {
+                let c = 0;
+                let l = data.length;
+                for (let i = 0; i < l; i++) {
+                    c += data[i].length;
+                }
+                return c;
+            }
+
+            // users' x
+            function xof(k) {
+                result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                return result;
+            }
+
+            // users' y
+            function yof(k) {
+                let offsety = parseInt(k / nextline, 10);
+                result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                return result + inity;
+            }
+
+            // button click
+            function buttonclick(d, k) {
+                d3.event.preventDefault();
+                degylist = modify(degylist, d, k);
+                uylist = uccount(degylist, uclist);
+                // console.log(uylist);
+                rect.attr('transform', (d, i) => {
+                    return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+                });
+                d3.selectAll('.degree')
+                    .attr('height', (d, i) => {
+                        return cellSize1 * degylist[i] - 2;
+                    });
+                d3.selectAll('.botton')
+                    .attr('height', (d, i) => {
+                        return cellSize1 * degylist[i] - 2;
+                    });
+                text.attr('y', (d, i) => {
+                    return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
+                });
+
+                let id = '#degree' + k;
+                let display = d3.select(id).select('g').node().style.display;
+                // console.log(display);
+                d3.select(id).select('g').style('display', function () {
+                    if (display !== 'none') {
+                        return 'none';
+                    } else {
+                        return 'block';
+                    }
+                });
+                for (let i = 0; i < degcounts; i++) {
+                    let did = '#degree' + i;
+                    d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
+                        let offsetx = uylist[i][j].x % nextline;
+                        let resultx = initx + offsetx * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        let offsety = 0;
+                        if (degylist[i] !== 1) {
+                            offsety = parseInt(uylist[i][j].y / nextline, 10);
+                        }
+                        let resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        // console.log(offsetx);
+                        return 'translate(' + resultx + ',' + resulty + ')';
+                    });
+                    d3.selectAll(did).selectAll('.grect')
+                        .attr('height', (d) => {
+                            if (degylist[i] === 1) {
+                                return cellSize1 - (cellSize1 - cellSize2);
+                            } else {
+                                let h = parseInt(d.length / nextline, 10) + 1;
+                                return h * cellSize1 - (cellSize1 - cellSize2);
+                            }
+                        });
+                    let gcount = overlap[i].length;
+                    for (let j = 0; j < gcount; j++) {
+                        let gid = '#d' + i + 'g' + j;
+                        d3.selectAll(gid).selectAll('.user')
+                            .attr('transform', (d, k) => {
+                                resultx = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                let offsety = parseInt(k / nextline, 10);
+                                if (degylist[i] === 1) {
+                                    resulty = inity;
+                                } else {
+                                    resulty = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                    resulty += inity;
+                                }
+                                resulty += 1; // +1 for align after button click
+                                return 'translate(' + resultx + ',' + resulty + ')';
+                            });
+                        /* .attr('y', (d, k) => {
+                            // calculate users' y
+                            function usery(check, index) {
+                                if (check === 1) {
+                                    return (cellSize2 - cellSize3) / 2;
+                                } else {
+                                    let offsety = parseInt(index / nextline, 10);
+                                    let result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                    return result;
+                                }
+                            }
+                            return usery(degylist[i], k) + inity;
+                        });*/
+                    }
+                }
+            }
+
+            let rect = g.selectAll('g')
+                .data(overlap)
+                .enter().append('g')
+                .attr('id', (d, i) => 'degree' + i)
+                .attr('transform', (d, i) => {
+                    return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+                });
+
+            let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
                 .attr('fill', 'none')
-                .attr('stroke', 'none' /* '#0f0'*/ )
+                .attr('stroke', 'none' /* '#f00'*/ )
                 .attr('opacity', 1)
                 .attr('width', (d) => {
                     if (widthcount(d) < nextline) {
-                        return widthcount(d) * cellSize1 - (cellSize1 - cellSize2);
+                        return widthcount(d) * cellSize1;
                     } else {
-                        return nextline * cellSize1 - (cellSize1 - cellSize2);
+                        return nextline * cellSize1;
                     }
                 })
-                .attr('height', (d) => {
-                    let h = parseInt(d.length / nextline, 10) + 1;
-                    return h * cellSize1 - (cellSize1 - cellSize2);
+                .attr('height', (d, i) => {
+                    return cellSize1 * degylist[i];
                 })
-                .attr('x', 0)
+                .attr('x', initx)
                 .attr('y', inity);
 
-            let gcount = degree.length;
-            for (let j = 0; j < gcount; j++) {
-                let group = degree[j];
-                let gid = '#d' + i + 'g' + j;
-                if (group.length > 0) {
-                    function glyphmargin(k) {
-                        let result = {
-                            top: yof(k),
-                            right: 0,
-                            bottom: 0,
-                            left: xof(k),
-                        };
-                        return result;
-                    };
-                    let labelMargin = 1;
-                    let scale = d3.scaleLog()
-                        .domain([1, 32])
-                        .range([0, 100]);
+            let degcounts = overlap.length;
+            let botton = rect.append('rect')
+                .attr('class', (d, i) => 'botton' + ' ' + i)
+                .attr('fill', '#aaa')
+                .attr('stroke', 'none' /* '#f00'*/ )
+                .attr('opacity', 1)
+                /* .attr('width', cellSize1 * nextline)
+                .attr('height', (d, i) => {
+                    return cellSize1;
+                })
+                .attr('x', initx)
+                .attr('y', inity - cellSize1 * 1)*/
+                .attr('width', cellSize1 * 2)
+                .attr('height', (d, i) => {
+                    return cellSize1 * degylist[i] - 2;
+                })
+                .attr('x', initx - cellSize1 * 2)
+                .attr('y', inity + 1)
+                .on('click', function (d, k) {
+                    buttonclick(d, k);
+                });
 
-                    function glyph(k, properties, labels) {
-                        let glyph = d3.starglyph(k)
-                            .width(cellSize3)
-                            .properties(properties)
-                            // .scales(scale)
-                            .labels(labels)
-                            .title(function (d) {
-                                return d.name;
-                            })
-                            .maxattr(attrmax)
-                            .width(cellSize3)
-                            .ratio(ratio)
-                            .margin(glyphmargin(k))
-                            .labelMargin(labelMargin);
-                        return glyph;
-                    };
+            let maxi = overlap.length - 1;
+            let num = []; // degrees' degree value
 
-                    let usergrid = g.selectAll(gid)
-                        .selectAll('g')
-                        .data(group)
-                        .enter().append('g')
-                        .attr('class', 'user')
-                        .attr('id', (d, i) => {
-                            return 'u' + i;
-                        })
-                        .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
-                        // .attr('stroke', '#00f')
-                        .attr('opacity', 1)
-                        .attr('width', cellSize3)
-                        .attr('height', cellSize3)
-                        /* .attr('x', (d, k) => {
-                            result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+            let maxd = overlap[maxi][0][0].posts;
+            num.push(getlength(maxd, 'A') + getlength(maxd, 'B'));
+            let offset = numoffset(num);
+            // console.log(offset);
+            let text = rect.append('text')
+                /* .attr('x', initx)
+                .attr('y', (d, i) => {
+                    return (cellSize1 * (-1 + 0.66)) / 2 + inity;
+                })*/
+                .attr('x', initx - cellSize1 * 2)
+                .attr('y', (d, i) => {
+                    return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
+                })
+                // .attr('dy', '.35em')
+                .attr('font-size', 50 * ratio)
+                .attr('fill', '#f00')
+                // .attr('stroke', '#f00')
+                .text((d) => {
+                    let data = d[0][0].posts;
+                    let len = getlength(data, 'A') + getlength(data, 'B');
+                    return numalign(len, offset);
+                })
+                .on('click', function (d, k) {
+                    buttonclick(d, k);
+                });
+
+            let interactionLabel = d3.select('.c').select('.interaction.label');
+
+            for (let i = 0; i < degcounts; i++) {
+                let degree = overlap[i];
+                let did = '#degree' + i;
+                let x = 0;
+                let yc = 0;
+                let groupgrid = g.selectAll(did)
+                    .selectAll('g')
+                    .data(degree)
+                    .enter().append('g')
+                    .attr('class', 'ggrid')
+                    .attr('id', (d, l) => 'd' + i + 'g' + l)
+                    .style('diplay', () => {
+                        // console.log(i);
+                        if (i === 0) {
+                            return 'none';
+                        } else {
+                            return 'block';
+                        }
+                    })
+                    .attr('transform', (d) => {
+                        resultx = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        x += widthcount(d);
+                        while (x > (nextline - 1)) {
+                            x -= nextline;
+                        }
+                        let offsety = parseInt(yc / nextline, 10);
+                        resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        yc += d.length;
+                        return 'translate(' + resultx + ',' + resulty + ')';
+                    })
+                    .append('rect')
+                    .attr('class', 'grect')
+                    .attr('fill', 'none')
+                    .attr('stroke', 'none' /* '#0f0'*/ )
+                    .attr('opacity', 1)
+                    .attr('width', (d) => {
+                        if (widthcount(d) < nextline) {
+                            return widthcount(d) * cellSize1 - (cellSize1 - cellSize2);
+                        } else {
+                            return nextline * cellSize1 - (cellSize1 - cellSize2);
+                        }
+                    })
+                    .attr('height', (d) => {
+                        let h = parseInt(d.length / nextline, 10) + 1;
+                        return h * cellSize1 - (cellSize1 - cellSize2);
+                    })
+                    .attr('x', 0)
+                    .attr('y', inity);
+
+                let gcount = degree.length;
+                for (let j = 0; j < gcount; j++) {
+                    let group = degree[j];
+                    let gid = '#d' + i + 'g' + j;
+                    if (group.length > 0) {
+                        function glyphmargin(k) {
+                            let result = {
+                                top: yof(k),
+                                right: 0,
+                                bottom: 0,
+                                left: xof(k),
+                            };
                             return result;
-                        })
-                        .attr('y', (d, k) => {
-                            let offsety = parseInt(k / nextline, 10);
-                            result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                            return result + inity;
-                        });*/
-                        .each(function (d, i) {
-                            // reaction count: sum, like, love, haha, wow, sad, angry, others || push count: sum, pushing, neutral, boo
-                            // comment count || push count
-                            // share count || publish count
-                            let properties;
-                            let labels;
-                            if (ptt) {
-                                properties = ['asc', 'arc.1', 'arc.2', 'arc.3', 'bsc', 'brc.1', 'brc.2', 'brc.3'];
-                                labels = ['A.publish', 'A.push', 'A.neutral', 'A.boo', 'B.publish', 'B.push', 'B.neutral', 'B.boo'];
-                            } else {
-                                properties = ['arc.1', 'acc', 'asc', 'brc.1', 'bcc', 'bsc'];
-                                labels = ['A.reaction', 'A.comment', 'A.share', 'B.reaction', 'B.comment', 'B.share'];
-                            }
-                            let star = glyph(i, properties, labels);
+                        };
+                        let labelMargin = 1;
+                        let scale = d3.scaleLog()
+                            .domain([1, 32])
+                            .range([0, 100]);
 
-                            d3.select(this)
-                                .append('rect')
-                                .attr('class', 'ugrid')
-                                .attr('fill', 'none')
-                                .attr('stroke', '#000')
-                                .attr('opacity', 1)
-                                .attr('x', 0)
-                                .attr('y', 0)
-                                .attr('width', cellSize3)
-                                .attr('height', cellSize3);
+                        function glyph(k, properties, labels) {
+                            let glyph = d3.starglyph(k)
+                                .width(cellSize3)
+                                .properties(properties)
+                                // .scales(scale)
+                                .labels(labels)
+                                .title(function (d) {
+                                    return d.name;
+                                })
+                                .maxattr(attrmax)
+                                .width(cellSize3)
+                                .ratio(ratio)
+                                .margin(glyphmargin(k))
+                                .labelMargin(labelMargin);
+                            return glyph;
+                        };
 
-                            d3.select(this)
-                                .datum(d)
-                                .call(star)
-                                .call(star.interaction);
+                        let usergrid = g.selectAll(gid)
+                            .selectAll('g')
+                            .data(group)
+                            .enter().append('g')
+                            .attr('class', 'user')
+                            .attr('id', (d, i) => {
+                                return 'u' + i;
+                            })
+                            .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
+                            // .attr('stroke', '#00f')
+                            .attr('opacity', 1)
+                            .attr('width', cellSize3)
+                            .attr('height', cellSize3)
+                            /* .attr('x', (d, k) => {
+                                result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                return result;
+                            })
+                            .attr('y', (d, k) => {
+                                let offsety = parseInt(k / nextline, 10);
+                                result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                return result + inity;
+                            });*/
+                            .each(function (d, i) {
+                                // reaction count: sum, like, love, haha, wow, sad, angry, others || push count: sum, pushing, neutral, boo
+                                // comment count || push count
+                                // share count || publish count
+                                let properties;
+                                let labels;
+                                if (ptt) {
+                                    properties = ['bsc', 'brc.1', 'brc.2', 'brc.3', 'asc', 'arc.1', 'arc.2', 'arc.3'];
+                                    labels = ['B.publish', 'B.push', 'B.neutral', 'B.boo', 'A.publish', 'A.push', 'A.neutral', 'A.boo'];
+                                } else {
+                                    properties = ['brc.1', 'bcc', 'bsc', 'arc.1', 'acc', 'asc'];
+                                    labels = ['B.reaction', 'B.comment', 'B.share', 'A.reaction', 'A.comment', 'A.share'];
+                                }
+                                let star = glyph(i, properties, labels);
 
-                            /* .on('mouseover', function (d) {
                                 d3.select(this)
-                                    .attr('stroke', '#0f0');
+                                    .append('rect')
+                                    .attr('class', 'ugrid')
+                                    .attr('fill', 'none')
+                                    .attr('stroke', '#000')
+                                    .attr('opacity', 1)
+                                    .attr('x', 0)
+                                    .attr('y', 0)
+                                    .attr('width', cellSize3)
+                                    .attr('height', cellSize3);
+
+                                d3.select(this)
+                                    .datum(d)
+                                    .call(star)
+                                    .call(star.interaction);
+
+                                /* .on('mouseover', function (d) {
+                                    d3.select(this)
+                                        .attr('stroke', '#0f0');
+                                })
+                                .on('mouseout', function (d) {
+                                    d3.select(this)
+                                        .attr('stroke', 'none');
+                                })*/
+                            });
+
+                        /* let circle = usergrid.append('circle')
+                            .attr('class', (d, i) => {
+                                return 'interaction circle ' + gid + i;
+                            })
+                            .attr('r', 1 * ratio);*/
+
+                        let interaction = svg.selectAll('.interaction')
+                            .style('display', 'none');
+
+                        // let transform = d3.zoomTransform(svg.node());
+
+                        usergrid.selectAll('.star-interaction')
+                            .on('mouseover', function (d) {
+                                let hover = d3.select(this.parentNode);
+                                /*hover.selectAll('.star-title')
+                                    .style('display', 'block');*/
+
+                                hover.selectAll('.star-label')
+                                    .style('display', 'block');
+
+                                hover.selectAll('.interaction')
+                                    .style('display', 'block');
+
+                                /* hover.selectAll('circle')
+                                    .attr('cx', d.x)
+                                    .attr('cy', d.y);*/
+
+                                // interactionLabel = interactionLabel.node();
+                                interactionLabel
+                                    .datum(d)
+                                    .html((d) => {
+                                        // console.log(d);
+                                        let name = ptt ? d.datum.id : d.datum.name;
+                                        return name + '<br/>' + d.key + ':' + d.value;
+                                    });
+                                /* .style('left', function (d) {
+                                    console.log(svg.node(), transform);
+                                    let left = transform.x * transform.k + d.xExtent - (this.clientWidth / 2);
+                                    console.log(left);
+                                    return left + 'px';
+                                })
+                                .style('top', function (d) {
+                                    let top = transform.y * transform.k + d.yExtent - (this.clientHeight / 2);
+                                    console.log(top);
+                                    return top + 'px';
+                                });*/
                             })
                             .on('mouseout', function (d) {
-                                d3.select(this)
-                                    .attr('stroke', 'none');
-                            })*/
-                        });
+                                usergrid.selectAll('.star-title')
+                                    .style('display', 'none');
 
-                    /* let circle = usergrid.append('circle')
-                        .attr('class', (d, i) => {
-                            return 'interaction circle ' + gid + i;
-                        })
-                        .attr('r', 1 * ratio);*/
+                                usergrid.selectAll('.star-label')
+                                    .style('display', 'none');
 
-                    let interaction = svg.selectAll('.interaction')
-                        .style('display', 'none');
-
-                    // let transform = d3.zoomTransform(svg.node());
-
-                    usergrid.selectAll('.star-interaction')
-                        .on('mouseover', function (d) {
-                            let hover = d3.select(this.parentNode);
-                            hover.selectAll('.star-title')
-                                .style('display', 'block');
-
-                            hover.selectAll('.star-label')
-                                .style('display', 'block');
-
-                            hover.selectAll('.interaction')
-                                .style('display', 'block');
-
-                            /* hover.selectAll('circle')
-                                .attr('cx', d.x)
-                                .attr('cy', d.y);*/
-
-                            // interactionLabel = interactionLabel.node();
-                            interactionLabel
-                                .datum(d)
-                                .html((d) => {
-                                    // console.log(d);
-                                    let name = ptt ? d.datum.id : d.datum.name;
-                                    return name + '<br/>' + d.key + ':' + d.value;
-                                });
-                            /* .style('left', function (d) {
-                                console.log(svg.node(), transform);
-                                let left = transform.x * transform.k + d.xExtent - (this.clientWidth / 2);
-                                console.log(left);
-                                return left + 'px';
-                            })
-                            .style('top', function (d) {
-                                let top = transform.y * transform.k + d.yExtent - (this.clientHeight / 2);
-                                console.log(top);
-                                return top + 'px';
-                            });*/
-                        })
-                        .on('mouseout', function (d) {
-                            usergrid.selectAll('.star-title')
-                                .style('display', 'none');
-
-                            usergrid.selectAll('.star-label')
-                                .style('display', 'none');
-
-                            interaction
-                                .style('display', 'none');
-                            /* usergrid.selectAll('circle')
-                                .style('display', 'none');*/
-                        });
+                                interaction
+                                    .style('display', 'none');
+                                /* usergrid.selectAll('circle')
+                                    .style('display', 'none');*/
+                            });
+                    }
                 }
             }
+
+            let tooltip3 = d3.select('body').select('.c')
+                // .attr('class', 'tooltip1')
+                .style('opacity', 0);
+            // .style("width","200px")
+            // .style("height","30px");
+            d3.selectAll('.user')
+                .on('mouseover', function (d) {
+                    d3.event.preventDefault();
+                    tooltip3.transition()
+                        .duration(200)
+                        .style('opacity', .9);
+                    tooltip3
+                        /* .html('ID=' + d.datum.id + '<br/>' + 'Name = ' + d.datum.name + '<br/>' +
+                            'Activities on A = ' + getlength(d.datum.posts, 'A') + '<br/>' +
+                            'Activities on B = ' + getlength(d.datum.posts, 'B'))*/
+                        .style('left', (d3.event.pageX + 5) + 'px')
+                        .style('top', (d3.event.pageY - 10) + 'px');
+                })
+                .on('mouseout', function (d) {
+                    d3.event.preventDefault();
+                    tooltip3.transition()
+                        .duration(500)
+                        .style('opacity', 0);
+                })
+                .on('click', function (d) {
+                    d3.event.preventDefault();
+                    // console.log(d, this);
+                    /* let i = selectobj.page === data.query.page1) ? 1 : (selectobj.page === data.query.page1 + '1') ? 1 : 2;
+                    let j = 0;
+                    if (selectobj.post !== 0) {
+                        j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
+                    }
+                    // console.log(i, j);*/
+                    let preselect = {};
+                    let user = [];
+                    let actpost = [
+                        [],
+                        [],
+                    ];
+                    for (let i = 0, l = select.user.length; i < l; i++) {
+                        user.push(select.user[i]);
+                    }
+                    for (let i = 0, l = select.actpost.length; i < l; i++) {
+                        for (let j = 0, l = select.actpost[i].length; j < l; j++) {
+                            let post = select.actpost[i][j];
+                            actpost[i].push(post);
+                        }
+                    }
+                    preselect.user = user;
+                    preselect.actpost = actpost;
+                    let la = d.posts.A.length;
+                    let lb = d.posts.B.length;
+                    let deg = la + lb;
+                    let selectobj = d;
+                    if (select.user.length !== 0) {
+                        for (let i = 0, l = select.user.length; i < l;) {
+                            if (select.user[i].id === selectobj.id) {
+                                select.user.splice(i, 1);
+                                select.ci.user = i - 1 > 0 ? i - 1 : 0;
+                                i = l + 1;
+                            } else {
+                                i++;
+                            }
+                            if (i === l) {
+                                select.user.push(selectobj);
+                                select.ci.user = l;
+                            }
+                        }
+                    } else {
+                        select.user.push(selectobj);
+                    }
+                    console.log(select.user);
+                    // user color update
+                    let bug = d3.selectAll('.user');
+                    console.log(bug);
+                    bug.attr('fill', (d) => {
+                        // console.log(d);
+                        let rcolor;
+                        if (ptt) {
+                            rcolor = color(Math.sqrt(d.posts.A.length));
+                        } else {
+                            rcolor = color(Math.sqrt(d.posts.A.length));
+                        }
+                        for (let i = 0, l = select.user.length; i < l; i++) {
+                            if (d.id === select.user[i].id) {
+                                rcolor = '#000';
+                            }
+                        }
+                        return rcolor;
+                    });
+                    // status(d);
+                    console.log('#degree' + deg.toString());
+                    // activepost(data, preselect, select);
+                    select.actpost = activeposts(data, preselect, select, 'union');
+                    userdetailview(data, select);
+                    overview(data, select);
+                    showselect(data, select);
+                });
+
+            let strokewidth = 1;
+            let zoom = d3.zoom()
+                .scaleExtent([1 / 10, 10])
+                .on('zoom', function () {
+                    g.attr('transform', d3.event.transform);
+                    let k = this.__zoom.k;
+                    g.attr('stroke-width', 1 / k);
+                    g.selectAll('.star-axis')
+                        .attr('stroke-width', 2 / k);
+                    g.selectAll('.star-guideline')
+                        .attr('stroke-width', 1 / k);
+                    g.selectAll('.star-path')
+                        .attr('stroke-width', 2 / k);
+                    g.selectAll('.star-line')
+                        .attr('stroke-width', 3 / k);
+                    strokewidth = 1 / k;
+                });
+
+            svg.call(zoom);
+
+            // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
+
+            /*
+            svg.append('g')
+                .attr('fill', 'none')
+                .attr('stroke', '#000')
+                .selectAll('path')
+                .data(function (d) {
+                    return d3.timeMonths(new Date(d, 0, 1), new Date(d + 1, 0, 1));
+                })
+                .enter().append('path')
+                .attr('d', pathMonth);*/
         }
 
-        let tooltip3 = d3.select('body').select('.c')
-            // .attr('class', 'tooltip1')
-            .style('opacity', 0);
-        // .style("width","200px")
-        // .style("height","30px");
-        d3.selectAll('.user')
-            .on('mouseover', function (d) {
-                d3.event.preventDefault();
-                tooltip3.transition()
-                    .duration(200)
-                    .style('opacity', .9);
-                tooltip3
-                    /* .html('ID=' + d.datum.id + '<br/>' + 'Name = ' + d.datum.name + '<br/>' +
-                        'Activities on A = ' + getlength(d.datum.posts, 'A') + '<br/>' +
-                        'Activities on B = ' + getlength(d.datum.posts, 'B'))*/
-                    .style('left', (d3.event.pageX + 5) + 'px')
-                    .style('top', (d3.event.pageY - 10) + 'px');
-            })
-            .on('mouseout', function (d) {
-                d3.event.preventDefault();
-                tooltip3.transition()
-                    .duration(500)
-                    .style('opacity', 0);
-            })
-            .on('click', function (d) {
-                d3.event.preventDefault();
-                // console.log(d, this);
-                /* let i = selectobj.page === data.query.page1) ? 1 : (selectobj.page === data.query.page1 + '1') ? 1 : 2;
-                let j = 0;
-                if (selectobj.post !== 0) {
-                    j = parseInt(selectobj.post.match(/\d{1,}/)[0]) - 1;
-                }
-                // console.log(i, j);*/
-                let preselect = {};
-                let user = [];
-                let actpost = [
-                    [],
-                    [],
-                ];
-                for (let i = 0, l = select.user.length; i < l; i++) {
-                    user.push(select.user[i]);
-                }
-                for (let i = 0, l = select.actpost.length; i < l; i++) {
-                    for (let j = 0, l = select.actpost[i].length; j < l; j++) {
-                        let post = select.actpost[i][j];
-                        actpost[i].push(post);
-                    }
-                }
-                preselect.user = user;
-                preselect.actpost = actpost;
-                let la = d.posts.A.length;
-                let lb = d.posts.B.length;
-                let deg = la + lb;
-                let selectobj = d;
-                if (select.user.length !== 0) {
-                    for (let i = 0, l = select.user.length; i < l;) {
-                        if (select.user[i].id === selectobj.id) {
-                            select.user.splice(i, 1);
-                            select.ci.user = i - 1 > 0 ? i - 1 : 0;
-                            i = l + 1;
-                        } else {
-                            i++;
-                        }
-                        if (i === l) {
-                            select.user.push(selectobj);
-                            select.ci.user = l;
-                        }
-                    }
-                } else {
-                    select.user.push(selectobj);
-                }
-                console.log(select.user);
-                // user color update
-                let bug = d3.selectAll('.user');
-                console.log(bug);
-                bug.attr('fill', (d) => {
-                    // console.log(d);
-                    let rcolor;
-                    if (ptt) {
-                        rcolor = color(Math.sqrt(d.posts.A.length));
-                    } else {
-                        rcolor = color(Math.sqrt(d.posts.A.length));
-                    }
-                    for (let i = 0, l = select.user.length; i < l; i++) {
-                        if (d.id === select.user[i].id) {
-                            rcolor = '#000';
-                        }
-                    }
-                    return rcolor;
-                });
-                // status(d);
-                console.log('#degree' + deg.toString());
-                // activepost(data, preselect, select);
-                select.actpost = activeposts(data, preselect, select, 'union');
-                userdetailview(data, select);
-                overview(data, select);
-                showselect(data, select);
-            });
-
-        let strokewidth = 1;
-        let zoom = d3.zoom()
-            .scaleExtent([1 / 10, 10])
-            .on('zoom', function () {
-                g.attr('transform', d3.event.transform);
-                let k = this.__zoom.k;
-                g.attr('stroke-width', 1 / k);
-                g.selectAll('.star-axis')
-                    .attr('stroke-width', 2 / k);
-                g.selectAll('.star-guideline')
-                    .attr('stroke-width', 1 / k);
-                g.selectAll('.star-path')
-                    .attr('stroke-width', 2 / k);
-                g.selectAll('.star-line')
-                    .attr('stroke-width', 3 / k);
-                strokewidth = 1 / k;
-            });
-
-        svg.call(zoom);
-
-        // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
-
-        /*
-        svg.append('g')
-            .attr('fill', 'none')
-            .attr('stroke', '#000')
-            .selectAll('path')
-            .data(function (d) {
-                return d3.timeMonths(new Date(d, 0, 1), new Date(d + 1, 0, 1));
-            })
-            .enter().append('path')
-            .attr('d', pathMonth);*/
     }
 }
 
@@ -2197,7 +2252,8 @@ function activeuser(data, preselect, postselect, mode) {
      * @param {string} mode -
      */
     function modifycolor(postchange, maxact, add, mode) {
-        console.log(postchange);
+        // console.log(postchange);
+        let cl = postchange.length;
         let ptt = data.query.posttype === 'PTT';
         let colormod;
         if (mode === 'intersection') {
@@ -2210,27 +2266,27 @@ function activeuser(data, preselect, postselect, mode) {
                 if (!d.act) {
                     d.act = 0;
                 }
-                return d;
-            })
-            .attr('stroke', (d) => {
-                let rcolor;
-                for (let i = 0, l = d.posts.A.length; i < l; i++) {
-                    for (let j = 0, l = postchange.length; j < l; j++) {
-                        // console.log(postchange[j].page);
-                        let x = (postchange[j].page === data.query.page1) ? 0 : (postchange[j].page === data.query.page1 + '1') ? 0 : 1;
-                        let y = 0;
-                        if (postchange[j].post !== undefined) {
-                            y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
-                        }
-                        // console.log(x, y);
-                        let id;
+                for (let j = 0; j < cl; j++) {
+                    console.log(postchange[j].page);
+                    let x = (postchange[j].page === data.query.page1) ? 0 : (postchange[j].page === data.query.page1 + '1') ? 0 : 1;
+                    let y = 0;
+                    if (postchange[j].post !== undefined) {
+                        y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
+                    }
+                    let id;
+                    if (ptt) {
+                        // console.log(pagedata[x][y]);
+                        id = pagedata[x][y].article_id;
+                    } else {
+                        id = pagedata[x][y].id;
+                    }
+                    // console.log(x, y);
+
+                    for (let i = 0, l = d.posts.A.length; i < l; i++) {
                         let eqid;
                         if (ptt) {
-                            // console.log(pagedata[x][y]);
-                            id = pagedata[x][y].article_id;
                             eqid = d.posts.A[i].article_id === id;
                         } else {
-                            id = pagedata[x][y].id;
                             eqid = d.posts.A[i].id === id;
                         }
                         if (eqid) {
@@ -2239,38 +2295,31 @@ function activeuser(data, preselect, postselect, mode) {
                             } else {
                                 d.act--;
                             }
-                            a = l;
-                        }
-                    }
-                }
-                for (let i = 0, l = d.posts.B.length; i < l; i++) {
-                    for (let j = 0, l = postchange.length; j < l; j++) {
-                        // console.log(postchange[j].page);
-                        let x = (postchange[j].page === data.query.page1) ? 0 : (postchange[j].page === data.query.page1 + '1') ? 0 : 1;
-                        let y = 0;
-                        if (postchange[j].post !== undefined) {
-                            y = parseInt(postchange[j].post.match(/\d{1,}/)[0]) - 1;
-                        }
-                        // console.log(x, y);
-                        let id;
-                        let eqid;
-                        if (ptt) {
-                            id = pagedata[x][y].article_id;
-                            eqid = d.posts.B[i].article_id === id;
+                            i = l;
                         } else {
-                            id = pagedata[x][y].id;
-                            eqid = d.posts.B[i].id === id;
-                        }
-                        if (eqid) {
-                            if (add) {
-                                d.act++;
-                            } else {
-                                d.act--;
+                            for (let i = 0, l = d.posts.B.length; i < l; i++) {
+                                let eqid;
+                                if (ptt) {
+                                    eqid = d.posts.B[i].article_id === id;
+                                } else {
+                                    eqid = d.posts.B[i].id === id;
+                                }
+                                if (eqid) {
+                                    if (add) {
+                                        d.act++;
+                                    } else {
+                                        d.act--;
+                                    }
+                                    i = l;
+                                }
                             }
-                            a = l;
                         }
                     }
                 }
+                return d;
+            })
+            .attr('stroke', (d) => {
+                let rcolor;
                 if (d.act >= colormod) {
                     rcolor = '#000';
                 };
@@ -2378,11 +2427,21 @@ function activeposts(data, preselect, postselect, mode) {
                         let thispost = pagedata[page][post];
                         for (let i = 0; i < userchange.length; i++) {
                             for (let j = 0; j < userchange[i].posts[pname].length; j++) {
-                                if (userchange[i].posts[pname][j].article_id === thispost.article_id) {
-                                    if (add) {
-                                        d.act++;
-                                    } else {
-                                        d.act--;
+                                if (ptt) {
+                                    if (userchange[i].posts[pname][j].article_id === thispost.article_id) {
+                                        if (add) {
+                                            d.act++;
+                                        } else {
+                                            d.act--;
+                                        }
+                                    }
+                                } else {
+                                    if (userchange[i].posts[pname][j].id === thispost.id) {
+                                        if (add) {
+                                            d.act++;
+                                        } else {
+                                            d.act--;
+                                        }
                                     }
                                 }
                             }
@@ -2404,15 +2463,6 @@ function activeposts(data, preselect, postselect, mode) {
                         return 'rgba(0, 0, 0, ' + a + ')';
                     }
                 })
-                /* .attr('stroke', (d) => {
-                    let rcolor;
-                    if (d.act >= colormod) {
-                        rcolor = '#000';
-                    }else{
-                        rcolor = '#fff';
-                    }
-                    return rcolor;
-                })*/
                 .attr('stroke-dasharray', (d) => {
                     // console.log(d.act);
                     let p = 1 / d.act * 50;
@@ -2433,11 +2483,21 @@ function activeposts(data, preselect, postselect, mode) {
                         let thispost = pagedata[page][post];
                         for (let i = 0; i < userchange.length; i++) {
                             for (let j = 0; j < userchange[i].posts[pname].length; j++) {
-                                if (userchange[i].posts[pname][j].article_id === thispost.article_id) {
-                                    if (add) {
-                                        d.act++;
-                                    } else {
-                                        d.act--;
+                                if (ptt) {
+                                    if (userchange[i].posts[pname][j].article_id === thispost.article_id) {
+                                        if (add) {
+                                            d.act++;
+                                        } else {
+                                            d.act--;
+                                        }
+                                    }
+                                } else {
+                                    if (userchange[i].posts[pname][j].id === thispost.id) {
+                                        if (add) {
+                                            d.act++;
+                                        } else {
+                                            d.act--;
+                                        }
                                     }
                                 }
                             }
@@ -3468,6 +3528,8 @@ function pagedata(data) {
     let samestarttime = (data.query.time1 === data.query.time3);
     let sameendtime = (data.query.time2 === data.query.time4);
     let sametime = (samestarttime && sameendtime);
+    let sametitle = (data.query.keyword1 === data.query.keyword3);
+    let samekey = (data.query.keyword2 === data.query.keyword4);
     let ptt = data.query.posttype === 'PTT';
     let pagedata = data.data[0];
     let tm = {};
@@ -3540,7 +3602,7 @@ function pagedata(data) {
         tmdata.push(page);
     }
     tm.name = 'root';
-    if (samepage && sametime) {
+    if (samepage && sametime && sametitle && samekey) {
         tm.children = [tmdata[0]];
     } else {
         tm.children = tmdata;
@@ -3865,7 +3927,11 @@ function getProperty(propertyName, object) {
     let property = object || this;
 
     for (i = 0; i < length; i++) {
-        property = property[parts[i]];
+        if (parts[i] === 'length') {
+            property = property.length;
+        } else {
+            property = property[parts[i]];
+        }
     }
     return property;
 }
