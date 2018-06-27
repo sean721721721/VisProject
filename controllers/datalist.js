@@ -66,39 +66,42 @@ var ualist = function ualist(files, ptt) {
     if (ptt) {
         var data, message, user, post, comment, messageslength;
         files = jb.cut(files, function () {
-            //console.log(files);
+            // console.log(files.length);
             var find = false;
             for (var i = 0; i < filelength; i++) {
                 data = files[i];
                 find = false;
-                var id = data.author.split(" ")[0];
-                post = {};
-                post["article_id"] = data.article_id;
-                post["article_title"] = data.article_title;
-                post["author"] = data.author;
-                post["board"] = data.board;
-                post["content"] = data.content;
-                post["word"] = data.word;
-                post["date"] = data.date;
-                post["ip"] = data.ip;
-                post["url"] = data.url;
-                post["publish"] = true;
-                post["message_count"] = data.message_count;
-                post["pushing"] = [];
-                post["boo"] = [];
-                post["neutral"] = [];
-                for (var a = 0; a < userlist.length; a++) {
-                    if (userlist[a].id === id) {
-                        userlist[a].posts.push(post);
-                        a = userlist.length;
-                        find = true;
+                if (data.author !== null) {
+                    // console.log(data.author);
+                    var id = data.author.split(" (")[0];
+                    post = {};
+                    post["article_id"] = data.article_id;
+                    post["article_title"] = data.article_title;
+                    post["author"] = data.author;
+                    post["board"] = data.board;
+                    post["content"] = data.content;
+                    post["word"] = data.word;
+                    post["date"] = data.date;
+                    post["ip"] = data.ip;
+                    post["url"] = data.url;
+                    post["publish"] = true;
+                    post["message_count"] = data.message_count;
+                    post["pushing"] = [];
+                    post["boo"] = [];
+                    post["neutral"] = [];
+                    for (var a = 0; a < userlist.length; a++) {
+                        if (userlist[a].id === id) {
+                            userlist[a].posts.push(post);
+                            a = userlist.length;
+                            find = true;
+                        }
                     }
-                }
-                if (!find) {
-                    user = {};
-                    user["id"] = id;
-                    user["posts"] = [post];
-                    userlist.push(user);
+                    if (!find) {
+                        user = {};
+                        user["id"] = id;
+                        user["posts"] = [post];
+                        userlist.push(user);
+                    }
                 }
             }
             messaageuserlist(files, userlist)

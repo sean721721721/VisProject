@@ -227,9 +227,10 @@ var findquery = function findquery(page, queryobj, ptt) {
     //return Query(queryobj, options, pagepost, page);
     //console.log(page,pagepost);
     return pagepost.find(queryobj, function (err, pagepost) {
-        //logger.log('info',pagepost);
-        return pagepost;
-    });
+            //logger.log('info',pagepost);
+            return pagepost;
+        })
+        .limit(1000);
 };
 
 var mapreduce = function mapreduce(queryobj) {
@@ -332,7 +333,7 @@ var callback = function callback(req, res) {
         if (req.params.posttype === 'PTT') {
             ptt = true;
         }
-        if (page1 === page2 && time1 === time3 && time2 === time4) {
+        if (page1 === page2 && time1 === time3 && time2 === time4 && keyword1 === keyword2 && keyword3 === keyword4) {
             return new Promise((resolve, reject) => {
                     findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
