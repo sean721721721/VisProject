@@ -174,10 +174,13 @@ function overview(data, select) {
             if (d[3] === 0) {
                 return 0;
             } else {
-                let wa = (d[1] / d[3]) * w;
+                let wa = Math.abs(d[1] / d[3]) * w;
                 if (i === 1) {
                     ratio = d[1] / (2 * d[1] + 2 * d[2] - d[3]);
                     return w * ratio;
+                } else if (i === 4) {
+                    wa = Math.abs(d[1]) / (Math.abs(d[1]) + Math.abs(d[2])) * w;
+                    return wa;
                 } else {
                     return wa;
                 }
@@ -233,10 +236,13 @@ function overview(data, select) {
             if (d[3] === 0) {
                 return 0;
             } else {
-                let wb = (d[2] / d[3]) * w;
+                let wb = (Math.abs(d[2]) / d[3]) * w;
                 if (i === 1) {
                     let ratio = d[2] / (2 * d[1] + 2 * d[2] - d[3]);
                     return w * ratio;
+                } else if (i === 4) {
+                    wa = Math.abs(d[2]) / (Math.abs(d[1]) + Math.abs(d[2])) * w;
+                    return wa;
                 } else {
                     return wb;
                 }
@@ -250,6 +256,9 @@ function overview(data, select) {
                 if (i === 1) {
                     let ratio = (2 * d[1] + d[2] - d[3]) / (2 * d[1] + 2 * d[2] - d[3]);
                     return w * ratio;
+                } else if (i === 4) {
+                    let wa = Math.abs(d[1]) / (Math.abs(d[1]) + Math.abs(d[2])) * w;
+                    return wa;
                 } else {
                     return (d[1] / d[3]) * w;
                 }
@@ -690,7 +699,7 @@ function pageview(data, pagedata, select) {
             .attr('id', 'percentage');
         text.append('tspan')
             .attr('id', 'title');
-        console.log(text);
+        // console.log(text);
     }
 
     function drawtm(g, root) {
@@ -1146,7 +1155,7 @@ function userview(data, select) {
             overlapvis(data, select, 'share');
         };
     }
-    console.log(select);
+    console.log('select: ', select);
 }
 
 /**
@@ -1206,7 +1215,7 @@ function overlapvis(data, select, mode) {
         }
         let mindeg = document.querySelector('input[name="mindeg"]').value;
         let maxdeg = document.querySelector('input[name="maxdeg"]').value;
-        console.log(maxdeg, typeof maxdeg);
+        // console.log(maxdeg, typeof maxdeg);
         let svg = d3.select('#overlap')
             .append('div')
             .attr('class', 'wrapper')
@@ -1226,7 +1235,7 @@ function overlapvis(data, select, mode) {
         let users = data.data[1];
         let overlap = [];
         let l = maxdeg !== '' ? maxdeg : data.data[2].O.length;
-        console.log('deg: ', mindeg, 'to', l);
+        // console.log('deg: ', mindeg, 'to', l);
         // make overlap array
         for (let i = mindeg - 1; i < l; i++) {
             if (data.data[2].O[i].length > 0) {
@@ -1288,7 +1297,7 @@ function overlapvis(data, select, mode) {
                 degylist.push(parseInt(count / nextline, 10) + 1);
             }
 
-            // usercount in degree[i] list
+            // groupcount in degree[i] list
             let uclist = [];
             for (let i = 0; i < overlap.length; i++) {
                 let deg = overlap[i];
@@ -1326,6 +1335,31 @@ function overlapvis(data, select, mode) {
                 return list;
             }
 
+            // console.log(degylist, uclist);
+
+            function nuccount(check, list) {
+                let result = [];
+                let l = check.length;
+                for (let i = 0; i < l; i++) {
+                    let temp = [];
+                    let x = 0;
+                    let y = 0;
+                    let h = list[i].length;
+                    for (let j = 0; j < h; j++) {
+                        temp.push({
+                            'x': x,
+                            'y': y,
+                        });
+                        if (check[i] !== 1) {
+                            y += list[i][j];
+                        }
+                        x += list[i][j];
+                    }
+                    result.push(temp);
+                }
+                return result;
+            }
+
             // elements' (x,y) corrdinate array
             function uccount(check, list) {
                 let result = [];
@@ -1360,31 +1394,33 @@ function overlapvis(data, select, mode) {
                 return c;
             }
 
-            // users' x
-            function xof(k) {
-                result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+            // users' x by ggrid
+            function xof(i, k) {
+                let result = Math.round(k / degylist[i] - 0.5) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                // result = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
                 return result;
             }
 
-            // users' y
-            function yof(k) {
-                let offsety = parseInt(k / nextline, 10);
-                result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                return result + inity;
+            // users' y by ggrid
+            function yof(i, k) {
+                let result = (k) % degylist[i] * cellSize1 + (cellSize2 - cellSize3) / 2 + inity;
+                /* let offsety = parseInt(k / nextline, 10);
+                result = offsety * cellSize1 + (cellSize2 - cellSize3) / 2 + inity;*/
+                return result;
             }
 
             // button click
             function buttonclick(d, k) {
                 d3.event.preventDefault();
                 degylist = modify(degylist, d, k);
-                uylist = uccount(degylist, uclist);
+                // uylist = uccount(degylist, uclist);
                 // console.log(uylist);
                 rect.attr('transform', (d, i) => {
-                    return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+                    return 'translate(0,' + (gety(degylist, i) * cellSize1 + (cellSize1 - cellSize2) / 2) + ')';
                 });
                 d3.selectAll('.degree')
                     .attr('height', (d, i) => {
-                        return cellSize1 * degylist[i] - 2;
+                        return cellSize1 * degylist[i];
                     });
                 d3.selectAll('.botton')
                     .attr('height', (d, i) => {
@@ -1397,7 +1433,7 @@ function overlapvis(data, select, mode) {
                 let id = '#degree' + k;
                 let display = d3.select(id).select('g').node().style.display;
                 // console.log(display);
-                d3.select(id).select('g').style('display', function () {
+                d3.select(id).selectAll('g').style('display', function () {
                     if (display !== 'none') {
                         return 'none';
                     } else {
@@ -1406,7 +1442,16 @@ function overlapvis(data, select, mode) {
                 });
                 for (let i = 0; i < degcounts; i++) {
                     let did = '#degree' + i;
-                    d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
+                    /* d3.selectAll(did).selectAll('.ggrid').attr('transform', (d, j) => {
+                        let x = 0;
+                        for (let a = 0; a < l; a++) {
+                            x += Math.round(uclist[i][a] / degylist[i] - 0.5);
+                            if ((uclist[i][a]) % degylist[i] > 0) {
+                                x++;
+                            }
+                        }
+                        result = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        return 'translate(' + result + ',' + 0 + ')';
                         let offsetx = uylist[i][j].x % nextline;
                         let resultx = initx + offsetx * cellSize1 + (cellSize1 - cellSize2) / 2;
                         let offsety = 0;
@@ -1416,33 +1461,34 @@ function overlapvis(data, select, mode) {
                         let resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
                         // console.log(offsetx);
                         return 'translate(' + resultx + ',' + resulty + ')';
-                    });
+                    });*/
                     d3.selectAll(did).selectAll('.grect')
                         .attr('height', (d) => {
                             if (degylist[i] === 1) {
                                 return cellSize1 - (cellSize1 - cellSize2);
                             } else {
-                                let h = parseInt(d.length / nextline, 10) + 1;
-                                return h * cellSize1 - (cellSize1 - cellSize2);
+                                return degylist[i] * cellSize1 - (cellSize1 - cellSize2);
+                                /* let h = parseInt(d.length / nextline, 10) + 1;
+                                return h * cellSize1 - (cellSize1 - cellSize2);*/
                             }
                         });
-                    let gcount = overlap[i].length;
+                    /* let gcount = overlap[i].length;
                     for (let j = 0; j < gcount; j++) {
                         let gid = '#d' + i + 'g' + j;
                         d3.selectAll(gid).selectAll('.user')
-                            .attr('transform', (d, k) => {
-                                resultx = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
-                                let offsety = parseInt(k / nextline, 10);
-                                if (degylist[i] === 1) {
-                                    resulty = inity;
-                                } else {
-                                    resulty = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
-                                    resulty += inity;
-                                }
-                                resulty += 1; // +1 for align after button click
-                                return 'translate(' + resultx + ',' + resulty + ')';
-                            });
-                        /* .attr('y', (d, k) => {
+                        .attr('transform', (d, k) => {
+                            resultx = (k % nextline) * cellSize1 + (cellSize2 - cellSize3) / 2;
+                            let offsety = parseInt(k / nextline, 10);
+                            if (degylist[i] === 1) {
+                                resulty = inity;
+                            } else {
+                                resulty = offsety * cellSize1 + (cellSize2 - cellSize3) / 2;
+                                resulty += inity;
+                            }
+                            resulty += 1; // +1 for align after button click
+                            return 'translate(' + resultx + ',' + resulty + ')';
+                        });*/
+                    /* .attr('y', (d, k) => {
                             // calculate users' y
                             function usery(check, index) {
                                 if (check === 1) {
@@ -1454,8 +1500,8 @@ function overlapvis(data, select, mode) {
                                 }
                             }
                             return usery(degylist[i], k) + inity;
-                        });*/
-                    }
+                        });
+                    }*/
                 }
             }
 
@@ -1464,7 +1510,7 @@ function overlapvis(data, select, mode) {
                 .enter().append('g')
                 .attr('id', (d, i) => 'degree' + i)
                 .attr('transform', (d, i) => {
-                    return 'translate(0,' + gety(degylist, i) * cellSize1 + ')';
+                    return 'translate(0,' + (gety(degylist, i) * cellSize1 + (cellSize1 - cellSize2) / 2) + ')';
                 });
 
             let deggrid = rect.append('rect').attr('class', (d, i) => 'degree' + ' ' + i)
@@ -1556,8 +1602,18 @@ function overlapvis(data, select, mode) {
                             return 'block';
                         }
                     })
-                    .attr('transform', (d) => {
-                        resultx = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
+                    .attr('transform', (d, l) => {
+                        // console.log(degylist, uclist);
+                        let x = 0;
+                        for (let a = 0; a < l; a++) {
+                            x += Math.round(uclist[i][a] / degylist[i] - 0.5);
+                            if ((uclist[i][a]) % degylist[i] > 0) {
+                                x++;
+                            }
+                        }
+                        result = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
+                        return 'translate(' + result + ',' + (cellSize1 - cellSize2) / 2 + ')';
+                        /* resultx = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
                         x += widthcount(d);
                         while (x > (nextline - 1)) {
                             x -= nextline;
@@ -1565,23 +1621,29 @@ function overlapvis(data, select, mode) {
                         let offsety = parseInt(yc / nextline, 10);
                         resulty = offsety * cellSize1 + (cellSize1 - cellSize2) / 2;
                         yc += d.length;
-                        return 'translate(' + resultx + ',' + resulty + ')';
+                        return 'translate(' + resultx + ',' + resulty + ')';*/
                     })
                     .append('rect')
                     .attr('class', 'grect')
                     .attr('fill', 'none')
                     .attr('stroke', 'none' /* '#0f0'*/ )
                     .attr('opacity', 1)
-                    .attr('width', (d) => {
-                        if (widthcount(d) < nextline) {
+                    .attr('width', (d, l) => {
+                        x = Math.round(uclist[i][l] / degylist[i] - 0.5);
+                        if ((uclist[i][l]) % degylist[i] > 0) {
+                            x++;
+                        }
+                        return x * cellSize1 - (cellSize1 - cellSize2);
+                        /* if (widthcount(d) < nextline) {
                             return widthcount(d) * cellSize1 - (cellSize1 - cellSize2);
                         } else {
                             return nextline * cellSize1 - (cellSize1 - cellSize2);
-                        }
+                        }*/
                     })
                     .attr('height', (d) => {
-                        let h = parseInt(d.length / nextline, 10) + 1;
-                        return h * cellSize1 - (cellSize1 - cellSize2);
+                        return degylist[i] * cellSize1 - (cellSize1 - cellSize2);
+                        /* let h = parseInt(d.length / nextline, 10) + 1;
+                        return h * cellSize1 - (cellSize1 - cellSize2);*/
                     })
                     .attr('x', 0)
                     .attr('y', inity);
@@ -1593,10 +1655,10 @@ function overlapvis(data, select, mode) {
                     if (group.length > 0) {
                         function glyphmargin(k) {
                             let result = {
-                                top: yof(k),
+                                top: yof(i, k),
                                 right: 0,
                                 bottom: 0,
-                                left: xof(k),
+                                left: xof(i, k),
                             };
                             return result;
                         };
@@ -1699,7 +1761,7 @@ function overlapvis(data, select, mode) {
                         usergrid.selectAll('.star-interaction')
                             .on('mouseover', function (d) {
                                 let hover = d3.select(this.parentNode);
-                                /*hover.selectAll('.star-title')
+                                /* hover.selectAll('.star-title')
                                     .style('display', 'block');*/
 
                                 hover.selectAll('.star-label')
@@ -2026,12 +2088,12 @@ function postdetailview(data, select) {
             postdetail(data, select);
         });
     button.exit().remove();
-    document.querySelector('.next').onclick = function () {
+    /* document.querySelector('.next').onclick = function () {
         nextpost(data, select, 1);
     };
     document.querySelector('.previous').onclick = function () {
         nextpost(data, select, -1);
-    };
+    };*/
     // console.log(select.ci.post);
 }
 
@@ -2267,7 +2329,7 @@ function activeuser(data, preselect, postselect, mode) {
                     d.act = 0;
                 }
                 for (let j = 0; j < cl; j++) {
-                    console.log(postchange[j].page);
+                    // console.log(postchange[j].page);
                     let x = (postchange[j].page === data.query.page1) ? 0 : (postchange[j].page === data.query.page1 + '1') ? 0 : 1;
                     let y = 0;
                     if (postchange[j].post !== undefined) {
@@ -2275,11 +2337,11 @@ function activeuser(data, preselect, postselect, mode) {
                     }
                     let id;
                     if (ptt) {
-                        // console.log(pagedata[x][y]);
                         id = pagedata[x][y].article_id;
                     } else {
                         id = pagedata[x][y].id;
                     }
+                    // console.log(id, pagedata[x][y]);
                     // console.log(x, y);
 
                     for (let i = 0, l = d.posts.A.length; i < l; i++) {
@@ -2296,23 +2358,22 @@ function activeuser(data, preselect, postselect, mode) {
                                 d.act--;
                             }
                             i = l;
+                        }
+                    }
+                    for (let i = 0, l = d.posts.B.length; i < l; i++) {
+                        let eqid;
+                        if (ptt) {
+                            eqid = d.posts.B[i].article_id === id;
                         } else {
-                            for (let i = 0, l = d.posts.B.length; i < l; i++) {
-                                let eqid;
-                                if (ptt) {
-                                    eqid = d.posts.B[i].article_id === id;
-                                } else {
-                                    eqid = d.posts.B[i].id === id;
-                                }
-                                if (eqid) {
-                                    if (add) {
-                                        d.act++;
-                                    } else {
-                                        d.act--;
-                                    }
-                                    i = l;
-                                }
+                            eqid = d.posts.B[i].id === id;
+                        }
+                        if (eqid) {
+                            if (add) {
+                                d.act++;
+                            } else {
+                                d.act--;
                             }
+                            i = l;
                         }
                     }
                 }
@@ -2452,13 +2513,13 @@ function activeposts(data, preselect, postselect, mode) {
                 .attr('fill', (d) => {
                     let page = d.data.page - 1;
                     let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
-                    if (d.act > 0) {
-                        console.log(page, post, d.act);
-                    }
                     if (d.act === 0) {
                         // console.log(chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5));
                         return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
                     } else {
+                        if (d.act > 0) {
+                            // console.log(page, post, d.act);
+                        }
                         let a = d.act / maxact;
                         return 'rgba(0, 0, 0, ' + a + ')';
                     }
@@ -2967,7 +3028,7 @@ function nextuser(data, select, count) {
  */
 function userdetailview(data, select) {
     userdetail(data, select);
-    console.log(select);
+    console.log('userselect', select);
     let sul = select.user.length;
     let button = d3.select('.btn-group').selectAll('button').data(select.user, (d) => {
         return d;
@@ -2984,12 +3045,12 @@ function userdetailview(data, select) {
             userdetail(data, select);
         });
     button.exit().remove();
-    document.querySelector('.next').onclick = function () {
+    /* document.querySelector('.next').onclick = function () {
         nextuser(data, select, 1);
     };
     document.querySelector('.previous').onclick = function () {
         nextuser(data, select, -1);
-    };
+    };*/
     // console.log(select.ci.post);
 }
 
@@ -3094,9 +3155,9 @@ function timeline(user, meta) {
                     let year = new Date(post.date).getFullYear();
                     if (typeof (date) !== 'object') {
                         date = date.split(/\s|\/|\:/);
-                        console.log(date);
+                        // console.log(date);
                         date = new Date(year, date[0] - 1, date[1], date[2], date[3]);
-                        console.log(date);
+                        // console.log(date);
                     }
                     post[property][j].push_ipdatetime = date;
                     post.lastactive = new Date(post.lastactive) > new Date(date) ? post.lastactive : date;
@@ -3212,7 +3273,7 @@ function timeline(user, meta) {
             })
             .html((d) => {
                 let author = '<p id="author">' + d.author + '</p>';
-                let date = '<p>' + d.date + '</p>';
+                let date = '<p>' + new Date(d.date).toLocaleString() + '</p>';
                 let wordstr = '';
                 for (let i = 0; i < d.word.length; i++) {
                     wordstr += ' ' + d.word[i].word;
@@ -3234,17 +3295,16 @@ function timeline(user, meta) {
                         return p.pushing.length + ' 推';
                     });
 
-                let push = d3.select(this).selectAll('#pushing');
-                push.data(p.pushing).enter().append('xhtml:#pushing').merge(push)
-                    .append('xhtml:div')
-                    .attr('class', 'panel')
+                let push = d3.select(this).selectAll('#pushing').append('div')
+                    .attr('class', 'panel').selectAll('p');
+                push.data(p.pushing).enter().append('p') /* .append('xhtml:#pushing')*/ .merge(push)
                     .attr('id', (d, i) => {
                         return 'push' + i;
                     })
                     .html((d) => {
-                        let timeID = d.push_ipdatetime + ' ' + d.push_userid;
+                        let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
-                        return timeID + content;
+                        return timeID + ':<br>' + content;
                     });
 
                 // draw boobutton
@@ -3254,17 +3314,16 @@ function timeline(user, meta) {
                     .text((d) => {
                         return p.boo.length + ' 噓';
                     });
-                let boo = d3.select(this).selectAll('#boo');
-                boo.data(p.boo).enter().append('xhtml:#boo').merge(boo)
-                    .append('xhtml:div')
-                    .attr('class', 'panel')
+                let boo = d3.select(this).selectAll('#boo').append('div')
+                    .attr('class', 'panel').selectAll('p');
+                boo.data(p.boo).enter().append('p') /* .append('xhtml:#boo')*/ .merge(boo)
                     .attr('id', (d, i) => {
                         return 'boo' + i;
                     })
                     .html((d) => {
-                        let timeID = d.push_ipdatetime + ' ' + d.push_userid;
+                        let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
-                        return timeID + content;
+                        return timeID + ':<br>' + content;
                     });
 
                 // draw neutralbutton
@@ -3274,17 +3333,16 @@ function timeline(user, meta) {
                     .text((d) => {
                         return p.neutral.length + ' →';
                     });
-                let neutral = d3.select(this).selectAll('#neutral');
-                neutral.data(p.neutral).enter().append('xhtml:#neutral').merge(neutral)
-                    .append('xhtml:div')
-                    .attr('class', 'panel')
+                let neutral = d3.select(this).selectAll('#neutral').append('div')
+                    .attr('class', 'panel').selectAll('p');
+                neutral.data(p.neutral).enter().append('p') /* .append('xhtml:#neutral')*/ .merge(neutral)
                     .attr('id', (d, i) => {
                         return 'neutral' + i;
                     })
                     .html((d) => {
-                        let timeID = d.push_ipdatetime + ' ' + d.push_userid;
+                        let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
-                        return timeID + content;
+                        return timeID + ':<br>' + content;
                     });
             });
     }
@@ -3392,10 +3450,10 @@ function timeline(user, meta) {
             .attr('cy', (d) => {
                 let query = d.query;
                 if (query === 'A') {
-                    console.log('query', ' 發', Ascale(query + ' 發'));
+                    // console.log('query', ' 發', Ascale(query + ' 發'));
                     return Ascale(query + ' 發');
                 } else {
-                    console.log('query', ' 發', Bscale(query + ' 發'));
+                    // console.log('query', ' 發', Bscale(query + ' 發'));
                     return Bscale(query + ' 發');
                 }
             })
@@ -3427,16 +3485,16 @@ function timeline(user, meta) {
             .attr('fill', '#f00')
             .attr('r', 5)
             .attr('cx', (d) => {
-                console.log(d);
+                // console.log(d);
                 return Tscale(new Date(d.push_ipdatetime));
             })
             .attr('cy', (d) => {
                 let query = d.query;
                 if (query === 'A') {
-                    console.log('query', ' 推', Ascale(query + ' 推'));
+                    // console.log('query', ' 推', Ascale(query + ' 推'));
                     return Ascale(query + ' 推');
                 } else {
-                    console.log('query', ' 推', Bscale(query + ' 推'));
+                    // console.log('query', ' 推', Bscale(query + ' 推'));
                     return Bscale(query + ' 推');
                 }
             })
@@ -3460,16 +3518,16 @@ function timeline(user, meta) {
             .attr('fill', '#0f0')
             .attr('r', 5)
             .attr('cx', (d) => {
-                console.log(d);
+                // console.log(d);
                 return Tscale(new Date(d.push_ipdatetime));
             })
             .attr('cy', (d) => {
                 let query = d.query;
                 if (query === 'A') {
-                    console.log('query', ' 噓', Ascale(query + ' 噓'));
+                    // console.log('query', ' 噓', Ascale(query + ' 噓'));
                     return Ascale(query + ' 噓');
                 } else {
-                    console.log('query', ' 噓', Bscale(query + ' 噓'));
+                    // console.log('query', ' 噓', Bscale(query + ' 噓'));
                     return Bscale(query + ' 噓');
                 }
             })
@@ -3499,10 +3557,10 @@ function timeline(user, meta) {
             .attr('cy', (d) => {
                 let query = d.query;
                 if (query === 'A') {
-                    console.log('query', ' →', Ascale(query + ' →'));
+                    // console.log('query', ' →', Ascale(query + ' →'));
                     return Ascale(query + ' →');
                 } else {
-                    console.log('query', ' →', Bscale(query + ' →'));
+                    // console.log('query', ' →', Bscale(query + ' →'));
                     return Bscale(query + ' →');
                 }
             })
