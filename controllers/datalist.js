@@ -167,50 +167,87 @@ var ualist = function ualist(files, ptt) {
 
 function pushtype(post, message) {
     if (message.push_tag === "推") {
-        if (post["pushing"]) {
-            post["pushing"].push(message);
+        if (!post["pushing"]) {
+            //console.log('??')
+            post["pushing"] = [];
         } else {
-            post["pushing"] = [message];
             //post["neutral"] = [];
             //post["boo"] = [];
         }
+        post.pushing.push(message);
         //return 1;
     } else if (message.push_tag === "→") {
-        if (post["neutral"]) {
-            post["neutral"].push(message);
+        if (!post["neutral"]) {
+            post["neutral"] = [];
         } else {
             //post["push"] = [];
-            post["neutral"] = [message];
             //post["boo"] = [];
         }
+        post.neutral.push(message);
         //return 2;
     } else if (message.push_tag === "噓") {
-        if (post["boo"]) {
-            post["boo"].push(message);
+        if (!post["boo"]) {
+            post["boo"] = [];
         } else {
             //post["push"] = [];
             //post["neutral"] = [];
-            post["boo"] = [message];
         }
+        post.boo.push(message);
         //return 3;
     }
+    // console.log(post);
 }
 
 function messaageuserlist(files, userlist) {
-    var filelength = files.length;
+    let filelength = files.length;
+    //console.log(files[0]);
     for (var i = 0; i < filelength; i++) {
         data = files[i];
         if (data.messages !== undefined) {
             messageslength = data.messages.length;
             if (messageslength !== 0) {
-                for (var j = 0; j < messageslength; j++) {
+                for (let j = 0; j < messageslength; j++) {
                     message = data.messages[j];
-                    find = false;
-                    for (var a = 0; a < userlist.length; a++) {
+                    let find = false;
+                    for (let a = 0; a < userlist.length; a++) {
                         if (userlist[a].id === message.push_userid) { // insert message into user's posts obj
-                            pushtype(userlist[a].posts, message);
-                            //console.log(userlist[a].id, message, userlist.length);
-                            a = userlist.length;
+                            let findpost = false;
+                            for (let p = 0; p < userlist[a].posts.length; p++) {
+                                let thispost = userlist[a].posts[p];
+                                let thispostid = thispost.article_id;
+                                if (thispostid === data.article_id) {
+                                    pushtype(userlist[a].posts[p], message);
+                                    // console.log('here ', userlist[a].posts[p]);
+                                    p = userlist[a].posts.length;
+                                    findpost = true;
+                                }
+                                /*else {
+                                                               }*/
+                            }
+                            if (!findpost) {
+                                post = {};
+                                post["article_id"] = data.article_id;
+                                post["article_title"] = data.article_title;
+                                post["author"] = data.author;
+                                post["board"] = data.board;
+                                post["content"] = data.content;
+                                post["word"] = data.word;
+                                post["date"] = data.date;
+                                post["ip"] = data.ip;
+                                post["url"] = data.url;
+                                post["publish"] = false;
+                                post["message_count"] = data.message_count;
+                                post["pushing"] = [];
+                                post["boo"] = [];
+                                post["neutral"] = [];
+                                post.publish = false;
+                                pushtype(post, message);
+                                userlist[a].posts.push(post);
+                            }
+                            if (userlist[a].id === 'Whitening') {
+                                // console.log(userlist[a].id, message, userlist.length);
+                            }
+                            // a = userlist.length;
                             find = true;
                         }
                     }
@@ -234,6 +271,15 @@ function messaageuserlist(files, userlist) {
                         post["boo"] = [];
                         post["neutral"] = [];
                         post.publish = false;
+                        /*for (var p = 0; p < userlist[a].posts.length; p++) {
+                            var thispost = userlist[a].posts[b];
+                            var thispostid = thispost.article_id;
+                            if (thispostid === data.article_id) {
+                                pushtype(userlist[a].posts[p], message);
+                                p=userlist[a].posts.length;
+                                b=p;
+                            }
+                        }*/
                         pushtype(post, message);
                         user.posts.push(post);
                         userlist.push(user);
