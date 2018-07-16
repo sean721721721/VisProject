@@ -21,7 +21,7 @@ var LocalStrategy = require('passport-local').Strategy;
 
 
 function urlhandle(req, res, next) {
-    console.log(req.query);
+    console.log('urlhandle ', req.query);
     var hasquery = false;
     //var postid = req.params.postid;
     if (req.query['postid']) {
@@ -31,22 +31,6 @@ function urlhandle(req, res, next) {
     if (req.query['page1']) {
         req.params.page1 = req.query['page1'];
         hasquery = true;
-    }
-    if(req.query['keyword1']){
-        req.params.keyword1 = req.query['keyword1'];
-    }
-    if(req.query['keyword3']){
-        req.params.keyword3 = req.query['keyword3'];
-    }
-    if (req.query['page2']) {
-        req.params.page2 = req.query['page2'];
-        hasquery = true;
-    }
-    if(req.query['keyword2']){
-        req.params.keyword2 = req.query['keyword2'];
-    }
-    if(req.query['keyword4']){
-        req.params.keyword4 = req.query['keyword4'];
     }
     //var time1 = req.params.time1;
     if (req.query['time1']) {
@@ -58,6 +42,19 @@ function urlhandle(req, res, next) {
         req.params.time2 = req.query['time2'];
         hasquery = true;
     }
+    if(req.query['keyword1']){
+        req.params.keyword1 = req.query['keyword1'];
+    }
+    if(req.query['keyword3']){
+        req.params.keyword3 = req.query['keyword3'];
+    }
+    if(req.query['user1']){
+        req.params.user1 = req.query['user1'];
+    }
+    if (req.query['page2']) {
+        req.params.page2 = req.query['page2'];
+        hasquery = true;
+    }
     //var time3 = req.params.time3;
     if (req.query['time3']) {
         req.params.time3 = req.query['time3'];
@@ -67,6 +64,15 @@ function urlhandle(req, res, next) {
     if (req.query['time4']) {
         req.params.time4 = req.query['time4'];
         hasquery = true;
+    }
+    if(req.query['user2']){
+        req.params.user2 = req.query['user2'];
+    }
+    if(req.query['keyword2']){
+        req.params.keyword2 = req.query['keyword2'];
+    }
+    if(req.query['keyword4']){
+        req.params.keyword4 = req.query['keyword4'];
     }
     if (req.query['posttype']) {
         req.params.posttype = req.query['posttype'];
@@ -152,15 +158,17 @@ function redirecturl(req, res) {
         "maxcomment": body.maxcomment,
         "posttype": body.posttype,
         "page1": body.pagename1,
+        "time1": body.date1,
+        "time2": body.date2,
+        "user1": body.user1,
         "keyword1": body.keyword1,
         "keyword3": body.keyword3,
         "page2": body.pagename2,
-        "keyword2": body.keyword2,
-        "keyword4": body.keyword4,
-        "time1": body.date1,
-        "time2": body.date2,
         "time3": body.date3,
         "time4": body.date4,
+        "user2": body.user2,
+        "keyword2": body.keyword2,
+        "keyword4": body.keyword4,
         "co": body.co,
     });
     res.redirect('/query?' + query);

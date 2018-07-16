@@ -35,7 +35,7 @@ var logger = new(winston.Logger)({
     exitOnError: false
 });
 
-var queryobj = function queryobj(req, res, time1, time2, tkeyword, ckeyword) {
+var queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyword) {
     //console.log('req.params= ', req.params);
     //var url = req.params.url;
     /*
@@ -71,25 +71,25 @@ var queryobj = function queryobj(req, res, time1, time2, tkeyword, ckeyword) {
                         $lt: time2,
                     }
                 }
-            } else {
-                if (time1 || time2) {
-                    if (time1) {
-                        if (!time2) {
-                            time2 = Date(Date.now());
-                        }
-                        queryobj['created_time'] = {
-                            $gte: time1,
-                            $lt: time2,
-                        };
-                    } else {
-                        queryobj['created_time'] = {
-                            $lt: time2,
-                        }
-                    }
-                }
             }
         } else {
             queryobj['type'] = req.params.posttype;
+        }
+    } else {
+        if (time1 || time2) {
+            if (time1) {
+                if (!time2) {
+                    time2 = Date(Date.now());
+                }
+                queryobj['created_time'] = {
+                    $gte: time1,
+                    $lt: time2,
+                };
+            } else {
+                queryobj['created_time'] = {
+                    $lt: time2,
+                }
+            }
         }
     }
     if (tkeyword !== undefined) {
@@ -109,6 +109,9 @@ var queryobj = function queryobj(req, res, time1, time2, tkeyword, ckeyword) {
                 }
             }
         ];
+    }
+    if (userid !== undefined) {
+        queryobj['messages.push_userid'] = userid;
     }
     if (req.params.postid) {
         queryobj['id'] = req.params.postid;
@@ -319,21 +322,23 @@ var callback = function callback(req, res) {
     } else {
         console.log("go db")
         var page1 = req.params.page1;
+        var user1 = req.params.user1;
         var keyword1 = req.params.keyword1;
         var keyword3 = req.params.keyword3;
         var page2 = req.params.page2;
+        var user2 = req.params.user2;
         var keyword2 = req.params.keyword2;
         var keyword4 = req.params.keyword4;
         var time1 = req.params.time1;
         var time2 = req.params.time2;
         var time3 = req.params.time3;
         var time4 = req.params.time4;
-        var queryobj1 = queryobj(req, res, time1, time2, keyword1, keyword3);
+        var queryobj1 = queryobj(req, res, time1, time2, user1, keyword1, keyword3);
         var ptt = false;
         if (req.params.posttype === 'PTT') {
             ptt = true;
         }
-        if (page1 === page2 && time1 === time3 && time2 === time4 && keyword1 === keyword2 && keyword3 === keyword4) {
+        if (page1 === page2 && time1 === time3 && time2 === time4 && keyword1 === keyword2 && keyword3 === keyword4 && user1 === user2) {
             return new Promise((resolve, reject) => {
                     findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
@@ -364,7 +369,7 @@ var callback = function callback(req, res) {
                     logger.log('error', err);
                 })
         } else {
-            var queryobj2 = queryobj(req, res, time3, time4, keyword2, keyword4);
+            var queryobj2 = queryobj(req, res, time3, time4, user2, keyword2, keyword4);
             return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {
                     console.log("q1 lenght: " + result[0].length);
@@ -410,7 +415,6 @@ var callback = function callback(req, res) {
                     logger.log('error', err);
                 });
         }
-
         /*mapreduce
         mapreduce(queryobj1);
         */
