@@ -552,9 +552,9 @@ div.panel {
     text-align: left;
     word-wrap: break-word;
 }
-.activitiies1 {
-    float: left;
-    border: 1px solid #111;
+
+.highlight {
+    background-color: #000;
 }
 
 .author {

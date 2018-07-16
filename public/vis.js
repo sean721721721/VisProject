@@ -434,8 +434,8 @@ function showselect(data, select) {
         }
         userstr += i < l ? ', ' : '';
     }*/
-    let sdiv = document.getElementById('select');
-    /* sdiv.innerHTML = '';
+    /* let sdiv = document.getElementById('select');
+    sdiv.innerHTML = '';
     sdiv.innerHTML += '<h1>posts: ' + poststr + '</h1>';
     sdiv.innerHTML += '<h1>users: ' + userstr + '</h1>';
     console.log(poststr, userstr);*/
@@ -444,7 +444,7 @@ function showselect(data, select) {
         .range(['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b',
             '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837',
         ]);
-    sdiv = d3.select('#select');
+    let sdiv = d3.select('#select');
     // console.log(sdiv);
     let userdiv = sdiv.selectAll('.showuser').data(select.user);
     userdiv.exit().remove();
@@ -636,6 +636,14 @@ function pageview(data, pagedata, select) {
             }
         } else if (mode === 'treemap') {
             drawtm(g, root.sort(sortBySize));
+        }
+
+        // keep selective post when change mode
+        let l = select.post.length;
+        for (let i = 0; i < l; i++) {
+            let pagenum = (select.post[i].page === data.query.page1) ? 1 : (select.post[i].page === data.query.page1 + '1') ? 1 : 2;
+            let postnum = select.post[i].post.match(/\d{1,}/)[0];
+            selectivepost(pagenum, postnum);
         }
     }
 
@@ -1505,6 +1513,26 @@ function overlapvis(data, select, mode) {
                 }
             }
 
+            function selectHL() {
+                let bug = d3.selectAll('.user');
+                console.log(bug);
+                bug.attr('fill', (d) => {
+                    // console.log(d);
+                    let rcolor;
+                    if (ptt) {
+                        rcolor = color(Math.sqrt(d.posts.A.length));
+                    } else {
+                        rcolor = color(Math.sqrt(d.posts.A.length));
+                    }
+                    for (let i = 0, l = select.user.length; i < l; i++) {
+                        if (d.id === select.user[i].id) {
+                            rcolor = '#000';
+                        }
+                    }
+                    return rcolor;
+                });
+            }
+
             let rect = g.selectAll('g')
                 .data(overlap)
                 .enter().append('g')
@@ -1883,23 +1911,7 @@ function overlapvis(data, select, mode) {
                     }
                     console.log(select.user);
                     // user color update
-                    let bug = d3.selectAll('.user');
-                    console.log(bug);
-                    bug.attr('fill', (d) => {
-                        // console.log(d);
-                        let rcolor;
-                        if (ptt) {
-                            rcolor = color(Math.sqrt(d.posts.A.length));
-                        } else {
-                            rcolor = color(Math.sqrt(d.posts.A.length));
-                        }
-                        for (let i = 0, l = select.user.length; i < l; i++) {
-                            if (d.id === select.user[i].id) {
-                                rcolor = '#000';
-                            }
-                        }
-                        return rcolor;
-                    });
+                    selectHL();
                     // status(d);
                     console.log('#degree' + deg.toString());
                     // activepost(data, preselect, select);
@@ -1929,6 +1941,8 @@ function overlapvis(data, select, mode) {
 
             svg.call(zoom);
 
+            selectHL();
+
             // .attr('transform', 'translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")');
 
             /*
@@ -1942,7 +1956,6 @@ function overlapvis(data, select, mode) {
                 .enter().append('path')
                 .attr('d', pathMonth);*/
         }
-
     }
 }
 
@@ -2187,7 +2200,7 @@ function messagedetail(data) {
         content.push_userid = message.push_userid;
         content.push_content = message.push_content === '' ? 'no text' : message.push_content;
         content.push_tag = message.push_tag;
-        content.divid = ci >= 10 ? ci : ' ' + ci;
+        content.divid = ci >= 9 ? (ci + 1) : ' ' + (ci + 1);
         // console.log('comment', content);
         let html = template(content);
         cdetail.innerHTML += html;
@@ -2212,7 +2225,7 @@ function commentdetail(data) {
         content.message = comment.message === '' ? 'no text' : comment.message;
         content.commentcount = comment.comment_count;
         content.comment = comment.comments;
-        content.divid = '"subcomment' + ci + '"';
+        content.divid = '"subcomment' + (ci + 1) + '"';
         // console.log('comment', content);
         let html = template(content);
         cdetail.innerHTML += html;
@@ -3204,8 +3217,10 @@ function timeline(user, meta) {
     let svg = d3.select('#timeline').append('svg')
         .attr('width', w)
         .attr('height', h);
-    let svgoffset = getOffset(svg.node());
-    let postg = svg.append('g').attr('class', 'posts').selectAll('g');
+    let g = svg.append('g');
+
+    let svgoffset = getOffset(g.node());
+    let postg = g.append('g').attr('class', 'posts').selectAll('g');
     postg = postg.data(entries).enter().append('g').merge(postg)
         .attr('class', (d, i) => {
             return 'post' + i;
@@ -3220,7 +3235,7 @@ function timeline(user, meta) {
             return 'post' + i;
         })
         .append('xhtml:div')
-        .attr('class', 'activitiies1')
+        .attr('class', 'activities1')
         .attr('id', (d) => {
             return 'A' + d.num;
         })
@@ -3239,7 +3254,7 @@ function timeline(user, meta) {
             return 'post' + i;
         })
         .append('xhtml:div')
-        .attr('class', 'activitiies2')
+        .attr('class', 'activities2')
         .attr('id', (d) => {
             return 'B' + d.num;
         })
@@ -3259,7 +3274,7 @@ function timeline(user, meta) {
         inherit(p.neutral, p, 'num');
         // draw postbutton
         selection.append('xhtml:button')
-            .attr('class', 'accordion pageA')
+            .attr('class', 'accordion page')
             .style('max-width', (d) => {
                 return rw * 0.49 + 'px';
             })
@@ -3290,17 +3305,19 @@ function timeline(user, meta) {
                 // draw pushbutton
                 d3.select(this).selectAll('#pushing')
                     .append('xhtml:button')
-                    .attr('class', 'subaccordion commentA')
+                    .attr('class', 'subaccordion comment')
                     .text((d) => {
                         return p.pushing.length + ' 推';
                     });
 
                 let push = d3.select(this).selectAll('#pushing').append('div')
-                    .attr('class', 'panel').selectAll('p');
-                push.data(p.pushing).enter().append('p') /* .append('xhtml:#pushing')*/ .merge(push)
+                    .attr('class', 'panel').selectAll('div');
+                push.data(p.pushing).enter().append('div') /* .append('xhtml:#pushing')*/ .merge(push)
                     .attr('id', (d, i) => {
                         return 'push' + i;
                     })
+                    .append('p')
+                    .style('background-color', 'white')
                     .html((d) => {
                         let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
@@ -3310,16 +3327,18 @@ function timeline(user, meta) {
                 // draw boobutton
                 d3.select(this).selectAll('#boo')
                     .append('xhtml:button')
-                    .attr('class', 'subaccordion commentA')
+                    .attr('class', 'subaccordion comment')
                     .text((d) => {
                         return p.boo.length + ' 噓';
                     });
                 let boo = d3.select(this).selectAll('#boo').append('div')
-                    .attr('class', 'panel').selectAll('p');
-                boo.data(p.boo).enter().append('p') /* .append('xhtml:#boo')*/ .merge(boo)
+                    .attr('class', 'panel').selectAll('div');
+                boo.data(p.boo).enter().append('div') /* .append('xhtml:#boo')*/ .merge(boo)
                     .attr('id', (d, i) => {
                         return 'boo' + i;
                     })
+                    .append('p')
+                    .style('background-color', 'white')
                     .html((d) => {
                         let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
@@ -3329,16 +3348,18 @@ function timeline(user, meta) {
                 // draw neutralbutton
                 d3.select(this).selectAll('#neutral')
                     .append('xhtml:button')
-                    .attr('class', 'subaccordion commentA')
+                    .attr('class', 'subaccordion comment')
                     .text((d) => {
                         return p.neutral.length + ' →';
                     });
                 let neutral = d3.select(this).selectAll('#neutral').append('div')
-                    .attr('class', 'panel').selectAll('p');
-                neutral.data(p.neutral).enter().append('p') /* .append('xhtml:#neutral')*/ .merge(neutral)
+                    .attr('class', 'panel').selectAll('div');
+                neutral.data(p.neutral).enter().append('div') /* .append('xhtml:#neutral')*/ .merge(neutral)
                     .attr('id', (d, i) => {
                         return 'neutral' + i;
                     })
+                    .append('p')
+                    .style('background-color', 'white')
                     .html((d) => {
                         let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
@@ -3349,24 +3370,24 @@ function timeline(user, meta) {
 
     // axises
     let timetopaxis = d3.axisTop().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
-    svg.append('g')
+    g.append('g')
         .attr('class', 'Topaxis')
         // .attr('transform', 'translate(' + rw / 2 + ', 0 )')
         .attr('transform', 'translate( 0, ' + (h / 2) + ' )')
         .call(customTAxis, timetopaxis, 0, 5, -h / 14, -6 * h / 14);
     let timebotaxis = d3.axisBottom().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
-    svg.append('g')
+    g.append('g')
         .attr('class', 'Bottomaxis')
         // .attr('transform', 'translate(' + rw / 2 + ', 0 )')
         .attr('transform', 'translate( 0, ' + (h / 2) + ' )')
         .call(customTAxis, timebotaxis, 0, 5, h / 14, 6 * h / 14);
     let Aaxis = d3.axisLeft().scale(Ascale);
-    svg.append('g')
+    g.append('g')
         .attr('class', 'Aaxis')
         .attr('transform', 'translate( ' + startx + ', 0 )')
         .call(customAxis, Aaxis, 0, (rw - 2 * startx));
     let Baxis = d3.axisLeft().scale(Bscale);
-    svg.append('g')
+    g.append('g')
         .attr('class', 'Baxis')
         .attr('transform', 'translate( ' + (startx) + ', 0 )')
         .call(customAxis, Baxis, 0, (rw - 2 * startx));
@@ -3386,8 +3407,12 @@ function timeline(user, meta) {
     }
 
     // draw postdot
-    postg.each(function (p) {
-        function mouseover(d) {
+    let pushdot;
+    let boodot;
+    let neutraldot;
+
+    function drawpoints(p) {
+        function mouseover(d, selection) {
             d3.event.preventDefault();
             let time = d.date !== undefined ? d.date : d.push_ipdatetime;
             let type = d.push_tag !== undefined ? d.push_tag : '發文';
@@ -3398,50 +3423,97 @@ function timeline(user, meta) {
             tooltip1.html(type + ' ' + time + '<br/>' + content + '<br/>')
                 .style('left', (d3.event.pageX + 5) + 'px')
                 .style('top', (d3.event.pageY - 30) + 'px');
+
+            d3.select(selection.node().parentNode).select('.postline')
+                .transition()
+                .duration(500)
+                .style('display', 'block');
         }
 
-        function mouseout() {
+        function mouseout(d, selection) {
             d3.event.preventDefault();
             tooltip1.transition()
                 .duration(500)
                 .style('opacity', 0);
+            d3.select(selection.node().parentNode).select('.postline')
+                .transition()
+                .duration(500)
+                .style('display', 'none');
         }
 
         function click(d, selection) {
             d3.event.preventDefault();
+            // display activitiy paragraph or not
             if (d.id !== undefined) {
-                let id = d.id;
-                console.log(d, id, d3.select('#' + id).node());
-                let display = d3.select('#' + id).node().style.display;
-                d3.select('#' + id).style('display', () => {
-                    if (display !== 'none') {
-                        return 'none';
-                    } else {
-                        return 'block';
-                    }
-                });
-                let postdisplay = d3.select(selection.node().parentNode).select('.postcircle').node().style.display;
-                d3.select(selection.node().parentNode).select('.postcircle').style('display', () => {
-                    if (postdisplay !== 'none') {
-                        return 'none';
-                    } else {
-                        return 'block';
-                    }
+                // console.log(d, d.id, d3.select('#' + d.id).node());
+                /* let display = d3.select('#'+d.query+d.num).select('#' + id).node().style.display;
+                d3.select('#'+d.query+d.num).select('#' + d.id)
+                    .style('display', () => {
+                        if (display !== 'none') {
+                            return 'none';
+                        } else {
+                            return 'block';
+                        }
+                    });*/
+                d3.select('#' + d.query + d.num).select('#' + d.id).classed('highlight', function () {
+                    return this.classList.item(0) !== 'highlight';
                 });
             }
-            let detaildisplay = d3.select('#' + d.query + d.num).node().style.display;
-            d3.select('#' + d.query + d.num).style('display', () => {
-                if (detaildisplay !== 'none') {
-                    return 'none';
-                } else {
-                    return 'block';
-                }
+            d3.select('#' + d.query + d.num).classed('highlight', function () {
+                return this.classList.item(1) !== 'highlight';
             });
+            // let showstroke = d3.select(selection.node().parentNode).select('.postcircle').node().style.display;
+            /* d3.select(selection.node().parentNode).select('.postcircle')
+                .attr('stroke', function () {
+                    let showstroke = d3.select(this).node().attributes.stroke;
+                    console.log(showstroke);
+                    if (showstroke !== undefined) {
+                        return null;
+                    } else {
+                        return 'black';
+                    }
+                });*/
         }
 
+        // postdot = d3.select(this).selectAll('.postcircle').data(p);
+        // postdot.exit().remove();
+        d3.select(this).selectAll('.postline').remove();
+        d3.select(this).append('line')
+            .attr('class', 'postline')
+            .attr('id', (d) => {
+                return 'l_' + d.query + d.num;
+            })
+            .attr('x1', (d) => {
+                return Tscale(new Date(d.date));
+            })
+            .attr('x2', (d) => {
+                return Tscale(new Date(d.date));
+            })
+            .attr('y1', (d) => {
+                let query = d.query;
+                if (query === 'A') {
+                    return Ascale(query + ' 發');
+                } else {
+                    return Bscale(query + ' 發');
+                }
+            })
+            .attr('y2', (d) => {
+                let query = d.query;
+                if (query === 'A') {
+                    return Ascale(query + ' 推');
+                } else {
+                    return Bscale(query + ' 推');
+                }
+            })
+            .attr('stroke', '#000')
+            .attr('stroke-width', 2)
+            .style('display', 'none');
+
+        d3.select(this).selectAll('.postcircle').remove();
         d3.select(this).append('circle')
             .attr('class', 'postcircle')
             .attr('fill', '#aaa')
+            .attr('stroke', '#000')
             .attr('r', 5)
             // .attr('heigth', 10)
             .attr('cx', (d) => {
@@ -3450,14 +3522,14 @@ function timeline(user, meta) {
             .attr('cy', (d) => {
                 let query = d.query;
                 if (query === 'A') {
-                    // console.log('query', ' 發', Ascale(query + ' 發'));
                     return Ascale(query + ' 發');
                 } else {
-                    // console.log('query', ' 發', Bscale(query + ' 發'));
                     return Bscale(query + ' 發');
                 }
             })
+            .style('opacity', .7)
             .style('display', (d) => {
+                console.log(d);
                 let author = d.author.split(' ')[0];
                 if (author !== user.id) {
                     return 'none';
@@ -3466,23 +3538,24 @@ function timeline(user, meta) {
                 }
             })
             .on('mouseover', function (d) {
-                mouseover(d);
+                mouseover(d, d3.select(this));
             })
             .on('mouseout', function (d) {
-                mouseout(d);
+                mouseout(d, d3.select(this));
             })
             .on('click', function (d) {
                 click(d, d3.select(this));
             });
 
-        let pushdot = d3.select(this).selectAll('.pushingcircle');
-        pushdot.data(p.pushing, (d, i) => {
-                d.id = 'push' + i;
-                return d;
-            })
-            .enter().append('circle').merge(pushdot)
+        pushdot = d3.select(this).selectAll('.pushingcircle').data(p.pushing, (d, i) => {
+            d.id = 'push' + i;
+            return d;
+        });
+        pushdot.exit().remove();
+        pushdot.enter().append('circle').merge(pushdot)
             .attr('class', 'pushingcircle')
             .attr('fill', '#f00')
+            .attr('stroke', '#000')
             .attr('r', 5)
             .attr('cx', (d) => {
                 // console.log(d);
@@ -3498,24 +3571,26 @@ function timeline(user, meta) {
                     return Bscale(query + ' 推');
                 }
             })
+            .style('opacity', .7)
             .on('mouseover', function (d) {
-                mouseover(d);
+                mouseover(d, d3.select(this));
             })
             .on('mouseout', function (d) {
-                mouseout(d);
+                mouseout(d, d3.select(this));
             })
             .on('click', function (d) {
                 click(d, d3.select(this));
             });
 
-        let boodot = d3.select(this).selectAll('.boocircle');
-        boodot.data(p.boo, (d, i) => {
-                d.id = 'boo' + i;
-                return d;
-            })
-            .enter().append('circle').merge(boodot)
+        boodot = d3.select(this).selectAll('.boocircle').data(p.boo, (d, i) => {
+            d.id = 'boo' + i;
+            return d;
+        });
+        boodot.exit().remove();
+        boodot.enter().append('circle').merge(boodot)
             .attr('class', 'boocircle')
             .attr('fill', '#0f0')
+            .attr('stroke', '#000')
             .attr('r', 5)
             .attr('cx', (d) => {
                 // console.log(d);
@@ -3531,24 +3606,26 @@ function timeline(user, meta) {
                     return Bscale(query + ' 噓');
                 }
             })
+            .style('opacity', .7)
             .on('mouseover', function (d) {
-                mouseover(d);
+                mouseover(d, d3.select(this));
             })
             .on('mouseout', function (d) {
-                mouseout(d);
+                mouseout(d, d3.select(this));
             })
             .on('click', function (d) {
                 click(d, d3.select(this));
             });
 
-        let neutraldot = d3.select(this).selectAll('.neutralcircle');
-        neutraldot.data(p.neutral, (d, i) => {
-                d.id = 'neutral' + i;
-                return d;
-            })
-            .enter().append('circle').merge(neutraldot)
+        neutraldot = d3.select(this).selectAll('.neutralcircle').data(p.neutral, (d, i) => {
+            d.id = 'neutral' + i;
+            return d;
+        });
+        neutraldot.exit().remove();
+        neutraldot.enter().append('circle').merge(neutraldot)
             .attr('class', 'neutralcircle')
             .attr('fill', '#00f')
+            .attr('stroke', '#000')
             .attr('r', 5)
             .attr('cx', (d) => {
                 // console.log(d, new Date(d.push_ipdatetime));
@@ -3564,16 +3641,46 @@ function timeline(user, meta) {
                     return Bscale(query + ' →');
                 }
             })
+            .style('opacity', .7)
             .on('mouseover', function (d) {
-                mouseover(d);
+                mouseover(d, d3.select(this));
             })
             .on('mouseout', function (d) {
-                mouseout(d);
+                mouseout(d, d3.select(this));
             })
             .on('click', function (d) {
                 click(d, d3.select(this));
             });
-    });
+    }
+    postg.each(drawpoints);
+
+    let zoom = d3.zoom()
+        .scaleExtent([1, 10])
+        .on('zoom', function () {
+            let transform = d3.event.transform;
+            let Trange = [startx, rw - startx];
+            Tscale.range(Trange.map((x) => x * transform.k + transform.x));
+
+            // axises
+            timetopaxis = d3.axisTop().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
+            g.select('.Topaxis')
+                .call(customTAxis, timetopaxis, 0, 5, -h / 14, -6 * h / 14);
+            timebotaxis = d3.axisBottom().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
+            g.select('.Bottomaxis')
+                .call(customTAxis, timebotaxis, 0, 5, h / 14, 6 * h / 14);
+
+            postg.attr('r', 5)
+                // .attr('heigth', 10)
+                .attr('cx', (d) => {
+                    return Tscale(new Date(d.date));
+                })
+                .each(drawpoints);
+            let k = this.__zoom.k;
+            g.attr('r', 5 / k)
+                .attr('stroke-width', 1 / k);
+        });
+
+    svg.call(zoom);
 }
 
 /**
