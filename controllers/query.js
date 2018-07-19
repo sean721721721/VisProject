@@ -1,19 +1,19 @@
 /* eslint-disable */
-var fs = require('fs');
+let fs = require('fs');
 /*var MongoClient = require('mongodb').MongoClient,*/
-var assert = require('assert');
-var mongoose = require('mongoose');
-var dl = require('./datalist.js');
-var winston = require('winston');
-var db = require("../db");
+let assert = require('assert');
+let mongoose = require('mongoose');
+let dl = require('./datalist.js');
+let winston = require('winston');
+let db = require("../db");
 
 // Use native promises
 mongoose.Promise = global.Promise;
-var options = {
+let options = {
     useMongoClient: true
 };
 //var dir="/windows/D/Projects/PageVis";
-var logger = new(winston.Logger)({
+let logger = new(winston.Logger)({
     transports: [
         new(winston.transports.Console)(),
         new(winston.transports.File)({
@@ -35,7 +35,7 @@ var logger = new(winston.Logger)({
     exitOnError: false
 });
 
-var queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyword) {
+let queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyword) {
     //console.log('req.params= ', req.params);
     //var url = req.params.url;
     /*
@@ -53,7 +53,7 @@ var queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyw
     var maxcomment = 100;
     */
     //var queryobj = queryobj(req, req.params.time1, req.params.time2);
-    var queryobj = {};
+    let queryobj = {};
     if (req.params.posttype) {
         if (req.params.posttype === 'PTT') {
             if (time1 || time2) {
@@ -213,19 +213,20 @@ var queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyw
     return queryobj;
 };
 
-var findquery = function findquery(page, queryobj, ptt) {
+let findquery = function findquery(page, queryobj, ptt) {
     if (!page) {
-        var page = '客台';
+        let page = '客台';
     }
     //console.log(options)
+    let pagepost;
     if (ptt) {
-        var schema = require('../models/pttSchema.js');
+        let schema = require('../models/pttSchema.js');
         db.db2.model(page, schema.pttSchema)
-        var pagepost = db.db2.model(page);
+        pagepost = db.db2.model(page);
     } else {
-        var schema = require('../models/postSchema.js');
+        let schema = require('../models/postSchema.js');
         db.db1.model(page, schema.postSchema)
-        var pagepost = db.db1.model(page);
+        pagepost = db.db1.model(page);
     }
     //return Query(queryobj, options, pagepost, page);
     //console.log(page,pagepost);
@@ -236,14 +237,14 @@ var findquery = function findquery(page, queryobj, ptt) {
         .limit(1000);
 };
 
-var mapreduce = function mapreduce(queryobj) {
-    var o = {};
+let mapreduce = function mapreduce(queryobj) {
+    let o = {};
     self = this;
 
     o.mapFunction = function () {
         //var key = this.reactions;
-        var key = this.likes;
-        var value = {
+        let key = this.likes;
+        let value = {
             likes: this.likes,
             /*like: this.like,
             love: this.love,
@@ -261,7 +262,7 @@ var mapreduce = function mapreduce(queryobj) {
     }
     */
     o.reduceFunction = function (key, values) {
-        var reducedObject = {
+        let reducedObject = {
             likes: 0,
             /*like: 0,
             love: 0,
@@ -302,17 +303,17 @@ var mapreduce = function mapreduce(queryobj) {
             reduce: "session_stat"
         },
     }*/
-    var result = pagepost.mapReduce(o, function (err, res) {
+    let result = pagepost.mapReduce(o, function (err, res) {
         if (err) console.log(err);
         console.log(res);
         return res;
     });
 };
 
-var callback = function callback(req, res) {
+let callback = function callback(req, res) {
     if (req.query.hasquery === false) {
         console.log("no query!")
-        var queryresult = {
+        let queryresult = {
             title: 'query',
             query: '沒有選取資料範圍',
             summary: '',
@@ -321,20 +322,20 @@ var callback = function callback(req, res) {
         return queryresult;
     } else {
         console.log("go db")
-        var page1 = req.params.page1;
-        var user1 = req.params.user1;
-        var keyword1 = req.params.keyword1;
-        var keyword3 = req.params.keyword3;
-        var page2 = req.params.page2;
-        var user2 = req.params.user2;
-        var keyword2 = req.params.keyword2;
-        var keyword4 = req.params.keyword4;
-        var time1 = req.params.time1;
-        var time2 = req.params.time2;
-        var time3 = req.params.time3;
-        var time4 = req.params.time4;
-        var queryobj1 = queryobj(req, res, time1, time2, user1, keyword1, keyword3);
-        var ptt = false;
+        let page1 = req.params.page1;
+        let user1 = req.params.user1;
+        let keyword1 = req.params.keyword1;
+        let keyword3 = req.params.keyword3;
+        let page2 = req.params.page2;
+        let user2 = req.params.user2;
+        let keyword2 = req.params.keyword2;
+        let keyword4 = req.params.keyword4;
+        let time1 = req.params.time1;
+        let time2 = req.params.time2;
+        let time3 = req.params.time3;
+        let time4 = req.params.time4;
+        let queryobj1 = queryobj(req, res, time1, time2, user1, keyword1, keyword3);
+        let ptt = false;
         if (req.params.posttype === 'PTT') {
             ptt = true;
         }
@@ -343,22 +344,23 @@ var callback = function callback(req, res) {
                     findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
                         //var response = [];
-                        var ul1 = dl.ualist(result, ptt);
-                        var postlist = dl.bindpostlist(result, result, ptt);
-                        var userlist = dl.binduserlist(ul1, ul1);
-                        var oldata = dl.overlap(userlist, 'all');
+                        let ul1 = dl.ualist(result, ptt);
+                        let postlist = dl.bindpostlist(result, result, ptt);
+                        let user = Object.values(ul1);
+                        let userlist = dl.binduserobj(ul1, ul1, user, user);
+                        let oldata = dl.overlap(userlist, 'all');
                         console.log('All');
                         oldata = dl.olresult(oldata);
-                        var sortdata = dl.sortdegree(oldata);
+                        let sortdata = dl.sortdegree(oldata);
                         //response.push(ul1);
                         //response.push(ul2);
                         //logger.log('info', response);
-                        var queryresult = {
+                        let queryresult = {
                             title: 'query',
                             query: req.params,
                             summary: [
                                 [result.length, result.length, result.length * 2],
-                                [ul1.length, ul1.length, ul1.length * 2]
+                                [user.length, user.length, user.length * 2]
                             ],
                             data: [postlist, oldata, sortdata],
                         };
@@ -369,17 +371,19 @@ var callback = function callback(req, res) {
                     logger.log('error', err);
                 })
         } else {
-            var queryobj2 = queryobj(req, res, time3, time4, user2, keyword2, keyword4);
+            let queryobj2 = queryobj(req, res, time3, time4, user2, keyword2, keyword4);
             return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {
                     console.log("q1 lenght: " + result[0].length);
                     console.log("q2 lenght: " + result[1].length);
-                    var response = [];
-                    var ul1 = dl.ualist(result[0], ptt);
-                    var ul2 = dl.ualist(result[1], ptt);
-                    var postlist = dl.bindpostlist(result[0], result[1], ptt);
-                    var userlist = dl.binduserlist(ul1, ul2);
-                    var oldata = userlist;
+                    //var response = [];
+                    let ul1 = dl.newualist(result[0], ptt);
+                    let ul2 = dl.newualist(result[1], ptt);
+                    let postlist = dl.bindpostlist(result[0], result[1], ptt);
+                    let user = Object.values(ul1);
+                    let tuser = Object.values(ul2);
+                    let userlist = dl.binduserobj(ul1, ul2, user, tuser);
+                    let oldata = userlist;
                     if (req.params.co === 'Co reaction') {
                         oldata = dl.overlap(userlist, 'like');
                     }
@@ -394,16 +398,16 @@ var callback = function callback(req, res) {
                     }
                     console.log(req.params.co);
                     oldata = dl.olresult(oldata);
-                    var sortdata = dl.sortdegree(oldata);
+                    let sortdata = dl.sortdegree(oldata);
                     //response.push(ul1);
                     //response.push(ul2);
                     //logger.log('info', response);
-                    var queryresult = {
+                    let queryresult = {
                         title: 'query',
                         query: req.params,
                         summary: [
                             [result[0].length, result[1].length, result[0].length + result[1].length],
-                            [ul1.length, ul2.length, userlist.length]
+                            [user.length, tuser.length, userlist.length]
                         ],
                         data: [postlist, oldata, sortdata],
                     };

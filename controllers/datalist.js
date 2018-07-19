@@ -1,80 +1,23 @@
 /* eslint-disable */
-var jb = require('./text.js');
-//for csv
-var user_list = function user_list(files) {
-    var userlist = [];
-    var data, reaction, user, post, reactionlength;
-    var filelength = files.length;
-    var find = false;
-    for (var i = 0; i < filelength; i++) {
-        var datalength = files[i].contents.data.length;
-        //console.log(userlist.length)
-        for (var j = 0; j < datalength; j++) {
-            data = files[i].contents.data[j];
-            //console.log(data.id)
-            if (data.reactions.list !== undefined) {
-                reactionlength = data.reactions.list.length;
-                if (reactionlength !== 0) {
-                    //console.log(userlist.length)
-                    for (var k = 0; k < reactionlength; k++) {
-                        reaction = data.reactions.list[k];
-                        post = {};
-                        post["id"] = data.id
-                        post["like"] = post_liketype(post, reaction);
-                        post["commentcount"] = 0;
-                        post["share"] = false;
-                        //console.log(post)
-                        user = {};
-                        user["id"] = reaction.id;
-                        user["name"] = reaction.name;
-                        user["posts"] = [];
-                        //console.log(userlist.length)
-                        find = false;
-                        for (var a = 0; a < userlist.length; a++) {
-                            if (userlist[a].id == user.id) {
-                                userlist[a].posts.push(post);
-                                a = userlist.length;
-                                find = true;
-                            }
-                        }
-                        if (find == false) {
-                            user.posts.push(post);
-                            //console.log(post)
-                            //console.log(user.posts[0])
-                            userlist.push(user);
-                            //people++;
-                            //console.log(user)
-                            //console.log("---------------------")
-                        }
-                    }
-                }
-            }
-        }
-    }
-    console.log("ul len: " + userlist.length)
-    comment_count(files, userlist);
-    share_count(files, userlist);
-    //console.log("people "+people)
-    return userlist;
-}
+let jb = require('./text.js');
+const NS_PER_SEC = 1e9;
 
 //for dbquery
-var ualist = function ualist(files, ptt) {
-    var userlist = [];
-    var filelength = files.length;
+let newualist = function newualist(files, ptt) {
+    const time = process.hrtime();
+    let userlist = [];
+    let userobj = {};
+    let filelength = files.length;
     console.log("file length: " + filelength)
     if (ptt) {
-        var data, message, user, post, comment, messageslength;
         files = jb.cut(files, function () {
             // console.log(files.length);
-            var find = false;
-            for (var i = 0; i < filelength; i++) {
-                data = files[i];
-                find = false;
+            for (let i = 0; i < filelength; i++) {
+                let data = files[i];
                 if (data.author !== null) {
                     // console.log(data.author);
-                    var id = data.author.split(" (")[0];
-                    post = {};
+                    let id = data.author.split(" (")[0];
+                    let post = {};
                     post["article_id"] = data.article_id;
                     post["article_title"] = data.article_title;
                     post["author"] = data.author;
@@ -89,39 +32,30 @@ var ualist = function ualist(files, ptt) {
                     post["pushing"] = [];
                     post["boo"] = [];
                     post["neutral"] = [];
-                    for (var a = 0; a < userlist.length; a++) {
-                        if (userlist[a].id === id) {
-                            userlist[a].posts.push(post);
-                            a = userlist.length;
-                            find = true;
-                        }
-                    }
-                    if (!find) {
-                        user = {};
+                    if (userobj[id] !== undefined) {
+                        userobj[id].posts.push(post);
+                    } else {
+                        let user = {};
                         user["id"] = id;
                         user["posts"] = [post];
-                        userlist.push(user);
+                        userobj[id] = user;
                     }
                 }
             }
-            messaageuserlist(files, userlist)
-        })
+            newmuserlist(files, userobj);
+        });
     } else {
-        var data, reaction, user, post, reactionlength;
         files = jb.cut(files, function () {
             // list.push(data);
             //console.log(data.id)
-            var find = false;
-            for (var i = 0; i < filelength; i++) {
-                //console.log(userlist.length)
-                data = files[i];
+            for (let i = 0; i < filelength; i++) {
+                let data = files[i];
                 if (data.reactions.list !== undefined) {
-                    reactionlength = data.reactions.list.length;
+                    let reactionlength = data.reactions.list.length;
                     if (reactionlength !== 0) {
-                        //console.log(userlist.length)
-                        for (var k = 0; k < reactionlength; k++) {
-                            reaction = data.reactions.list[k];
-                            post = {};
+                        for (let k = 0; k < reactionlength; k++) {
+                            let reaction = data.reactions.list[k];
+                            let post = {};
                             post["id"] = data.id;
                             post["like"] = post_liketype(post, reaction);
                             post["commentcount"] = 0;
@@ -129,24 +63,18 @@ var ualist = function ualist(files, ptt) {
                             post["clist"] = [];
                             post["word"] = data.word;
                             //console.log(post)
-                            user = {};
+                            let user = {};
                             user["id"] = reaction.id;
                             user["name"] = reaction.name;
                             user["posts"] = [];
-                            //console.log(userlist.length)
-                            find = false;
-                            for (var a = 0; a < userlist.length; a++) {
-                                if (userlist[a].id === user.id) {
-                                    userlist[a].posts.push(post);
-                                    a = userlist.length;
-                                    find = true;
-                                }
-                            }
-                            if (!find) {
+                            let fid = user.id;
+                            if (userobj[fid] !== undefined) {
+                                userobj[fid].posts.push(post);
+                            } else {
                                 user.posts.push(post);
                                 //console.log(post)
                                 //console.log(user.posts[0])
-                                userlist.push(user);
+                                userobj[fid] = user;
                                 //people++;
                                 //console.log(user)
                                 //console.log("---------------------")
@@ -155,14 +83,16 @@ var ualist = function ualist(files, ptt) {
                     }
                 }
             }
-            comment_countdb(files, userlist);
-            share_db(files, userlist);
-            console.log("userlist length: " + userlist.length)
-            //console.log("people "+people)
+            newcomment_countdb(files, userobj);
+            newshare_db(files, userobj);
         });
     }
+    console.log("userlist length: " + userlist.length)
+    //console.log("people "+people)
+    const diff = process.hrtime(time);
+    console.log(`ualist() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
     //console.log(userlist);
-    return userlist;
+    return userobj;
 }
 
 function pushtype(post, message) {
@@ -198,60 +128,54 @@ function pushtype(post, message) {
     // console.log(post);
 }
 
-function messaageuserlist(files, userlist) {
+function newmuserlist(files, userobj) {
+    const time = process.hrtime();
     let filelength = files.length;
     //console.log(files[0]);
-    for (var i = 0; i < filelength; i++) {
+    // post
+    for (let i = 0; i < filelength; i++) {
         data = files[i];
         if (data.messages !== undefined) {
-            messageslength = data.messages.length;
+            let messageslength = data.messages.length;
             if (messageslength !== 0) {
+                // message in post
                 for (let j = 0; j < messageslength; j++) {
-                    message = data.messages[j];
-                    let find = false;
-                    for (let a = 0; a < userlist.length; a++) {
-                        if (userlist[a].id === message.push_userid) { // insert message into user's posts obj
-                            let findpost = false;
-                            for (let p = 0; p < userlist[a].posts.length; p++) {
-                                let thispost = userlist[a].posts[p];
-                                let thispostid = thispost.article_id;
-                                if (thispostid === data.article_id) {
-                                    pushtype(userlist[a].posts[p], message);
-                                    // console.log('here ', userlist[a].posts[p]);
-                                    p = userlist[a].posts.length;
-                                    findpost = true;
-                                }
-                                /*else {
-                                                               }*/
+                    let message = data.messages[j];
+                    // find user in userobj then update
+                    let id = message.push_userid;
+                    if (userobj[id] !== undefined) { // insert message into user's posts obj
+                        let findpost = false;
+                        for (let p = 0; p < userobj[id].posts.length; p++) {
+                            let thispost = userobj[id].posts[p];
+                            let thispostid = thispost.article_id;
+                            if (thispostid === data.article_id) {
+                                pushtype(userobj[id].posts[p], message);
+                                // console.log('here ', userlist[a].posts[p]);
+                                p = userobj[id].posts.length;
+                                findpost = true;
                             }
-                            if (!findpost) {
-                                post = {};
-                                post["article_id"] = data.article_id;
-                                post["article_title"] = data.article_title;
-                                post["author"] = data.author;
-                                post["board"] = data.board;
-                                post["content"] = data.content;
-                                post["word"] = data.word;
-                                post["date"] = data.date;
-                                post["ip"] = data.ip;
-                                post["url"] = data.url;
-                                post["publish"] = false;
-                                post["message_count"] = data.message_count;
-                                post["pushing"] = [];
-                                post["boo"] = [];
-                                post["neutral"] = [];
-                                post.publish = false;
-                                pushtype(post, message);
-                                userlist[a].posts.push(post);
-                            }
-                            if (userlist[a].id === 'Whitening') {
-                                // console.log(userlist[a].id, message, userlist.length);
-                            }
-                            // a = userlist.length;
-                            find = true;
                         }
-                    }
-                    if (!find) { // create new user
+                        if (!findpost) {
+                            post = {};
+                            post["article_id"] = data.article_id;
+                            post["article_title"] = data.article_title;
+                            post["author"] = data.author;
+                            post["board"] = data.board;
+                            post["content"] = data.content;
+                            post["word"] = data.word;
+                            post["date"] = data.date;
+                            post["ip"] = data.ip;
+                            post["url"] = data.url;
+                            post["publish"] = false;
+                            post["message_count"] = data.message_count;
+                            post["pushing"] = [];
+                            post["boo"] = [];
+                            post["neutral"] = [];
+                            post.publish = false;
+                            pushtype(post, message);
+                            userobj[id].posts.push(post);
+                        }
+                    } else {
                         user = {};
                         user["id"] = message.push_userid;
                         user["posts"] = [];
@@ -282,13 +206,16 @@ function messaageuserlist(files, userlist) {
                         }*/
                         pushtype(post, message);
                         user.posts.push(post);
-                        userlist.push(user);
+                        userobj[id] = user;
                         //console.log(user, message);
                     }
                 }
             }
         }
     }
+    const diff = process.hrtime(time);
+    console.log(`messaageuserlist() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
+    //console.log(userlist);
 }
 
 //check like type
@@ -310,286 +237,145 @@ function post_liketype(post, reaction) {
     }
 }
 
-//count comments for csv
-function comment_count(files, userlist) {
-    var data, comment, user, post, commentlength;
-    var filelength = files.length;
-    var listlength = userlist.length;
-    var findid = false;
-    var findpost = false;
-    for (var i = 0; i < filelength; i++) {
-        var datalength = files[i].contents.data.length;
-        for (var j = 0; j < datalength; j++) {
-            data = files[i].contents.data[j];
-            if (data.comments.context !== undefined) {
-                commentlength = data.comments.context.length;
-                if (commentlength !== 0) {
-                    //console.log(userlist.length)
-                    for (var k = 0; k < commentlength; k++) {
-                        comment = data.comments.context[k];
-                        findid = false;
-                        for (var a = 0; a < listlength; a++) {
-                            if (comment.from.id === userlist[a].id) {
-                                findid = true;
-                                //console.log("find")
-                                var length = userlist[a].posts.length;
-                                //console.log(length)
-                                findpost = false;
-                                for (var b = 0; b < length; b++) {
-                                    if (data.id === userlist[a].posts[b].id) {
-                                        findpost = true;
-                                        //console.log("find")
-                                        userlist[a].posts[b].commentcount++;
-                                        b = length;
-                                    }
-                                }
-                                if (!findpost) {
-                                    //console.log("no post!")
-                                    post = {
-                                        "id": data.id,
-                                        "like": 0,
-                                        "commentcount": 1,
-                                        "share": false,
-                                    }
-                                    userlist[a].posts.push(post);
-                                }
-                            }
-                        }
-                        if (!findid) {
-                            //console.log("no user!")
-                            post = {
-                                "id": data.id,
-                                "like": 0,
-                                "commentcount": 1,
-                                "share": false,
-                            }
-                            user = {
-                                "id": comment.from.id,
-                                "name": comment.from.name,
-                                "posts": [],
-                            }
-                            user.posts.push(post);
-                            userlist.push(user);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 //count comments for dbquery
-function comment_countdb(files, userlist) {
-    var data, comment, user, post, commentlength;
-    var filelength = files.length;
-    for (var i = 0; i < filelength; i++) {
-        data = files[i];
+function newcomment_countdb(files, userobj) {
+    const time = process.hrtime();
+    let filelength = files.length;
+    for (let i = 0; i < filelength; i++) {
+        let data = files[i];
         if (data.comments.context !== undefined) {
-            commentlength = data.comments.context.length;
+            let commentlength = data.comments.context.length;
             if (commentlength !== 0) {
                 //console.log(userlist.length)
-                for (var k = 0; k < commentlength; k++) {
-                    comment = data.comments.context[k];
-                    commentcount(data, comment, userlist);
-                    var subcommentlen = comment.length;
+                for (let k = 0; k < commentlength; k++) {
+                    let comment = data.comments.context[k];
+                    newcommentcount(data, comment, userobj);
+                    let subcommentlen = comment.length;
                     // for subcomment
-                    for (var x = 0; x < subcommentlen; x++) {
-                        var subcomment = comment[x];
-                        commentcount(data, subcomment, userlist);
+                    for (let x = 0; x < subcommentlen; x++) {
+                        let subcomment = comment[x];
+                        newcommentcount(data, subcomment, userobj);
                     }
                 }
             }
         }
     }
+    const diff = process.hrtime(time);
+    console.log(`newcomment_countdb() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
+    //console.log(userlist);
 }
 
 // commentcount and adjust userlist object
-function commentcount(data, comment, userlist) {
-    let findid = false;
-    var listlength = userlist.length;
-    for (var a = 0; a < listlength; a++) {
-        if (comment.from.id === userlist[a].id) {
-            findid = true;
-            //console.log("find")
-            var length = userlist[a].posts.length;
-            //console.log(length)
-            let findpost = false;
-            for (var b = 0; b < length; b++) {
-                if (data.id === userlist[a].posts[b].id) {
-                    findpost = true;
-                    //console.log("find")
-                    userlist[a].posts[b].commentcount++;
-                    userlist[a].posts[b].clist.push(comment);
-                    b = length;
-                }
-            }
-            if (!findpost) {
-                //console.log("no post!")
-                post = {
-                    "id": data.id,
-                    "like": 0,
-                    "commentcount": 1,
-                    "share": false,
-                    "clist": [comment],
-                }
-                userlist[a].posts.push(post);
+function newcommentcount(data, comment, userobj) {
+    let fid = comment.from.id;
+    if (userobj[fid] !== undefined) {
+        //console.log("find")
+        let length = userobj[fid].posts.length;
+        //console.log(length)
+        let findpost = false;
+        for (let b = 0; b < length; b++) {
+            if (data.id === userobj[fid].posts[b].id) {
+                findpost = true;
+                //console.log("find")
+                userobj[fid].posts[b].commentcount++;
+                userobj[fid].posts[b].clist.push(comment);
+                b = length;
             }
         }
-    }
-    if (!findid) {
+        if (!findpost) {
+            //console.log("no post!")
+            let post = {
+                "id": data.id,
+                "like": 0,
+                "commentcount": 1,
+                "share": false,
+                "clist": [comment],
+            }
+            userobj[fid].posts.push(post);
+        }
+    } else {
         //console.log("no user!")
-        post = {
+        let post = {
             "id": data.id,
             "like": 0,
             "commentcount": 1,
             "share": false,
             "clist": [comment],
         }
-        user = {
+        let user = {
             "id": comment.from.id,
             "name": comment.from.name,
             "posts": []
         }
         user.posts.push(post)
-        userlist.push(user)
+        userobj[fid] = user;
     }
 }
 
-//share check for csv
-function share_count(files, userlist) {
-    var data, sharedpost, user, post, sharelength;
-    var filelength = files.length;
-    var listlength = userlist.length;
-    var findid = false;
-    var findpost = false;
-    for (var i = 0; i < filelength; i++) {
-        var datalength = files[i].contents.data.length;
-        for (var j = 0; j < datalength; j++) {
-            data = files[i].contents.data[j];
-            if (data.sharedposts) {
-                sharelength = data.sharedposts.data.length;
-                if (sharelength !== 0) {
-                    //console.log(userlist.length)
-                    for (var k = 0; k < sharelength; k++) {
-                        sharedpost = data.sharedposts.data[k];
-                        findid = false;
-                        for (var a = 0; a < listlength; a++) {
-                            if (sharedpost.from.id === userlist[a].id) {
-                                findid = true;
+//share check for dbquery
+function newshare_db(files, userobj) {
+    const time = process.hrtime();
+    let filelength = files.length;
+    for (let i = 0; i < filelength; i++) {
+        let data = files[i];
+        if (data.sharedposts) {
+            let sharelength = data.sharedposts.data.length;
+            if (sharelength !== 0) {
+                for (let k = 0; k < sharelength; k++) {
+                    let sharedpost = data.sharedposts.data[k];
+                    let fid = sharedpost.from.id;
+                    if (userobj[fid] !== undefined) {
+                        //console.log("find")
+                        let length = userobj[fid].posts.length;
+                        //console.log(length)
+                        let findpost = false;
+                        for (let b = 0; b < length; b++) {
+                            // console.log(userobj[fid].posts[b]);
+                            if (data.id === userobj[fid].posts[b].id) {
+                                findpost = true;
                                 //console.log("find")
-                                var length = userlist[a].posts.length;
-                                //console.log(length)
-                                findpost = false;
-                                for (var b = 0; b < length; b++) {
-                                    if (data.id === userlist[a].posts[b].id) {
-                                        findpost = true;
-                                        //console.log("find")
-                                        userlist[a].posts[b].share = true;
-                                        b = length;
-                                    }
-                                }
-                                if (!findpost) {
-                                    //console.log("no post!")
-                                    post = {
-                                        "id": data.id,
-                                        "like": 0,
-                                        "commentcount": 0,
-                                        "share": true,
-                                    }
-                                    userlist[a].posts.push(post);
-                                }
+                                userobj[fid].posts[b].share = true;
+                                b = length;
                             }
                         }
-                        if (!findid) {
-                            //console.log("no user!")
-                            post = {
+                        if (!findpost) {
+                            //newshare_dbonsole.log("no post!")
+                            let post = {
                                 "id": data.id,
                                 "like": 0,
                                 "commentcount": 0,
                                 "share": true,
                             }
-                            user = {
-                                "id": sharedpost.from.id,
-                                "name": sharedpost.from.name,
-                                "posts": [],
-                            }
-                            user.posts.push(post)
-                            userlist.push(user)
+                            userobj[fid].posts.push(post);
                         }
-                    }
-                }
-            }
-        }
-    }
-}
-
-//share check for dbquery
-function share_db(files, userlist) {
-    var data, sharedpost, user, post, sharelength;
-    var filelength = files.length;
-    var listlength = userlist.length;
-    var findid = false;
-    var findpost = false;
-    for (var i = 0; i < filelength; i++) {
-        data = files[i];
-        if (data.sharedposts) {
-            sharelength = data.sharedposts.data.length;
-            if (sharelength !== 0) {
-                //console.log(userlist.length)
-                for (var k = 0; k < sharelength; k++) {
-                    sharedpost = data.sharedposts.data[k];
-                    findid = false;
-                    for (var a = 0; a < listlength; a++) {
-                        if (sharedpost.from.id === userlist[a].id) {
-                            findid = true;
-                            //console.log("find")
-                            var length = userlist[a].posts.length;
-                            //console.log(length)
-                            findpost = false;
-                            for (var b = 0; b < length; b++) {
-                                if (data.id === userlist[a].posts[b].id) {
-                                    findpost = true;
-                                    //console.log("find")
-                                    userlist[a].posts[b].share = true;
-                                    b = length;
-                                }
-                            }
-                            if (!findpost) {
-                                //console.log("no post!")
-                                post = {
-                                    "id": data.id,
-                                    "like": 0,
-                                    "commentcount": 0,
-                                    "share": true,
-                                }
-                                userlist[a].posts.push(post);
-                            }
-                        }
-                    }
-                    if (!findid) {
+                    } else {
                         //console.log("no user!")
-                        post = {
+                        let post = {
                             "id": data.id,
                             "like": 0,
                             "commentcount": 0,
                             "share": true,
                         }
-                        user = {
+                        let user = {
                             "id": sharedpost.from.id,
                             "name": sharedpost.from.name,
                             "posts": [],
                         }
                         user.posts.push(post)
-                        userlist.push(user)
+                        userobj[fid] = user;
                     }
                 }
             }
         }
     }
+    const diff = process.hrtime(time);
+    console.log(`newshare_db() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
 }
 
 //slow code, need to improve
-var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
+let bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
+    const time = process.hrtime();
+
     function postobj(obj) {
         /*var posts = {};
         for (prop in obj) {
@@ -636,7 +422,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
                 }
             }
         }
-        var posts = obj;
+        let posts = obj;
         //delete posts.comments;
         //delete posts.reactions;
         /*
@@ -659,13 +445,13 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
         posts.comments = comments;*/
         return posts;
     }
-    var list = [];
-    var l1 = qobj1.length;
-    var l2 = qobj2.length;
-    var pagea = [];
-    var pageb = [];
-    for (var i = 0; i < l1; i++) {
-        var post = postobj(qobj1[i]);
+    let list = [];
+    let l1 = qobj1.length;
+    let l2 = qobj2.length;
+    let pagea = [];
+    let pageb = [];
+    for (let i = 0; i < l1; i++) {
+        let post = postobj(qobj1[i]);
         pagea.push(post);
     }
     list.push(pagea);
@@ -674,9 +460,9 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
     });*/
     // for return single page query faster
     if (qobj1 !== qobj2) {
-        for (var i = 0; i < l2; i++) {
-            var find = false;
-            for (var j = 0; j < l1;) {
+        for (let i = 0; i < l2; i++) {
+            let find = false;
+            for (let j = 0; j < l1;) {
                 if (qobj1[j].id !== qobj2[i].id) {
                     j++;
                 } else {
@@ -684,7 +470,7 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
                     j = l1;
                 }
                 if (j === l1 && !find) {
-                    var post = postobj(qobj2[i]);
+                    let post = postobj(qobj2[i]);
                     pageb.push(post);
                 }
             }
@@ -697,43 +483,45 @@ var bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
         list.push(pagea);
     }
     console.log("postlen: " + (list[0].length + list[1].length));
+    const diff = process.hrtime(time);
+    console.log(`bindpostlist() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
     return list;
 }
 
 //bind two userlist
-var binduserlist = function binduserlist(userlist1, userlist2) {
-    var user = userlist1;
-    var tuser = userlist2;
-    var result = [];
-    var l1 = userlist1.length;
-    var l2 = userlist2.length;
+let binduserobj = function binduserobj(userobj1, userobj2, user, tuser) {
+    const time = process.hrtime();
+    let result = [];
+    let l1 = user.length;
+    let l2 = tuser.length;
     // for return single page query faster
-    if (userlist1 !== userlist2) {
-        for (var i = 0; i < l1; i++) {
+    // if (user !== tuser) {
+    for (let i = 0; i < l1; i++) {
+        let id = user[i].id;
+        if (userobj2[id] !== undefined) {
             user[i].posts = {
-                "A": userlist1[i].posts,
+                "A": user[i].posts,
+                "B": userobj2[id].posts,
+            }
+        } else {
+            user[i].posts = {
+                "A": user[i].posts,
                 "B": [],
             }
-            result.push(user[i]);
         }
-        for (var i = 0; i < l2; i++) {
-            var find = false;
-            for (var j = 0; j < l1; j++) {
-                if (tuser[i].id === result[j].id) {
-                    find = true;
-                    result[j].posts.B = tuser[i].posts;
-                    j = l1;
-                }
+        result.push(user[i]);
+    }
+    for (let i = 0; i < l2; i++) {
+        let id = tuser[i].id;
+        if (userobj1[id] === undefined) {
+            tuser[i].posts = {
+                "A": [],
+                "B": tuser[i].posts,
             }
-            if (!find) {
-                tuser[i].posts = {
-                    "A": [],
-                    "B": userlist2[i].posts,
-                }
-                result.push(tuser[i]);
-            }
+            result.push(tuser[i]);
         }
-    } else {
+    }
+    /*} else {
         for (var i = 0; i < l1; i++) {
             user[i].posts = {
                 "A": userlist1[i].posts,
@@ -741,16 +529,19 @@ var binduserlist = function binduserlist(userlist1, userlist2) {
             }
             result.push(user[i]);
         }
-    }
+    }*/
     console.log("user length: " + result.length);
+    const diff = process.hrtime(time);
+    console.log(`binduserobj() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
     return result;
 }
 
 //insert activity state
-var overlap = function overlap(userlist, type) {
+let overlap = function overlap(userlist, type) {
+    const time = process.hrtime();
+    let len = userlist.length;
     if (type === "all") {
-        var len = userlist.length;
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             userlist[i]["activity"] = {
                 "A": true,
                 "B": true,
@@ -778,10 +569,9 @@ var overlap = function overlap(userlist, type) {
         if (type === "other") {
             type = 7;
         }
-        var len = userlist.length;
-        for (var i = 0; i < len; i++) {
-            var pal = userlist[i].posts.A.length;
-            for (var j = 0; j < pal; j++) {
+        for (let i = 0; i < len; i++) {
+            let pal = userlist[i].posts.A.length;
+            for (let j = 0; j < pal; j++) {
                 if (type === "comment") {
                     if (userlist[i].posts.A[j].commentcount != 0) {
                         userlist[i]["activity"] = {
@@ -808,8 +598,8 @@ var overlap = function overlap(userlist, type) {
                     }
                 }
             }
-            var pbl = userlist[i].posts.B.length;
-            for (var j = 0; j < pbl; j++) {
+            let pbl = userlist[i].posts.B.length;
+            for (let j = 0; j < pbl; j++) {
                 if (userlist[i].activity) {
                     if (type === "comment") {
                         if (userlist[i].posts.B[j].commentcount != 0) {
@@ -858,14 +648,17 @@ var overlap = function overlap(userlist, type) {
         }
     }
     console.log("ol length: " + len);
+    const diff = process.hrtime(time);
+    console.log(`overlap() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
     return userlist;
 };
 
 //collect overlap results
-var olresult = function olresult(ollist) {
-    var result = [];
-    var len = ollist.length;
-    for (var i = 0; i < len; i++) {
+let olresult = function olresult(ollist) {
+    const time = process.hrtime();
+    let result = [];
+    let len = ollist.length;
+    for (let i = 0; i < len; i++) {
         if (ollist[i].activity) {
             if ((ollist[i].activity.A === true) && (ollist[i].activity.B === true)) {
                 result.push(ollist[i]);
@@ -873,23 +666,26 @@ var olresult = function olresult(ollist) {
         }
     }
     console.log("fol length: " + result.length);
+    const diff = process.hrtime(time);
+    console.log(`olresult() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
     return result;
 }
 //sort overlap degree
-var sortdegree = function sortdegree(olrlist) {
+let sortdegree = function sortdegree(olrlist) {
+    const time = process.hrtime();
     // console.log(olrlist);
     function getdeg(item) {
-        var alen = item.posts.A.length;
-        var blen = item.posts.B.length;
-        var deg = alen + blen;
+        let alen = item.posts.A.length;
+        let blen = item.posts.B.length;
+        let deg = alen + blen;
         return deg;
     }
 
     function pushlist(obj, item) {
         // console.log(item);
-        var degA = item[0].posts.A.length;
-        var degB = item[0].posts.B.length;
-        var temp = [item];
+        let degA = item[0].posts.A.length;
+        let degB = item[0].posts.B.length;
+        let temp = [item];
         if (degA === 0 || degB === 0) { // if item's deg eqaul 0
             if (degA === 0) {
                 obj.O.push([]);
@@ -908,10 +704,11 @@ var sortdegree = function sortdegree(olrlist) {
     }
 
     function sort(obj, item, index) {
-        function makelist(list, post, ipost) {
-            var degi = post.length;
-            for (var a = 0; a < degi;) { // compare list[i][0] and item's postsA
-                for (var b = 0; b < deg; b++) {
+        function makelist(list, post, ipost, i) {
+            let degi = post.length;
+            let a = 0;
+            for (; a < degi;) { // compare list[i][0] and item's postsA
+                for (let b = 0; b < deg; b++) {
                     if (post[a].id === ipost[b].id) {
                         a++;
                         b = deg;
@@ -927,7 +724,7 @@ var sortdegree = function sortdegree(olrlist) {
                     list[i].push(item);
                     //console.log(list[i].length);
                 } else {
-                    var temp = [list[i]];
+                    let temp = [list[i]];
                     temp.push(item);
                     list[i] = temp;
                 }
@@ -936,11 +733,11 @@ var sortdegree = function sortdegree(olrlist) {
                 list.push([item]);
             }
         }
-        var list = obj.O[index];
-        var deg = item.posts.A.length;
-        var degB = item.posts.B.length;
-        var temp = [];
-        var eqdeg = false;
+        let list = obj.O[index];
+        let deg = item.posts.A.length;
+        let degB = item.posts.B.length;
+        let temp = [];
+        let eqdeg = false;
         if (deg === 0) {
             list = obj.B[index];
         }
@@ -948,7 +745,7 @@ var sortdegree = function sortdegree(olrlist) {
             list = obj.A[index];
         }
         //console.log(list);
-        var l = list.length;
+        let l = list.length;
         /*if (l > 0) { //if list is not empty
             for (var i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
                 var degi = list[i][0].posts.A.length;
@@ -1000,11 +797,11 @@ var sortdegree = function sortdegree(olrlist) {
             list.push([item]);
         }*/
         if (l > 0) { //if list is not empty
-            for (var i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
-                var degi = list[i][0].posts.A.length;
-                var post = list[i][0].posts.A;
-                var degib = list[i][0].posts.B.length;
-                var ipost = item.posts.A;
+            for (let i = 0; i < l; i++) { // find whitch list[i]'s deg eqaul item's deg
+                let degi = list[i][0].posts.A.length;
+                let post = list[i][0].posts.A;
+                let degib = list[i][0].posts.B.length;
+                let ipost = item.posts.A;
                 if (degi === 0) {
                     degi = degib;
                     post = list[i][0].posts.B;
@@ -1012,7 +809,7 @@ var sortdegree = function sortdegree(olrlist) {
                 }
                 if (deg === degi && degib !== 0) { // if find
                     //console.log(deg, list[i][0].posts.A.length, list[i][0].posts.B.length)
-                    makelist(list, post, ipost);
+                    makelist(list, post, ipost, i);
                     i = l;
                 } else if (deg > degi) { // push item in list to creat new list[deg]
                     if (!eqdeg && i === (l - 1)) {
@@ -1031,12 +828,12 @@ var sortdegree = function sortdegree(olrlist) {
 
     function makeaddr(sortobj) {
         function addr(data) {
-            var il = data.length
-            for (var i = 0; i < il; i++) {
-                var jl = data[i].length;
-                for (var j = 0; j < jl; j++) {
-                    var kl = data[i][j].length;
-                    for (var k = 0; k < kl; k++) {
+            let il = data.length
+            for (let i = 0; i < il; i++) {
+                let jl = data[i].length;
+                for (let j = 0; j < jl; j++) {
+                    let kl = data[i][j].length;
+                    for (let k = 0; k < kl; k++) {
                         data[i][j][k].addr = i + ',' + j + ',' + k;
                     }
                 }
@@ -1048,18 +845,18 @@ var sortdegree = function sortdegree(olrlist) {
         return sortobj;
     }
     //var sortlist = [];
-    var sortobj = {};
+    let sortobj = {};
     sortobj.A = [];
     sortobj.B = [];
     sortobj.O = [];
-    var degree = [];
-    var len = olrlist.length;
-    for (var i = 0; i < len; i++) {
-        var deg = getdeg(olrlist[i]);
-        var finddeg = false;
-        var l = degree.length;
+    let degree = [];
+    let len = olrlist.length;
+    for (let i = 0; i < len; i++) {
+        let deg = getdeg(olrlist[i]);
+        let finddeg = false;
+        let l = degree.length;
         if (l > 0) {
-            for (var d = 0; d < l; d++) {
+            for (let d = 0; d < l; d++) {
                 if (degree[d] === deg) {
                     finddeg = true;
                     //sortlist[d].push(olrlist[i]);
@@ -1075,10 +872,10 @@ var sortdegree = function sortdegree(olrlist) {
                     //console.log(d + " : " + l + " | " + degree[d] + ">" + deg);
                     degree.splice(d, 0, deg);
                     //console.log(degree);
-                    var list = [olrlist[i]];
+                    let list = [olrlist[i]];
                     //console.log(list);
-                    var degA = list[0].posts.A.length;
-                    var degB = list[0].posts.B.length;
+                    let degA = list[0].posts.A.length;
+                    let degB = list[0].posts.B.length;
                     if (degA === 0 || degB === 0) { // if item's deg eqaul 0
                         if (deg === 0) {
                             sortobj.O.splice(d, 0, []);
@@ -1108,16 +905,20 @@ var sortdegree = function sortdegree(olrlist) {
     //console.log(degree.length === sortlist.length);
     makeaddr(sortobj);
     //console.log(sortobj);
+    const diff = process.hrtime(time);
+    console.log(`sortdegree() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
     return sortobj;
 }
 
 var exports = module.exports = {};
-exports.user_list = user_list;
-exports.ualist = ualist;
-//exports.post_type = post_type;
-//exports.comment_count = comment_count;
+exports.newualist = newualist;
 exports.bindpostlist = bindpostlist;
-exports.binduserlist = binduserlist;
+exports.binduserobj = binduserobj;
 exports.overlap = overlap;
 exports.olresult = olresult;
 exports.sortdegree = sortdegree;
+//exports.user_list = user_list;
+//exports.ualist = ualist;
+//exports.post_type = post_type;
+//exports.comment_count = comment_count;
+//exports.binduserlist = binduserlist;
