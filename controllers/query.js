@@ -344,7 +344,7 @@ let callback = function callback(req, res) {
                     findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
                         //var response = [];
-                        let ul1 = dl.ualist(result, ptt);
+                        let ul1 = dl.newualist(result, ptt);
                         let postlist = dl.bindpostlist(result, result, ptt);
                         let user = Object.values(ul1);
                         let userlist = dl.binduserobj(ul1, ul1, user, user);
