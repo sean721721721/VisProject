@@ -20,6 +20,7 @@ function visMain(data) {
     let pd = pagedata(data);
     pageview(data, pd, select);
     userview(data, select);
+    showselect(data, select);
 }
 
 /**
@@ -119,8 +120,55 @@ function overview(data, select) {
     let samestarttime = (data.query.time1 === data.query.time3);
     let sameendtime = (data.query.time2 === data.query.time4);
     let sametime = (samestarttime && sameendtime);
-    let sametitle = (data.query.keyword1 === data.query.keyword3);
-    let samekey = (data.query.keyword2 === data.query.keyword4);
+    let sameuser = (data.query.user1 === data.query.user2);
+    let sametitle = (data.query.keyword1 === data.query.keyword2);
+    let samekey = (data.query.keyword3 === data.query.keyword4);
+    let samecollection = samepage && sametime && sameuser && sametitle && samekey;
+
+    function legendinfo(page, stime, otime, user, title, key, i) {
+        let str = '';
+        if (!samepage) {
+            str += `${page}`;
+        }
+        if (!sametime) {
+            str += ` from ${stime} to ${otime}`;
+        }
+        if (!sameuser) {
+            str += ` user: ${user}`;
+        }
+        if (!sametitle) {
+            str += ` title: ${title}`;
+        }
+        if (!samekey) {
+            str += ` key: ${key}`;
+        }
+        if (str === '') {
+            str = 'collection ' + i;
+        }
+        return str;
+    }
+
+    d3.select('#report').select('h1')
+        .html(function (d) {
+            let str = `${data.query.co}: `;
+            if (samepage) {
+                str += `${data.query.page1}`;
+            }
+            if (sametime) {
+                str += `_${data.query.time1} to ${data.query.time2}`;
+            }
+            str += '<br/>';
+            if (sameuser && data.query.user1 !== undefined) {
+                str += `_${data.query.user1}`;
+            }
+            if (sametitle && data.query.keyword1 !== undefined) {
+                str += `_${data.query.keyword1}`;
+            }
+            if (samekey && data.query.keyword3 !== undefined) {
+                str += `_${data.query.keyword3}`;
+            }
+            return str;
+        });
 
     let axisname = ovdata.map((d) => {
         return d[0];
@@ -154,13 +202,7 @@ function overview(data, select) {
         .data(ovdata)
         .enter().append('rect')
         .attr('class', 'A')
-        .attr('data-legend', function (d) {
-            if (samepage && sametime) {
-                return `${data.query.page1} title: ${data.query.keyword1}`;
-            } else {
-                return `${data.query.page1} from ${data.query.time1} to ${data.query.time2}`;
-            }
-        })
+        .attr('data-legend', legendinfo(data.query.page1, data.query.time1, data.query.time2, data.query.user1, data.query.keyword1, data.query.keyword3, 1))
         .attr('data-legend-color', function (d) {
             return colorA(0.25);
         })
@@ -216,13 +258,7 @@ function overview(data, select) {
         .data(ovdata)
         .enter().append('rect')
         .attr('class', 'B')
-        .attr('data-legend', function (d) {
-            if (samepage && sametime) {
-                return `${data.query.page2} title: ${data.query.keyword2}`;
-            } else {
-                return `${data.query.page2} from ${data.query.time3} to ${data.query.time4}`;
-            }
-        })
+        .attr('data-legend', legendinfo(data.query.page2, data.query.time3, data.query.time4, data.query.user2, data.query.keyword2, data.query.keyword4, 2))
         .attr('data-legend-color', function (d) {
             return colorB(0.75);
         })
@@ -292,7 +328,18 @@ function overview(data, select) {
         .enter().append('rect')
         .attr('class', 'C')
         .attr('data-legend', function (d) {
-            return `${data.query.page1} & ${data.query.page2} 's overlaps`;
+            let str = '';
+            if (samepage) {
+                str += `${data.query.page1}`;
+            }
+            if (sametime) {
+                str += `_${data.query.time1}_${data.query.time2}`;
+            }
+            str += '\'s Overlaps';
+            if (samecollection) {
+                str = 'Same Collection';
+            }
+            return str;
         })
         .attr('data-legend-color', function (d) {
             return colorC(0.75);
@@ -579,7 +626,6 @@ function pageview(data, pagedata, select) {
     let w = 500;
     let h = 500;
     let radius = Math.min(w, h) / 2;
-    let n = 100;
     // let wx = w / ovdata.length;
 
     d3.select('#pagemode').selectAll('fieldset').selectAll('input')
@@ -618,11 +664,15 @@ function pageview(data, pagedata, select) {
                 let post = d.data.id.split('.')[2];
                 d.data.page = page === undefined ? 0 : page === pagedata.children[0].name ? 1 : 2;
                 d.data.post = post === undefined ? 0 : post.match(/\d{1,}/);
-                d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
-                // console.log(d.data.post[0]);
-                if (d.data.post[0] > n) {
-                    n = d.data.post[0];
+                if (ptt) {
+                    d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'push' ? 3 : d.data.name === 'neutral' ? 4 : d.data.name === 'boo' ? 5 : 1;
+                } else {
+                    d.data.type = d.data.name === 'comment' ? 2 : d.data.name === 'share' ? 3 : 1;
                 }
+                // console.log(d.data.post[0]);
+                /* if (d.data.post[0] > n) {
+                    n = d.data.post[0];
+                }*/
             })
             .sum(sumBySize);
 
@@ -686,7 +736,9 @@ function pageview(data, pagedata, select) {
             .attr('stroke', '#fff')
             .attr('stroke-width', 0.5)
             .attr('fill', function (d) {
-                return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
+                console.log(d.data.page, d.data.type, d.value);
+                return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
             })
             .on('mouseover', (d) => {
                 mouseover(d, totalSize);
@@ -770,7 +822,8 @@ function pageview(data, pagedata, select) {
                 }
             }).attr('fill', function (d) {
                 if (d === d.leaves()[0]) {
-                    return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                    // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
+                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
                 } else {
                     return null;
                 }
@@ -1009,6 +1062,7 @@ function pageview(data, pagedata, select) {
         /* if (focus !== d) zoom(d);
         else zoom(root);*/
         // console.log(s._groups);
+        console.log('done');
     }
 
     function getr(d) {
@@ -1515,7 +1569,7 @@ function overlapvis(data, select, mode) {
 
             function selectHL() {
                 let bug = d3.selectAll('.user');
-                console.log(bug);
+                // console.log(bug);
                 bug.attr('fill', (d) => {
                     // console.log(d);
                     let rcolor;
@@ -2086,10 +2140,10 @@ function nextpost(data, select, count) {
 function postdetailview(data, select) {
     postdetail(data, select);
     let spl = select.post.length;
-    let button = d3.select('.btn-group').selectAll('button').data(select.post, (d) => {
+    let pbutton = d3.select('.btn-postgroup').selectAll('button').data(select.post, (d) => {
         return d;
     });
-    button.enter().append('button').merge(button)
+    pbutton.enter().append('button').merge(pbutton)
         .style('width', (d) => {
             return 100 / spl + '%';
         })
@@ -2100,7 +2154,7 @@ function postdetailview(data, select) {
             select.ci.post = i;
             postdetail(data, select);
         });
-    button.exit().remove();
+    pbutton.exit().remove();
     /* document.querySelector('.next').onclick = function () {
         nextpost(data, select, 1);
     };
@@ -2194,6 +2248,7 @@ function messagedetail(data) {
     let init = '';
     cdetail.innerHTML = init;
     let content = {};
+    let mhtml = '';
     for (let ci = 0, l = data.length; ci < l; ci++) {
         let message = data[ci];
         content.push_ipdatetime = message.push_ipdatetime;
@@ -2203,8 +2258,9 @@ function messagedetail(data) {
         content.divid = ci >= 9 ? (ci + 1) : ' ' + (ci + 1);
         // console.log('comment', content);
         let html = template(content);
-        cdetail.innerHTML += html;
+        mhtml += html;
     }
+    cdetail.innerHTML += mhtml;
 }
 
 /**
@@ -2217,6 +2273,7 @@ function commentdetail(data) {
     let cdetail = document.querySelector('#comment');
     let init = '';
     cdetail.innerHTML = init;
+    let chtml = '';
     let content = {};
     for (let ci = 0, l = data.length; ci < l; ci++) {
         let comment = data[ci];
@@ -2228,7 +2285,10 @@ function commentdetail(data) {
         content.divid = '"subcomment' + (ci + 1) + '"';
         // console.log('comment', content);
         let html = template(content);
-        cdetail.innerHTML += html;
+        chtml += html;
+    }
+    cdetail.innerHTML += chtml;
+    for (let ci = 0, l = data.length; ci < l; ci++) {
         if (comment.comments.length !== 0) {
             let id = 'subcomment' + ci;
             subcommentdetail(comment.comments, id);
@@ -2246,6 +2306,7 @@ function subcommentdetail(data, id) {
     let template = Handlebars.compile(rawTemplate);
     let scdetail = document.querySelector('#' + id);
     let init = '';
+    let dhtml = '';
     scdetail.innerHTML = init;
     let content = {};
     // console.log(l);
@@ -2256,8 +2317,9 @@ function subcommentdetail(data, id) {
         content.message = subcomment.message === '' ? 'no text' : subcomment.message;
         // console.log('subcomment', content);
         let html = template(content);
-        scdetail.innerHTML += html;
+        dhtml += html;
     }
+    scdetail.innerHTML += dhtml;
 }
 
 /**
@@ -2393,16 +2455,20 @@ function activeuser(data, preselect, postselect, mode) {
                 return d;
             })
             .attr('stroke', (d) => {
-                let rcolor;
-                if (d.act >= colormod) {
+                let rcolor = '#000';
+                /* if (d.act >= colormod) {
                     rcolor = '#000';
-                };
+                };*/
                 return rcolor;
             })
             .attr('stroke-dasharray', (d) => {
                 // console.log(d.act);
-                let p = 1 / d.act * 50;
-                return p - 10 + ', ' + 10;
+                if (d.act === 0) {
+                    return 0;
+                } else {
+                    let p = 1 / d.act * 50;
+                    return p - 10 + ', ' + 10;
+                }
             })
             .attr('fill', (d) => {
                 if (maxact === 0) {
@@ -2475,7 +2541,6 @@ function activeposts(data, preselect, postselect, mode) {
      */
     function modify(pagedata, userchange, maxact, add, mode) {
         console.log(userchange);
-        let n = 100;
         let ptt = data.query.posttype === 'PTT';
         let colormod;
         if (mode === 'intersection') {
@@ -2527,8 +2592,9 @@ function activeposts(data, preselect, postselect, mode) {
                     let page = d.data.page - 1;
                     let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
                     if (d.act === 0) {
-                        // console.log(chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5));
-                        return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                        // console.log(chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5));
+                        // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
+                        return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
                     } else {
                         if (d.act > 0) {
                             // console.log(page, post, d.act);
@@ -2587,7 +2653,8 @@ function activeposts(data, preselect, postselect, mode) {
                     }
                     if (d.act === 0) {
                         if (d === d.leaves()[0]) {
-                            return chcolor(n, d.data.post[0], d.data.type, d.data.page, 0.5);
+                            // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
+                            return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
                             // return '#fff';
                         } else {
                             return null;
@@ -3043,10 +3110,10 @@ function userdetailview(data, select) {
     userdetail(data, select);
     console.log('userselect', select);
     let sul = select.user.length;
-    let button = d3.select('.btn-group').selectAll('button').data(select.user, (d) => {
+    let ubutton = d3.select('.btn-usergroup').selectAll('button').data(select.user, (d) => {
         return d;
     });
-    button.enter().append('button').merge(button)
+    ubutton.enter().append('button').merge(ubutton)
         .style('width', (d) => {
             return 100 / sul + '%';
         })
@@ -3057,7 +3124,7 @@ function userdetailview(data, select) {
             select.ci.user = i;
             userdetail(data, select);
         });
-    button.exit().remove();
+    ubutton.exit().remove();
     /* document.querySelector('.next').onclick = function () {
         nextuser(data, select, 1);
     };
@@ -3675,9 +3742,6 @@ function timeline(user, meta) {
                     return Tscale(new Date(d.date));
                 })
                 .each(drawpoints);
-            let k = this.__zoom.k;
-            g.attr('r', 5 / k)
-                .attr('stroke-width', 1 / k);
         });
 
     svg.call(zoom);
@@ -4027,18 +4091,39 @@ function docount(user, uac) {
 }
 
 /**
+ * hcl color
+ * @param {number} n - maxh
+ * @param {number} h - hue
+ * @param {number} c - colorfulness
+ * @param {number} l - luminance
+ * @param {number} o - opacity
+ * @return {color}
+ */
+function hclcolor(n, h, c, l, o) {
+    let parah = d3.scaleLinear().domain([-2, 2]).range([0, 360]);
+    // let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
+    let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);
+    // let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
+    let paral = d3.scaleLog().domain([1, 100000]).range([0, 150]);
+    // console.log(parah(h), paras(s), paral(l));
+    return d3.hcl(parah(h), parac(c), paral(l), o);
+};
+
+/**
  * cubehelix color
  * @param {number} c - maxh
- * @param {number} h - h
- * @param {number} s -
- * @param {number} l -
- * @param {number} o -
+ * @param {number} h - hue
+ * @param {number} s - saturation
+ * @param {number} l - luminance
+ * @param {number} o - opacity
  * @return {color}
  */
 function chcolor(c, h, s, l, o) {
     let parah = d3.scaleLinear().domain([0, c]).range([0, 360]);
-    let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
+    let paras = d3.scaleLinear().domain([0, 7]).range([0, 2]);
+    // let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
     let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
+    // let paral = d3.scaleLog().domain([1, 50]).range([0, 1]);
     // console.log(parah(h), paras(s), paral(l));
     return d3.cubehelix(parah(h), paras(s), paral(l), o);
 };
