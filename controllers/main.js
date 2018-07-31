@@ -42,13 +42,13 @@ function urlhandle(req, res, next) {
         req.params.time2 = req.query['time2'];
         hasquery = true;
     }
-    if(req.query['keyword1']){
+    if (req.query['keyword1']) {
         req.params.keyword1 = req.query['keyword1'];
     }
-    if(req.query['keyword3']){
+    if (req.query['keyword3']) {
         req.params.keyword3 = req.query['keyword3'];
     }
-    if(req.query['user1']){
+    if (req.query['user1']) {
         req.params.user1 = req.query['user1'];
     }
     if (req.query['page2']) {
@@ -65,13 +65,13 @@ function urlhandle(req, res, next) {
         req.params.time4 = req.query['time4'];
         hasquery = true;
     }
-    if(req.query['user2']){
+    if (req.query['user2']) {
         req.params.user2 = req.query['user2'];
     }
-    if(req.query['keyword2']){
+    if (req.query['keyword2']) {
         req.params.keyword2 = req.query['keyword2'];
     }
-    if(req.query['keyword4']){
+    if (req.query['keyword4']) {
         req.params.keyword4 = req.query['keyword4'];
     }
     if (req.query['posttype']) {
@@ -257,16 +257,24 @@ module.exports = function (app) {
     });
 
     app.get('/query', urlhandle, async function (req, res) {
-        var result = await query.callback(req, res);
-        //console.log(result);
-        res.render('query', result);
+        try {
+            var result = await query.callback(req, res);
+            //console.log(result);
+            res.render('query', result);
+        } catch (err) {
+            console.log(err);
+        }
     });
 
     app.get('/vis', urlhandle, async function (req, res) {
-        var result = await query.callback(req, res);
-        result.title = 'vis';
-        //console.log(result);
-        res.render('vis', result);
+        try {
+            var result = await query.callback(req, res);
+            result.title = 'vis';
+            //console.log(result);
+            res.render('vis', result);
+        } catch (err) {
+            console.log(err);
+        }
     });
 
     app.post('/query', urlencodedParser, redirecturl);
@@ -275,14 +283,18 @@ module.exports = function (app) {
 
     // ajax getting data for the web
     app.get('/searching', urlencodedParser, urlhandle, async function (req, res) {
-        //console.log(req.query);
-        //if (req.session.passport.user == "villager") {
-        //console.log(req);
-        var result = await query.callback(req, res);
-        result.title = 'search';
-        //console.log(result);
-        res.send(result);
-        //}
+        try {
+            //console.log(req.query);
+            //if (req.session.passport.user == "villager") {
+            //console.log(req);
+            var result = await query.callback(req, res);
+            result.title = 'search';
+            //console.log(result);
+            res.send(result);
+            //}
+        } catch (err) {
+            console.log(err);
+        }
     });
 
     // for passport

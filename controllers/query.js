@@ -214,27 +214,40 @@ let queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyw
 };
 
 let findquery = function findquery(page, queryobj, ptt) {
-    if (!page) {
-        let page = '客台';
-    }
+
     //console.log(options)
     let pagepost;
     if (ptt) {
+        if (!page) {
+            page = 'Gossiping';
+        }
         let schema = require('../models/pttSchema.js');
         db.db2.model(page, schema.pttSchema)
         pagepost = db.db2.model(page);
     } else {
+        if (!page) {
+            page = '客台';
+        }
         let schema = require('../models/postSchema.js');
         db.db1.model(page, schema.postSchema)
         pagepost = db.db1.model(page);
     }
     //return Query(queryobj, options, pagepost, page);
-    //console.log(page,pagepost);
-    return pagepost.find(queryobj, function (err, pagepost) {
-            //logger.log('info',pagepost);
-            return pagepost;
-        })
-        .limit(1000);
+    // console.log(page, pagepost);
+    let promise = pagepost.find(queryobj)
+        /*, function (err, pagepost) {
+                    //logger.log('info',pagepost);
+                    console.log('query: ', queryobj);
+                    return pagepost;
+                })
+                .then(pagepost=>{
+                    return pagepost;
+                })
+                .catch(err=>{
+                    console.log(err);
+                })*/
+        .limit(1000).exec();
+    return promise;
 };
 
 let mapreduce = function mapreduce(queryobj) {
@@ -310,6 +323,14 @@ let mapreduce = function mapreduce(queryobj) {
     });
 };
 
+function isEmpty(obj) {
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key))
+            return false;
+    }
+    return true;
+}
+
 let callback = function callback(req, res) {
     if (req.query.hasquery === false) {
         console.log("no query!")
@@ -335,13 +356,18 @@ let callback = function callback(req, res) {
         let time3 = req.params.time3;
         let time4 = req.params.time4;
         let queryobj1 = queryobj(req, res, time1, time2, user1, keyword1, keyword3);
+        let queryobj2 = queryobj(req, res, time3, time4, user2, keyword2, keyword4);
+        let samequery = (page1 === page2 && time1 === time3 && time2 === time4 && keyword1 === keyword2 && keyword3 === keyword4 && user1 === user2);
+        let onequery = isEmpty(queryobj1) || isEmpty(queryobj2);
+        console.log('checkquery ', isEmpty(queryobj1), isEmpty(queryobj2), onequery);
         let ptt = false;
         if (req.params.posttype === 'PTT') {
             ptt = true;
         }
-        if (page1 === page2 && time1 === time3 && time2 === time4 && keyword1 === keyword2 && keyword3 === keyword4 && user1 === user2) {
+        if (samequery || onequery) {
             return new Promise((resolve, reject) => {
-                    findquery(page1, queryobj1, ptt).then(result => {
+                if (!(isEmpty(queryobj1))) {
+                    resolve(findquery(page1, queryobj1, ptt).then(result => {
                         console.log("q1 lenght: " + result.length);
                         //var response = [];
                         let ul1 = dl.newualist(result, ptt);
@@ -364,14 +390,48 @@ let callback = function callback(req, res) {
                             ],
                             data: [postlist, oldata, sortdata],
                         };
-                        resolve(queryresult);
-                    });
-                })
-                .catch(function (err) {
-                    logger.log('error', err);
-                })
+                        return queryresult;
+                    }));
+                } else if (!(isEmpty(queryobj2))) {
+                    resolve(findquery(page2, queryobj2, ptt).then(result => {
+                        console.log("q2 lenght: " + result.length);
+                        //var response = [];
+                        let ul2 = dl.newualist(result, ptt);
+                        let postlist = dl.bindpostlist(result, result, ptt);
+                        let user = Object.values(ul2);
+                        let userlist = dl.binduserobj(ul2, ul2, user, user);
+                        let oldata = dl.overlap(userlist, 'all');
+                        console.log('All');
+                        oldata = dl.olresult(oldata);
+                        let sortdata = dl.sortdegree(oldata);
+                        //response.push(ul1);
+                        //response.push(ul2);
+                        //logger.log('info', response);
+                        let queryresult = {
+                            title: 'query',
+                            query: req.params,
+                            summary: [
+                                [result.length, result.length, result.length * 2],
+                                [user.length, user.length, user.length * 2]
+                            ],
+                            data: [postlist, oldata, sortdata],
+                        };
+                        return queryresult;
+                    }));
+                } else {
+                    console.log('--else--');
+                    let queryresult = {
+                        title: 'query',
+                        query: '沒有選取資料範圍',
+                        summary: [, ],
+                        data: [, , ],
+                    }
+                    reject(queryresult);
+                }
+            }).catch(err => {
+                logger.log('error', err);
+            });
         } else {
-            let queryobj2 = queryobj(req, res, time3, time4, user2, keyword2, keyword4);
             return Promise.all([findquery(page1, queryobj1, ptt), findquery(page2, queryobj2, ptt)])
                 .then(result => {
                     console.log("q1 lenght: " + result[0].length);
@@ -415,7 +475,7 @@ let callback = function callback(req, res) {
                     return queryresult;
                     //res.send(result);
                 })
-                .catch(function (err) {
+                .catch(err => {
                     logger.log('error', err);
                 });
         }
