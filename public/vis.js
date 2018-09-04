@@ -3197,7 +3197,7 @@ function activeuser(data, preselect, postselect, mode) {
                 };*/
                 return rcolor;
             })
-            .attr('stroke-dasharray', (d) => {
+            /* .attr('stroke-dasharray', (d) => {
                 // console.log(d.act);
                 if (d.act === 0) {
                     return 0;
@@ -3205,7 +3205,7 @@ function activeuser(data, preselect, postselect, mode) {
                     let p = 1 / d.act * 50;
                     return p - 10 + ', ' + 10;
                 }
-            })
+            })*/
             .attr('fill', (d) => {
                 if (maxact === 0) {
                     return 'rgba(0, 0, 0, 0)';
@@ -3327,23 +3327,33 @@ function activeposts(data, preselect, postselect, mode) {
                 .attr('fill', (d) => {
                     let page = d.data.page - 1;
                     let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
-                    if (d.act === 0) {
+                    let a = d.act / maxact;
+                    if (maxact === 0) {
                         // console.log(chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5));
                         // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
+                        // return 'rgba(0, 0, 0, '+ (a) + ')';
                         return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
                     } else {
-                        if (d.act > 0) {
-                            // console.log(page, post, d.act);
+                        if (d.act === 0) {
+                            return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
+                        } else {
+                            // return 'rgba(0, 0, 0, ' + a + ')';
+                            return hclcolor(3, d.data.page, 6, 1, (1 - a));
                         }
-                        let a = d.act / maxact;
-                        return 'rgba(0, 0, 0, ' + a + ')';
                     }
                 })
-                .attr('stroke-dasharray', (d) => {
+                .attr('stroke', (d) => {
+                    if (d.act > 0) {
+                        return 'black';
+                    } else {
+                        return 'white';
+                    }
+                });
+                /* .attr('stroke-dasharray', (d) => {
                     // console.log(d.act);
                     let p = 1 / d.act * 50;
                     return p - 10 + ', ' + 10;
-                });
+                });*/
         } else if (graphmode === 'treemap') {
             console.log('treemap');
             let node = d3.select('#pageview').selectAll('g').selectAll('rect').datum((d) => {
@@ -3381,13 +3391,21 @@ function activeposts(data, preselect, postselect, mode) {
                     }
                     return d;
                 })
+                /* .attr('stroke', (d) => {
+                    if(d.act>0) {
+                        return 'white';
+                    }else{
+                        return 'black';
+                    }
+                })*/
                 .attr('fill', (d) => {
                     let page = d.data.page - 1;
                     let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
+                    let a = d.act / maxact;
                     if (d.act > 0) {
                         console.log(page, post, d.act);
                     }
-                    if (d.act === 0) {
+                    if (maxact === 0) {
                         if (d === d.leaves()[0]) {
                             // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
                             return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
@@ -3396,8 +3414,18 @@ function activeposts(data, preselect, postselect, mode) {
                             return null;
                         }
                     } else {
-                        let a = d.act / maxact;
-                        return 'rgba(0, 0, 0, ' + a + ')';
+                        if (d.act === 0) {
+                            if (d === d.leaves()[0]) {
+                                // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
+                                return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
+                                // return '#fff';
+                            } else {
+                                return null;
+                            }
+                        } else {
+                            // return 'rgba(0, 0, 0, ' + a + ')';
+                            return hclcolor(3, d.data.page, 6, 1, (1 - a));
+                        }
                     }
                 });
             console.log(node);
