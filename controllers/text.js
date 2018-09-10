@@ -46,10 +46,10 @@ if (os.platform() === "linux") {
         dict: nodejieba.DEFAULT_DICT,
         hmmDict: nodejieba.DEFAULT_HMM_DICT,
         //userDict: "d:/project/server/big_dict.utf8", //windows
-        userDict: "/home/sean/github/PageVis/controllers", //linux        
+        userDict: "/home/sean/桌面/PageVis-master/controllers/big_dict.utf8", //linux        
         idfDict: nodejieba.DEFAULT_IDF_DICT,
         //stopWordDict: "d:/project/server/stop_dict.utf8" //windows
-        stopWordDict: "/home/sean/github/PageVis/controllers" //linux    
+        stopWordDict: "/home/sean/桌面/PageVis-master/controllers/stop_dict.utf8" //linux    
     });
 } else {
     nodejieba.load({
