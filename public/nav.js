@@ -64,7 +64,7 @@ function getCR(type) {
     let strkeyword2 = 'keyword2=' + keyword2.value;
     let strkeyword4 = 'keyword4=' + keyword4.value;
     let strco = 'co=' + type;
-    let searchurl = 'http://140.119.164.22:3000/searching?';
+    let searchurl = 'http://140.119.164.233:3000/searching?';
     // let searchurl = 'http://140.119.164.166:8000/searching?';
     let str = searchurl + strminvar1 + '&' + strmaxvar1 + '&' + strposttype + '&' +
         strpage1 + '&' + strtime1 + '&' + strtime2 + '&' + struser1 + '&' + strkeyword1 + '&' + strkeyword3 + '&' +

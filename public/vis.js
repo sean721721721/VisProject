@@ -29,7 +29,6 @@ function visMain(data) {
  * @param {object} select - select
  */
 function overview(data, select) {
-    // let st = Date.now();
     // data manipulate
     let ov = countactivities(data.data, select);
     let ptt = data.query.posttype === 'PTT';
@@ -144,10 +143,7 @@ function overview(data, select) {
             str += ` key: ${key}`;
         }
         if (str === '') {
-            str = 'Collection ' + i;
-        }
-        if (page === undefined) {
-            str = 'Undefined, do as the same query.';
+            str = 'collection ' + i;
         }
         return str;
     }
@@ -339,11 +335,7 @@ function overview(data, select) {
             if (sametime) {
                 str += `_${data.query.time1}_${data.query.time2}`;
             }
-            if (str === '') {
-                str += 'Same data, all data are ovelaps.';
-            } else {
-                str += '\'s Overlaps';
-            }
+            str += '\'s Overlaps';
             if (samecollection) {
                 str = 'Same Collection';
             }
@@ -464,9 +456,6 @@ function overview(data, select) {
         .attr('x2', x(0.5))
         .attr('y2', h + 10)
         .attr('stroke', 'lightblue');*/
-
-    // let et = Date.now();
-    // console.log('overview time: ', et-st);
 }
 
 /**
@@ -629,7 +618,6 @@ function showselect(data, select) {
  * @param {array} select - record selectpost and ci
  */
 function pageview(data, pagedata, select) {
-    // let st = Date.now();
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
     let ptt = data.query.posttype === 'PTT';
@@ -749,8 +737,8 @@ function pageview(data, pagedata, select) {
             .attr('stroke-width', 0.5)
             .attr('fill', function (d) {
                 // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                // console.log(d.data.page, d.data.type, d.value);
-                return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
+                console.log(d.data.page, d.data.type, d.value);
+                return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
             })
             .on('mouseover', (d) => {
                 mouseover(d, totalSize);
@@ -771,8 +759,6 @@ function pageview(data, pagedata, select) {
             .attr('id', 'percentage');
         text.append('tspan')
             .attr('id', 'title');
-        text.append('tspan')
-            .attr('id', 'date');
         // console.log(text);
     }
 
@@ -837,7 +823,7 @@ function pageview(data, pagedata, select) {
             }).attr('fill', function (d) {
                 if (d === d.leaves()[0]) {
                     // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                    return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
+                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
                 } else {
                     return null;
                 }
@@ -1001,13 +987,13 @@ function pageview(data, pagedata, select) {
         d3.select('#info').style('visibility', '');
         d3.select('#percentage')
             .attr('x', 0)
-            .attr('y', -30)
+            .attr('y', -20)
             .attr('fill', 'red')
             .text(string);
 
         d3.select('#id')
             .attr('x', 0)
-            .attr('y', -10)
+            .attr('y', 0)
             .attr('fill', 'red')
             .text(() => {
                 return id;
@@ -1015,24 +1001,13 @@ function pageview(data, pagedata, select) {
 
         d3.select('#title')
             .attr('x', 0)
-            .attr('y', 10)
+            .attr('y', 20)
             .attr('fill', 'blue')
             .text(() => {
                 if (post !== undefined) {
                     return data.data[0][page - 1][post - 1].article_title;
                 } else {
                     return '';
-                }
-            });
-
-        d3.select('#date')
-            .attr('x', 0)
-            .attr('y', 30)
-            .attr('fill', 'green')
-            .text(() => {
-                if (post !== undefined) {
-                    let date = new Date(data.data[0][page - 1][post - 1].date);
-                    return (date.getMonth() + 1) + '月' + date.getDate() + '日' + date.toLocaleTimeString();
                 }
             });
     }
@@ -1102,18 +1077,13 @@ function pageview(data, pagedata, select) {
         return d.size;
     }
 
-    function sortByTime(a, b) {
-        let datea = a.data.date === null ? a.parent.data === null ? a.parent.parent.data.date : a.parent.data.date : a.data.date;
-        let dateb = b.data.date === null ? b.parent.data === null ? b.parent.parent.data.date : b.parent.data.date : b.data.date;
-        return new Date(dateb) - new Date(datea);
+    function sortByTime(d) {
+        return d;
     }
 
     function sortBySize(a, b) {
         return b.height - a.height || b.value - a.value;
     }
-
-    // let et = Date.now();
-    // console.log('pageview time: ', et-st);
 }
 
 /**
@@ -1205,7 +1175,6 @@ function showmodes(overlap, mode) {
  * @param {object} select - selectobj
  */
 function userview(data, select) {
-    let st = Date.now();
     let ptt = data.query.posttype === 'PTT';
     document.querySelector('#olbutton').innerHTML = '';
     let div = d3.select('#olbutton');
@@ -1249,9 +1218,6 @@ function userview(data, select) {
         };
     }
     console.log('select: ', select);
-
-    let et = Date.now();
-    console.log('userview time: ', et - st);
 }
 
 /**
@@ -1303,49 +1269,14 @@ function overlapvis(data, select, mode) {
                     return (d.y1 - d.y0) * k;
                 });
         }*/
-
-    // count elements in overlap
-    function countattrmax(overlap) {
-        let attrmax = 0;
-        for (let i = 0, l = overlap.length; i < l; i++) {
-            if (overlap[i].length > 0) {
-                let degl = overlap[i].length;
-                for (let j = 0; j < degl; j++) {
-                    let gl = overlap[i][j].length;
-                    for (let k = 0; k < gl; k++) {
-                        let d = overlap[i][j][k];
-                        d.count = docount(d, {});
-                        maxarc = d3.max(d.count.arc);
-                        maxbrc = d3.max(d.count.brc);
-                        let arr = [];
-                        arr.push(d.count.acc);
-                        arr.push(d.count.asc);
-                        arr.push(d.count.bcc);
-                        arr.push(d.count.bsc);
-                        arr.push(maxarc);
-                        arr.push(maxbrc);
-                        let max = d3.max(arr);
-                        if (max > attrmax) {
-                            attrmax = max;
-                        }
-                    }
-                }
-            }
-        }
-        return attrmax;
-    }
-    let attrmax = countattrmax(data.data[2].O);
     changed();
-    // canvas();
 
     function changed() {
-        let st = Date.now();
         if (d3.select('#overlap').select('.wrapper')._groups[0][0] !== undefined) {
             d3.select('#overlap').select('.wrapper')._groups[0][0].remove();
         }
         let mindeg = document.querySelector('input[name="mindeg"]').value;
         let maxdeg = document.querySelector('input[name="maxdeg"]').value;
-        let maxuser = document.querySelector('input[name="maxuser"]').value;
         // console.log(maxdeg, typeof maxdeg);
         let svg = d3.select('#overlap')
             .append('div')
@@ -1368,22 +1299,6 @@ function overlapvis(data, select, mode) {
         let l = maxdeg !== '' ? maxdeg : data.data[2].O.length;
         // console.log('deg: ', mindeg, 'to', l);
         // make overlap array
-        let ucount = 0;
-        for (let i = l - 1; i > mindeg; i--) {
-            if (ucount <= maxuser) {
-                if (data.data[2].O[i] !== undefined) {
-                    for (let j = 0; j < data.data[2].O[i].length; j++) {
-                        ucount += data.data[2].O[i][j].length;
-                    }
-                }
-                if (ucount > maxuser) {
-                    mindeg = i + 2;
-                    i = 0;
-                }
-            }
-            // console.log(i, mindeg, ucount);
-        }
-        console.log(mindeg);
         for (let i = mindeg - 1; i < l; i++) {
             if (data.data[2].O[i].length > 0) {
                 overlap.push(data.data[2].O[i]);
@@ -1392,14 +1307,35 @@ function overlapvis(data, select, mode) {
         overlap = showmodes(overlap, mode);
         let oucount = 0; // to decide nextline
         if (overlap.length > 0) {
+            // count elements in overlap
+            let attrmax = 0;
             for (let i = 0, l = overlap.length; i < l; i++) {
                 if (overlap[i].length > 0) {
                     let degl = overlap[i].length;
                     for (let j = 0; j < degl; j++) {
                         oucount += overlap[i][j].length;
+                        let gl = overlap[i][j].length;
+                        for (let k = 0; k < gl; k++) {
+                            let d = overlap[i][j][k];
+                            d.count = docount(d, {});
+                            maxarc = d3.max(d.count.arc);
+                            maxbrc = d3.max(d.count.brc);
+                            let arr = [];
+                            arr.push(d.count.acc);
+                            arr.push(d.count.asc);
+                            arr.push(d.count.bcc);
+                            arr.push(d.count.bsc);
+                            arr.push(maxarc);
+                            arr.push(maxbrc);
+                            let max = d3.max(arr);
+                            if (max > attrmax) {
+                                attrmax = max;
+                            }
+                        }
                     }
                 }
             }
+
             // how many elements in one line
             // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
             let basiclength = parseInt(Math.sqrt(2 * oucount), 10) - 2;
@@ -1794,7 +1730,6 @@ function overlapvis(data, select, mode) {
                     .attr('x', 0)
                     .attr('y', inity);
 
-                let gst = Date.now();
                 let gcount = degree.length;
                 for (let j = 0; j < gcount; j++) {
                     let group = degree[j];
@@ -1955,9 +1890,6 @@ function overlapvis(data, select, mode) {
                             });
                     }
                 }
-
-                let get = Date.now();
-                console.log('group time: ', get - gst);
             }
 
             let tooltip3 = d3.select('body').select('.c')
@@ -2078,674 +2010,7 @@ function overlapvis(data, select, mode) {
                 .enter().append('path')
                 .attr('d', pathMonth);*/
         }
-        let et = Date.now();
-        console.log('change time: ', et - st);
     }
-
-    function canvas() {
-        let st = Date.now();
-        if (d3.select('#overlap').select('.wrapper')._groups[0][0] !== undefined) {
-            d3.select('#overlap').select('.wrapper')._groups[0][0].remove();
-        }
-        let mindeg = document.querySelector('input[name="mindeg"]').value;
-        let maxdeg = document.querySelector('input[name="maxdeg"]').value;
-        // console.log(maxdeg, typeof maxdeg);
-
-        // Register the "custom" namespace prefix for our custom elements.
-        d3.namespace.custom = 'https://d3js.org/namespace/custom';
-
-
-        let svg = d3.select('#overlap')
-            .append('div')
-            .attr('class', 'wrapper')
-            .append('custom:sketch')
-            .attr('id', 'user')
-            .attr('width', width)
-            .attr('height', height)
-            .style('fill', 'none')
-            .style('pointer-events', 'all');
-
-        let g = svg.append('custom:sudog')
-            .attr('id', 'overlapmap');
-
-        let posts = data.data[0];
-        let users = data.data[1];
-        let overlap = [];
-        let l = maxdeg !== '' ? maxdeg : data.data[2].O.length;
-        // console.log('deg: ', mindeg, 'to', l);
-        // make overlap array
-        for (let i = mindeg - 1; i < l; i++) {
-            if (data.data[2].O[i].length > 0) {
-                overlap.push(data.data[2].O[i]);
-            }
-        }
-        overlap = showmodes(overlap, mode);
-        let oucount = 0; // to decide nextline
-        if (overlap.length > 0) {
-            for (let i = 0, l = overlap.length; i < l; i++) {
-                if (overlap[i].length > 0) {
-                    let degl = overlap[i].length;
-                    for (let j = 0; j < degl; j++) {
-                        oucount += overlap[i][j].length;
-                    }
-                }
-            }
-            // how many elements in one line
-            // let nextline = parseInt(((0.8 * 1000) / cellSize1), 10);
-            let basiclength = parseInt(Math.sqrt(2 * oucount), 10) - 2;
-            let nextline = Math.sqrt(2 * oucount) > overlap.length ? basiclength > 2 ? basiclength : 2 : overlap.length + 1;
-            let ratio = (1000 * 0.9) / (nextline * 50);
-            let cellSize1 = 50 * ratio;
-            let cellSize2 = 45 * ratio;
-            let cellSize3 = 40 * ratio;
-            let initx = 1000 * 0.025 + cellSize1 * 2;
-            let inity = 1000 * 0.025 + cellSize1;
-
-            // construct degree[i]'s y checklist
-            let degylist = [];
-            for (let i = 0; i < overlap.length; i++) {
-                let deg = overlap[i];
-                let count = 0;
-                for (let j = 0; j < deg.length; j++) {
-                    let group = deg[j];
-                    count += group.length;
-                }
-                degylist.push(parseInt(count / nextline, 10) + 1);
-            }
-
-            // groupcount in degree[i] list
-            let uclist = [];
-            for (let i = 0; i < overlap.length; i++) {
-                let deg = overlap[i];
-                let temp = [];
-                for (let j = 0; j < deg.length; j++) {
-                    let group = deg[j];
-                    temp.push(group.length);
-                }
-                uclist.push(temp);
-            }
-
-            // list[index]'s y value
-            function gety(list, index) {
-                let result = 0;
-                for (let i = 0; i < index; i++) {
-                    result += list[i];
-                }
-                return result; // + index; // one line space between degrees
-            }
-
-            // modify elements' dy in the same degree
-            function modify(list, datasource, index) {
-                let l = datasource.length;
-                let count = 0;
-                for (let j = 0; j < l; j++) {
-                    let group = datasource[j];
-                    count += group.length;
-                }
-                let yc = parseInt(count / nextline, 10) + 1;
-                if (list[index] === 1) {
-                    list[index] = yc;
-                } else {
-                    list[index] = 1;
-                }
-                return list;
-            }
-
-            // console.log(degylist, uclist);
-
-            function nuccount(check, list) {
-                let result = [];
-                let l = check.length;
-                for (let i = 0; i < l; i++) {
-                    let temp = [];
-                    let x = 0;
-                    let y = 0;
-                    let h = list[i].length;
-                    for (let j = 0; j < h; j++) {
-                        temp.push({
-                            'x': x,
-                            'y': y,
-                        });
-                        if (check[i] !== 1) {
-                            y += list[i][j];
-                        }
-                        x += list[i][j];
-                    }
-                    result.push(temp);
-                }
-                return result;
-            }
-
-            // elements' (x,y) corrdinate array
-            function uccount(check, list) {
-                let result = [];
-                let l = check.length;
-                for (let i = 0; i < l; i++) {
-                    let h = list[i].length;
-                    let temp = [];
-                    let x = 0;
-                    let y = 0;
-                    for (let j = 0; j < h; j++) {
-                        temp.push({
-                            'x': x,
-                            'y': y,
-                        });
-                        if (check[i] !== 1) {
-                            y += list[i][j];
-                        }
-                        x += list[i][j];
-                    }
-                    result.push(temp);
-                }
-                return result;
-            }
-
-            // count elements in array
-            function count(data) {
-                let c = 0;
-                let l = data.length;
-                for (let i = 0; i < l; i++) {
-                    c += data[i].length;
-                }
-                return c;
-            }
-
-            // users' x by ggrid
-            function xof(i, k) {
-                let result = Math.round(k / degylist[i] - 0.5) * cellSize1 + (cellSize2 - cellSize3) / 2;
-                return result;
-            }
-
-            // users' y by ggrid
-            function yof(i, k) {
-                let result = (k) % degylist[i] * cellSize1 + (cellSize2 - cellSize3) / 2 + inity;
-                return result;
-            }
-
-            // button click
-            function buttonclick(d, k) {
-                d3.event.preventDefault();
-                degylist = modify(degylist, d, k);
-                // uylist = uccount(degylist, uclist);
-                // console.log(uylist);
-                rect.attr('transform', (d, i) => {
-                    return 'translate(0,' + (gety(degylist, i) * cellSize1 + (cellSize1 - cellSize2) / 2) + ')';
-                });
-                d3.selectAll('.degree')
-                    .attr('height', (d, i) => {
-                        return cellSize1 * degylist[i];
-                    });
-                d3.selectAll('.botton')
-                    .attr('height', (d, i) => {
-                        return cellSize1 * degylist[i] - 2;
-                    });
-                text.attr('y', (d, i) => {
-                    return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-                });
-
-                let id = '#degree' + k;
-                let display = d3.select(id).select('g').node().style.display;
-                // console.log(display);
-                d3.select(id).selectAll('g').style('display', function () {
-                    if (display !== 'none') {
-                        return 'none';
-                    } else {
-                        return 'block';
-                    }
-                });
-                for (let i = 0; i < degcounts; i++) {
-                    let did = '#degree' + i;
-                    d3.selectAll(did).selectAll('.grect')
-                        .attr('height', (d) => {
-                            if (degylist[i] === 1) {
-                                return cellSize1 - (cellSize1 - cellSize2);
-                            } else {
-                                return degylist[i] * cellSize1 - (cellSize1 - cellSize2);
-                            }
-                        });
-                }
-            }
-
-            function selectHL() {
-                let bug = d3.selectAll('.user');
-                // console.log(bug);
-                bug.attr('fill', (d) => {
-                    // console.log(d);
-                    let rcolor;
-                    if (ptt) {
-                        rcolor = color(Math.sqrt(d.posts.A.length));
-                    } else {
-                        rcolor = color(Math.sqrt(d.posts.A.length));
-                    }
-                    for (let i = 0, l = select.user.length; i < l; i++) {
-                        if (d.id === select.user[i].id) {
-                            rcolor = '#000';
-                        }
-                    }
-                    return rcolor;
-                });
-            }
-
-            let rect = g.selectAll('sudog')
-                .data(overlap)
-                .enter().append('custom:sudog')
-                .attr('id', (d, i) => 'degree' + i)
-                .attr('transform', (d, i) => {
-                    return 'translate(0,' + (gety(degylist, i) * cellSize1 + (cellSize1 - cellSize2) / 2) + ')';
-                });
-
-            let deggrid = rect.append('custom:rect').attr('class', (d, i) => 'degree' + ' ' + i)
-                .attr('fill', 'none')
-                .attr('stroke', 'none' /* '#f00'*/ )
-                .attr('opacity', 1)
-                .attr('width', (d) => {
-                    if (widthcount(d) < nextline) {
-                        return widthcount(d) * cellSize1;
-                    } else {
-                        return nextline * cellSize1;
-                    }
-                })
-                .attr('height', (d, i) => {
-                    return cellSize1 * degylist[i];
-                })
-                .attr('x', initx)
-                .attr('y', inity);
-
-            let degcounts = overlap.length;
-            let botton = rect.append('custom:rect')
-                .attr('class', (d, i) => 'botton' + ' ' + i)
-                .attr('fill', '#aaa')
-                .attr('stroke', 'none' /* '#f00'*/ )
-                .attr('opacity', 1)
-                .attr('width', cellSize1 * 2)
-                .attr('height', (d, i) => {
-                    return cellSize1 * degylist[i] - 2;
-                })
-                .attr('x', initx - cellSize1 * 2)
-                .attr('y', inity + 1)
-                .on('click', function (d, k) {
-                    buttonclick(d, k);
-                });
-
-            let maxi = overlap.length - 1;
-            let num = []; // degrees' degree value
-
-            let maxd = overlap[maxi][0][0].posts;
-            num.push(getlength(maxd, 'A') + getlength(maxd, 'B'));
-            let offset = numoffset(num);
-            // console.log(offset);
-            let text = rect.append('custom:text')
-                .attr('x', initx - cellSize1 * 2)
-                .attr('y', (d, i) => {
-                    return (cellSize1 * (degylist[i] + 0.66)) / 2 + inity;
-                })
-                // .attr('dy', '.35em')
-                .attr('font-size', 50 * ratio)
-                .attr('fill', '#f00')
-                // .attr('stroke', '#f00')
-                .text((d) => {
-                    let data = d[0][0].posts;
-                    let len = getlength(data, 'A') + getlength(data, 'B');
-                    return numalign(len, offset);
-                })
-                .on('click', function (d, k) {
-                    buttonclick(d, k);
-                });
-
-            let interactionLabel = d3.select('.c').select('.interaction.label');
-
-            for (let i = 0; i < degcounts; i++) {
-                let degree = overlap[i];
-                let did = '#degree' + i;
-                let x = 0;
-                let yc = 0;
-                let groupgrid = g.selectAll(did)
-                    .selectAll('g')
-                    .data(degree)
-                    .enter().append('custom:sudog')
-                    .attr('class', 'ggrid')
-                    .attr('id', (d, l) => 'd' + i + 'g' + l)
-                    .style('diplay', () => {
-                        // console.log(i);
-                        if (i === 0) {
-                            return 'none';
-                        } else {
-                            return 'block';
-                        }
-                    })
-                    .attr('transform', (d, l) => {
-                        // console.log(degylist, uclist);
-                        let x = 0;
-                        for (let a = 0; a < l; a++) {
-                            x += Math.round(uclist[i][a] / degylist[i] - 0.5);
-                            if ((uclist[i][a]) % degylist[i] > 0) {
-                                x++;
-                            }
-                        }
-                        result = initx + x * cellSize1 + (cellSize1 - cellSize2) / 2;
-                        return 'translate(' + result + ',' + (cellSize1 - cellSize2) / 2 + ')';
-                    })
-                    .append('custom:rect')
-                    .attr('class', 'grect')
-                    .attr('fill', 'none')
-                    .attr('stroke', 'none' /* '#0f0'*/ )
-                    .attr('opacity', 1)
-                    .attr('width', (d, l) => {
-                        x = Math.round(uclist[i][l] / degylist[i] - 0.5);
-                        if ((uclist[i][l]) % degylist[i] > 0) {
-                            x++;
-                        }
-                        return x * cellSize1 - (cellSize1 - cellSize2);
-                    })
-                    .attr('height', (d) => {
-                        return degylist[i] * cellSize1 - (cellSize1 - cellSize2);
-                    })
-                    .attr('x', 0)
-                    .attr('y', inity);
-
-                // let gst = Date.now();
-                let gcount = degree.length;
-                for (let j = 0; j < gcount; j++) {
-                    let group = degree[j];
-                    let gid = '#d' + i + 'g' + j;
-                    if (group.length > 0) {
-                        function glyphmargin(k) {
-                            let result = {
-                                top: yof(i, k),
-                                right: 0,
-                                bottom: 0,
-                                left: xof(i, k),
-                            };
-                            return result;
-                        };
-                        let labelMargin = 1;
-                        let scale = d3.scaleLog()
-                            .domain([1, 32])
-                            .range([0, 100]);
-
-                        function glyph(k, properties, labels) {
-                            let glyph = d3.starglyph(k)
-                                .width(cellSize3)
-                                .properties(properties)
-                                // .scales(scale)
-                                .labels(labels)
-                                .title(function (d) {
-                                    return d.name;
-                                })
-                                .maxattr(attrmax)
-                                .width(cellSize3)
-                                .ratio(ratio)
-                                .margin(glyphmargin(k))
-                                .labelMargin(labelMargin);
-                            return glyph;
-                        };
-
-                        let usergrid = g.selectAll(gid)
-                            .selectAll('g')
-                            .data(group)
-                            .enter().append('custom:sudog')
-                            .attr('class', 'user')
-                            .attr('id', (d, i) => {
-                                return 'u' + i;
-                            })
-                            .attr('fill', (d) => color(Math.sqrt(d.posts.A.length)))
-                            // .attr('stroke', '#00f')
-                            .attr('opacity', 1)
-                            .attr('width', cellSize3)
-                            .attr('height', cellSize3)
-                            .each(function (d, i) {
-                                // reaction count: sum, like, love, haha, wow, sad, angry, others || push count: sum, pushing, neutral, boo
-                                // comment count || push count
-                                // share count || publish count
-                                let properties;
-                                let labels;
-                                if (ptt) {
-                                    properties = ['bsc', 'brc.1', 'brc.2', 'brc.3', 'asc', 'arc.1', 'arc.2', 'arc.3'];
-                                    labels = ['B.publish', 'B.push', 'B.neutral', 'B.boo', 'A.publish', 'A.push', 'A.neutral', 'A.boo'];
-                                } else {
-                                    properties = ['brc.1', 'bcc', 'bsc', 'arc.1', 'acc', 'asc'];
-                                    labels = ['B.reaction', 'B.comment', 'B.share', 'A.reaction', 'A.comment', 'A.share'];
-                                }
-                                let star = glyph(i, properties, labels);
-
-                                d3.select(this)
-                                    .append('custom:rect')
-                                    .attr('class', 'ugrid')
-                                    .attr('fill', 'none')
-                                    .attr('stroke', '#000')
-                                    .attr('opacity', 1)
-                                    .attr('x', 0)
-                                    .attr('y', 0)
-                                    .attr('width', cellSize3)
-                                    .attr('height', cellSize3);
-
-                                d3.select(this)
-                                    .datum(d)
-                                    .call(star)
-                                    .call(star.interaction);
-                            });
-
-                        let interaction = svg.selectAll('.interaction')
-                            .style('display', 'none');
-
-                        // let transform = d3.zoomTransform(svg.node());
-
-                        usergrid.selectAll('.star-interaction')
-                            .on('mouseover', function (d) {
-                                let hover = d3.select(this.parentNode);
-                                /* hover.selectAll('.star-title')
-                                    .style('display', 'block');*/
-
-                                hover.selectAll('.star-label')
-                                    .style('display', 'block');
-
-                                hover.selectAll('.interaction')
-                                    .style('display', 'block');
-
-                                /* hover.selectAll('circle')
-                                    .attr('cx', d.x)
-                                    .attr('cy', d.y);*/
-
-                                // interactionLabel = interactionLabel.node();
-                                interactionLabel
-                                    .datum(d)
-                                    .html((d) => {
-                                        // console.log(d);
-                                        let name = ptt ? d.datum.id : d.datum.name;
-                                        return name + '<br/>' + d.key + ':' + d.value;
-                                    });
-                            })
-                            .on('mouseout', function (d) {
-                                usergrid.selectAll('.star-title')
-                                    .style('display', 'none');
-
-                                usergrid.selectAll('.star-label')
-                                    .style('display', 'none');
-
-                                interaction
-                                    .style('display', 'none');
-                                /* usergrid.selectAll('circle')
-                                    .style('display', 'none');*/
-                            });
-                    }
-                }
-
-                // let get = Date.now();
-                // console.log('group time: ', get - gst);
-            }
-
-            let tooltip3 = d3.select('body').select('.c')
-                // .attr('class', 'tooltip1')
-                .style('opacity', 0);
-            // .style("width","200px")
-            // .style("height","30px");
-            d3.selectAll('.user')
-                .on('mouseover', function (d) {
-                    d3.event.preventDefault();
-                    tooltip3.transition()
-                        .duration(200)
-                        .style('opacity', .9);
-                    tooltip3
-                        /* .html('ID=' + d.datum.id + '<br/>' + 'Name = ' + d.datum.name + '<br/>' +
-                            'Activities on A = ' + getlength(d.datum.posts, 'A') + '<br/>' +
-                            'Activities on B = ' + getlength(d.datum.posts, 'B'))*/
-                        .style('left', (d3.event.pageX + 5) + 'px')
-                        .style('top', (d3.event.pageY - 10) + 'px');
-                })
-                .on('mouseout', function (d) {
-                    d3.event.preventDefault();
-                    tooltip3.transition()
-                        .duration(500)
-                        .style('opacity', 0);
-                })
-                .on('click', function (d) {
-                    d3.event.preventDefault();
-                    let preselect = {};
-                    let user = [];
-                    let actpost = [
-                        [],
-                        [],
-                    ];
-                    for (let i = 0, l = select.user.length; i < l; i++) {
-                        user.push(select.user[i]);
-                    }
-                    for (let i = 0, l = select.actpost.length; i < l; i++) {
-                        for (let j = 0, l = select.actpost[i].length; j < l; j++) {
-                            let post = select.actpost[i][j];
-                            actpost[i].push(post);
-                        }
-                    }
-                    preselect.user = user;
-                    preselect.actpost = actpost;
-                    let la = d.posts.A.length;
-                    let lb = d.posts.B.length;
-                    let deg = la + lb;
-                    let selectobj = d;
-                    if (select.user.length !== 0) {
-                        for (let i = 0, l = select.user.length; i < l;) {
-                            if (select.user[i].id === selectobj.id) {
-                                select.user.splice(i, 1);
-                                select.ci.user = i - 1 > 0 ? i - 1 : 0;
-                                i = l + 1;
-                            } else {
-                                i++;
-                            }
-                            if (i === l) {
-                                select.user.push(selectobj);
-                                select.ci.user = l;
-                            }
-                        }
-                    } else {
-                        select.user.push(selectobj);
-                    }
-                    console.log(select.user);
-                    // user color update
-                    selectHL();
-                    // status(d);
-                    console.log('#degree' + deg.toString());
-                    // activepost(data, preselect, select);
-                    select.actpost = activeposts(data, preselect, select, 'union');
-                    userdetailview(data, select);
-                    overview(data, select);
-                    showselect(data, select);
-                });
-
-            let strokewidth = 1;
-            let zoom = d3.zoom()
-                .scaleExtent([1 / 10, 10])
-                .on('zoom', function () {
-                    g.attr('transform', d3.event.transform);
-                    let k = this.__zoom.k;
-                    g.attr('stroke-width', 1 / k);
-                    g.selectAll('.star-axis')
-                        .attr('stroke-width', 2 / k);
-                    g.selectAll('.star-guideline')
-                        .attr('stroke-width', 1 / k);
-                    g.selectAll('.star-path')
-                        .attr('stroke-width', 2 / k);
-                    g.selectAll('.star-line')
-                        .attr('stroke-width', 3 / k);
-                    strokewidth = 1 / k;
-                });
-
-            svg.call(zoom);
-
-            selectHL();
-        }
-
-        let canvas = d3.select('.wrapper')
-            .attr('width', 1000)
-            .attr('height', 1000)
-            .call(custom);
-
-        let et = Date.now();
-        console.log('change time: ', et - st);
-    }
-
-    function custom(selection) {
-        selection.each(function () {
-            let root = this;
-            let canvas = root.parentNode.appendChild(document.createElement('canvas'));
-            let context = canvas.getContext('2d');
-
-            canvas.style.position = 'absolute';
-            canvas.style.top = root.offsetTop + 'px';
-            canvas.style.left = root.offsetLeft + 'px';
-
-            // It'd be nice to use DOM Mutation Events here instead.
-            // However, they appear to arrive irregularly, causing choppy animation.
-            //d3.timer(redraw);
-            redraw();
-
-            // Clear the canvas and then iterate over child elements.
-            function redraw() {
-                canvas.width = root.getAttribute('width');
-                canvas.height = root.getAttribute('height');
-                // canvas.width = root.parentElement.clientWidth; // not work
-                console.log(root);
-                // for (var child = root.firstChild; child; child = child.nextSibling) draw(child);
-                let child = root.firstChild;
-                while (child !== null) {
-                    draw(child);
-                    console.log(child.nextSibling);
-                    if (child.nextSibling) {
-                        child = child.nextSibling;
-                    } else {
-                        child = null;
-                    }
-                }
-            }
-
-            // For now we only support circles with strokeStyle.
-            // But you should imagine extending this to arbitrary shapes and groups!
-            function draw(element) {
-                switch (element.tagName) {
-                    case 'CIRCLE':
-                        {
-                            console.log(element);
-                            context.strokeStyle = element.getAttribute('strokeStyle');
-                            context.beginPath();
-                            context.arc(element.getAttribute('x'), element.getAttribute('y'), element.getAttribute('radius'), 0, 2 * Math.PI);
-                            context.stroke();
-                            break;
-                        }
-                    case 'RECT':
-                        {
-                            console.log(element);
-                            if (element.getAttribute('fill') !== 'none') {
-                                context.fillRect(element.getAttribute('x'), element.getAttribute('y'), element.getAttribute('width'), element.getAttribute('height'));
-                            } else {
-                                context.strokeRect(element.getAttribute('x'), element.getAttribute('y'), element.getAttribute('width'), element.getAttribute('height'));
-                            }
-                            break;
-                        }
-                    default:
-                        console.log(element);
-                        if (element.firstChild) draw(element.firstChild);
-                }
-            }
-        });
-    };
 }
 
 /**
@@ -2935,7 +2200,6 @@ function postdetail(data, select) {
         content.id = pagedata[i][j].id;
         content.word = pagedata[i][j].word;
         if (ptt) {
-            content.id = pagedata[i][j].author;
             content.url = pagedata[i][j].url;
             content.title = pagedata[i][j].article_title;
             content.content = pagedata[i][j].content;
@@ -3197,7 +2461,7 @@ function activeuser(data, preselect, postselect, mode) {
                 };*/
                 return rcolor;
             })
-            /* .attr('stroke-dasharray', (d) => {
+            .attr('stroke-dasharray', (d) => {
                 // console.log(d.act);
                 if (d.act === 0) {
                     return 0;
@@ -3205,7 +2469,7 @@ function activeuser(data, preselect, postselect, mode) {
                     let p = 1 / d.act * 50;
                     return p - 10 + ', ' + 10;
                 }
-            })*/
+            })
             .attr('fill', (d) => {
                 if (maxact === 0) {
                     return 'rgba(0, 0, 0, 0)';
@@ -3327,33 +2591,23 @@ function activeposts(data, preselect, postselect, mode) {
                 .attr('fill', (d) => {
                     let page = d.data.page - 1;
                     let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
-                    let a = d.act / maxact;
-                    if (maxact === 0) {
+                    if (d.act === 0) {
                         // console.log(chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5));
                         // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                        // return 'rgba(0, 0, 0, '+ (a) + ')';
-                        return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
+                        return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
                     } else {
-                        if (d.act === 0) {
-                            return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
-                        } else {
-                            // return 'rgba(0, 0, 0, ' + a + ')';
-                            return hclcolor(3, d.data.page, 6, 1, (1 - a));
+                        if (d.act > 0) {
+                            // console.log(page, post, d.act);
                         }
+                        let a = d.act / maxact;
+                        return 'rgba(0, 0, 0, ' + a + ')';
                     }
                 })
-                .attr('stroke', (d) => {
-                    if (d.act > 0) {
-                        return 'black';
-                    } else {
-                        return 'white';
-                    }
-                });
-                /* .attr('stroke-dasharray', (d) => {
+                .attr('stroke-dasharray', (d) => {
                     // console.log(d.act);
                     let p = 1 / d.act * 50;
                     return p - 10 + ', ' + 10;
-                });*/
+                });
         } else if (graphmode === 'treemap') {
             console.log('treemap');
             let node = d3.select('#pageview').selectAll('g').selectAll('rect').datum((d) => {
@@ -3391,41 +2645,23 @@ function activeposts(data, preselect, postselect, mode) {
                     }
                     return d;
                 })
-                /* .attr('stroke', (d) => {
-                    if(d.act>0) {
-                        return 'white';
-                    }else{
-                        return 'black';
-                    }
-                })*/
                 .attr('fill', (d) => {
                     let page = d.data.page - 1;
                     let post = d.data.post[0] === undefined ? 0 : parseInt(d.data.post[0], 10) - 1;
-                    let a = d.act / maxact;
                     if (d.act > 0) {
                         console.log(page, post, d.act);
                     }
-                    if (maxact === 0) {
+                    if (d.act === 0) {
                         if (d === d.leaves()[0]) {
                             // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                            return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
+                            return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
                             // return '#fff';
                         } else {
                             return null;
                         }
                     } else {
-                        if (d.act === 0) {
-                            if (d === d.leaves()[0]) {
-                                // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                                return hclcolor(3, d.data.page, d.data.type, d.value /* d.data.post[0]*/ , 0.5);
-                                // return '#fff';
-                            } else {
-                                return null;
-                            }
-                        } else {
-                            // return 'rgba(0, 0, 0, ' + a + ')';
-                            return hclcolor(3, d.data.page, 6, 1, (1 - a));
-                        }
+                        let a = d.act / maxact;
+                        return 'rgba(0, 0, 0, ' + a + ')';
                     }
                 });
             console.log(node);
@@ -4000,11 +3236,7 @@ function timeline(user, meta) {
                     if (typeof (date) !== 'object') {
                         date = date.split(/\s|\/|\:/);
                         // console.log(date);
-                        if (date.length === 5) {
-                            date = new Date(year, date[1] - 1, date[2], date[3], date[4]);
-                        } else {
-                            date = new Date(year, date[0] - 1, date[1], date[2], date[3]);
-                        }
+                        date = new Date(year, date[0] - 1, date[1], date[2], date[3]);
                         // console.log(date);
                     }
                     post[property][j].push_ipdatetime = date;
@@ -4125,10 +3357,8 @@ function timeline(user, meta) {
                 let author = '<p id="author">' + d.author + '</p>';
                 let date = '<p>' + new Date(d.date).toLocaleString() + '</p>';
                 let wordstr = '';
-                if (d.word) {
-                    for (let i = 0; i < d.word.length; i++) {
-                        wordstr += ' ' + d.word[i].word;
-                    }
+                for (let i = 0; i < d.word.length; i++) {
+                    wordstr += ' ' + d.word[i].word;
                 }
                 let word = '<p>' + wordstr + '</p>';
                 let url = '<a href="' + d.url + '" target="_blank">' + d.url + '</a>';
@@ -4156,11 +3386,7 @@ function timeline(user, meta) {
                     .append('p')
                     .style('background-color', 'white')
                     .html((d) => {
-                        let timestr = new Date(d.push_ipdatetime).toLocaleString();
-                        if (timestr === 'Invalid Date') {
-                            console.log(d);
-                        }
-                        let timeID = timestr + ' ' + d.push_userid;
+                        let timeID = new Date(d.push_ipdatetime).toLocaleString() + ' ' + d.push_userid;
                         let content = d.push_content;
                         return timeID + ':<br>' + content;
                     });
@@ -4370,8 +3596,8 @@ function timeline(user, meta) {
             })
             .style('opacity', .7)
             .style('display', (d) => {
-                // console.log(d);
-                let author = d.author ? d.author.split(' ')[0] : '';
+                console.log(d);
+                let author = d.author.split(' ')[0];
                 if (author !== user.id) {
                     return 'none';
                 } else {
@@ -4558,7 +3784,6 @@ function pagedata(data) {
                 message.name = 'comment';
                 message.children = [pushing, neutral, boo];
                 temp.push(message);
-                post.date = posts[j].date;
             } else {
                 let comment = {};
                 let reaction = {};
@@ -4875,7 +4100,7 @@ function docount(user, uac) {
  * @return {color}
  */
 function hclcolor(n, h, c, l, o) {
-    let parah = d3.scaleLinear().domain([0.75, 2.75]).range([0, 360]);
+    let parah = d3.scaleLinear().domain([-2, 2]).range([0, 360]);
     // let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
     let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);
     // let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
