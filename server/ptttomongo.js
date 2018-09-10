@@ -27,12 +27,13 @@ var options = {
 }
 
 // Using `mongoose.connect`...
-var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/ptt?authSource=admin', options);
+var db = mongoose.connect('mongodb://sean721721721:629629629@localhost:27017/ptt?authSource=admin', options);
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("we're connected!")
     // we're connected!
-});
+    
+  });
 
 function promiseAllP(items, block) {
     var promises = [];
@@ -48,12 +49,12 @@ function promiseAllP(items, block) {
 
 var saveFiles = function saveFiles(dirname, collection, schema) {
     mongoose.model(collection, schema);
-
+    
     function save(files) {
         var pagepost = mongoose.model(collection);
         var post = new pagepost();
         var savepost = Object.assign(post, files);
-        //console.log(files.articles[j]);
+        // console.log(files.articles[j]);
         return new Promise((resolve, reject) => {
                 savepost.save(function (err, post, numAffected) {
                     //console.log(numAffected);
@@ -72,12 +73,15 @@ var saveFiles = function saveFiles(dirname, collection, schema) {
             });
     }
     return new Promise((resolve, reject) => {
+        console.log(dirname);
             fs.readdir(dirname, function (err, filenames) {
+                console.log(dirname);
+                console.log(filenames);
                 if (err) return reject(err);
                 resolve(split())
                 async function split() {
                     await promiseAllP(filenames, (filename, index, resolve, reject) => {
-                            //console.log(filename)
+                            console.log(filename)
                             if (err) {
                                 reject(err);
                             }
@@ -93,7 +97,7 @@ var saveFiles = function saveFiles(dirname, collection, schema) {
                                             console.log(filename, " length = ", fl);
                                             for (var j = 0; j < fl; j++) {
                                                 await save(files.articles[j]);
-                                                //console.log('done file',j);
+                                                // console.log('done file',j);
                                             }
                                         }
                                     });
@@ -115,7 +119,7 @@ var saveFiles = function saveFiles(dirname, collection, schema) {
         });
 }
 
-var folders = ['6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29']; // 'Tech_Job', 'Gossiping', 'Soft_Job'];
+var folders = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39']; // 'Tech_Job', 'Gossiping', 'Soft_Job'];
 //folders.forEach(folder => {
 var root = "../pttdata/Gossiping";
 readfolder();
@@ -124,6 +128,7 @@ async function readfolder() {
         folder = folders[i];
         await saveFiles(root + '/' + folder, 'Gossiping', schema.pttSchema)
             .then(function () {
+                
                 console.log('saved')
             })
             .catch(error => {

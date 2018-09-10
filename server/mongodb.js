@@ -27,7 +27,7 @@ var options = {
 }
 
 // Using `mongoose.connect`...
-var db = mongoose.connect('mongodb://villager:4given4get@localhost:27017/newpages?authSource=admin', options);
+var db = mongoose.connect('mongodb://sean721721721:629629629@140.119.164.233:27017/newpages?authSource=admin', options);
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
     console.log("we're connected!")
