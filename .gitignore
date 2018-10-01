@@ -10,8 +10,10 @@ pagedata/
 
 #PTTdata
 pttdata/
-ptt-web-crawler
-!ptt-web-crawler/PttWebCrawler/crawler.py
+ptt-web-crawler/*
+!ptt-web-crawler/PttWebCrawler
+ptt-web-crawler/PttWebCrawler/__pycache__
+ptt-web-crawler/PttWebCrawler/*.pyc
 # Runtime data
 pids
 *.pid
