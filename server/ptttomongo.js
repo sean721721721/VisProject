@@ -119,25 +119,32 @@ var saveFiles = function saveFiles(dirname, collection, schema) {
         });
 }
 
-var folders = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39']; // 'Tech_Job', 'Gossiping', 'Soft_Job'];
+// var folders = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39']; // 'Tech_Job', 'Gossiping', 'Soft_Job'];
 //folders.forEach(folder => {
-var root = "../pttdata/Gossiping";
+var path = '../pttdata'; 
+var boardNames = fs.readdirSync(path);
 readfolder();
 async function readfolder() {
-    for (let i = 0; i < folders.length; i++) {
-        folder = folders[i];
-        await saveFiles(root + '/' + folder, 'Gossiping', schema.pttSchema)
-            .then(function () {
-                
-                console.log('saved')
-            })
-            .catch(error => {
-                console.log(error);
-            });
-        //mongoose.model(folder, schema.postSchema)
-        //mongoose.model(folder, schema.pttSchema)
-        //var pagepost = mongoose.model(folder);
-        //console.log(typeof(root + '/' + folder))
+    for(j =0; j < boardNames.length; j++){
+        var board = boardNames[j];
+        var root = "../pttdata/"+ board;
+        var folders = fs.readdirSync(root)
+        for (let i = 0; i < folders.length; i++) {
+            folder = folders[i];
+            console.log('board: ' + board);
+            await saveFiles(root + '/' + folder, board , schema.pttSchema)
+                .then(function () {
+                    
+                    console.log('saved')
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+            //mongoose.model(folder, schema.postSchema)
+            //mongoose.model(folder, schema.pttSchema)
+            //var pagepost = mongoose.model(folder);
+            //console.log(typeof(root + '/' + folder))
+        }
     }
 }
 /* 2 M.1502704474.A.3CB

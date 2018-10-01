@@ -11,7 +11,7 @@ pagedata/
 #PTTdata
 pttdata/
 ptt-web-crawler
-
+!ptt-web-crawler/PttWebCrawler/crawler.py
 # Runtime data
 pids
 *.pid
