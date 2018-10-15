@@ -3200,6 +3200,7 @@ function userdetail(data, select) {
         }
         if (ptt) {
             timeline(content, data.query);
+            console.log("data.query: " + data.query.time1);
         }
         paccordion();
     }
@@ -3272,6 +3273,9 @@ function timeline(user, meta) {
     let startx = 40;
     let Tscale = d3.scaleTime()
         // .domain([new Date(begin), new Date(end())])
+        .domain([begin, end])
+        .range([startx, rw - startx]);
+    let Tscale2 = d3.scaleTime()
         .domain([begin, end])
         .range([startx, rw - startx]);
     let Ascale = d3.scaleOrdinal()
@@ -3722,12 +3726,13 @@ function timeline(user, meta) {
     postg.each(drawpoints);
 
     let zoom = d3.zoom()
-        .scaleExtent([1, 10])
+        .scaleExtent([1, Infinity])
         .on('zoom', function () {
             let transform = d3.event.transform;
             let Trange = [startx, rw - startx];
-            Tscale.range(Trange.map((x) => x * transform.k + transform.x));
-
+            Tscale.domain(transform.rescaleX(Tscale2).domain());
+            // Tscale.range(Trange.map((x) => x * transform.k + transform.x));
+            // console.log("range: " + Tscale.range());
             // axises
             timetopaxis = d3.axisTop().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
             g.select('.Topaxis')
