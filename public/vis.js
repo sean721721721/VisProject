@@ -3200,6 +3200,7 @@ function userdetail(data, select) {
         }
         if (ptt) {
             timeline(content, data.query);
+            console.log(content);
             console.log("data.query: " + data.query.time1);
         }
         paccordion();
@@ -3211,6 +3212,8 @@ function timeline(user, meta) {
     let list = [];
     let listA = user.posts.A;
     let listB = user.posts.B;
+    console.log('listA: ');
+    console.log(listA);
     for (let i = 0; i < listA.length; i++) {
         listA[i].query = 'A';
         list.push(listA[i]);
@@ -3232,7 +3235,15 @@ function timeline(user, meta) {
         function datetransfer(post, property) {
             if (post[property].length > 0) {
                 for (let j = 0; j < post[property].length; j++) {
-                    let date = post[property][j].push_ipdatetime;
+                    // check user dateFormat and store the right format of date
+                    let date = "";
+                    let dateFormat = post[property][j].push_ipdatetime.split(" ");
+                    if(dateFormat.length == 3){
+                        date = dateFormat[1]+ " " + dateFormat[2];
+                    }
+                    else{
+                        date = dateFormat[0]+ " " + dateFormat[1];
+                    }
                     let year = new Date(post.date).getFullYear();
                     if (typeof (date) !== 'object') {
                         date = date.split(/\s|\/|\:/);
@@ -3724,6 +3735,62 @@ function timeline(user, meta) {
             });
     }
     postg.each(drawpoints);
+    circleSize();
+    console.log('postg:');
+    // console.log(d3.select('.posts').select('.post0').select('.neutralcircle').attr('cx'));
+    console.log(entries.length);
+    function circleSize(){
+        for(i = 0;i < entries.length;i++){
+            var postName = '.post'+i;
+            // var nextPostName = '.post'+(i+1);
+            var previous = d3.select('.posts').select(postName).selectAll('circle');
+            for(j = 0;j < entries.length;j++){
+                if(i ==j ){
+                    continue;
+                }
+                var nextPostName = '.post'+j;
+                var later = d3.select('.posts').select(nextPostName).selectAll('circle');
+                // console.log(postName + ' previous: '+ previous.attr('cx'));
+                // console.log(nextPostName + ' later: '+ later.attr('cx'));
+                if(later.attr('cy') == previous.attr('cy') && Math.abs(previous.attr('cx') - later.attr('cx'))< 10){
+                    console.log(Math.abs(later.attr('cx')-previous.attr('cx')));
+                    // d3.select('.posts').select(postName).select('.neutralcircle').attr('r',15);
+                    previous.attr('r','10');
+                    break;
+                    // later.attr('r','10');                
+                }else{
+                    previous.attr('r','5');
+                    // later.attr('r','5');    
+                }
+            }
+        }
+    }
+    
+
+    var formatMillisecond = d3.timeFormat(".%L"),
+    formatSecond = d3.timeFormat(":%S"),
+    formatMinute = d3.timeFormat("%H:%M"),
+    formatHour = d3.timeFormat("%H:00"),
+    formatDay = d3.timeFormat("%m/%d"),
+    formatWeek = d3.timeFormat("%m/%d"),
+    formatMonth = d3.timeFormat("%b"),
+    formatYear = d3.timeFormat("%Y");
+
+// Define filter conditions
+    function multiFormat(date) {
+    return (d3.timeSecond(date) < date ? formatMillisecond
+        : d3.timeMinute(date) < date ? formatSecond
+        : d3.timeHour(date) < date ? formatMinute
+        : d3.timeDay(date) < date ? formatHour
+        : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+        : d3.timeYear(date) < date ? formatWeek
+        : formatYear)(date);
+    }
+
+
+
+
+
 
     let zoom = d3.zoom()
         .scaleExtent([1, Infinity])
@@ -3734,10 +3801,10 @@ function timeline(user, meta) {
             // Tscale.range(Trange.map((x) => x * transform.k + transform.x));
             // console.log("range: " + Tscale.range());
             // axises
-            timetopaxis = d3.axisTop().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
+            timetopaxis = d3.axisTop().scale(Tscale).tickFormat(multiFormat);
             g.select('.Topaxis')
                 .call(customTAxis, timetopaxis, 0, 5, -h / 14, -6 * h / 14);
-            timebotaxis = d3.axisBottom().scale(Tscale).tickFormat(d3.timeFormat('%m/%d'));
+            timebotaxis = d3.axisBottom().scale(Tscale).tickFormat(multiFormat);
             g.select('.Bottomaxis')
                 .call(customTAxis, timebotaxis, 0, 5, h / 14, 6 * h / 14);
 
@@ -3747,6 +3814,7 @@ function timeline(user, meta) {
                     return Tscale(new Date(d.date));
                 })
                 .each(drawpoints);
+                circleSize();
         });
 
     svg.call(zoom);
