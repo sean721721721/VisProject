@@ -3237,14 +3237,19 @@ function timeline(user, meta) {
                 for (let j = 0; j < post[property].length; j++) {
                     // check user dateFormat and store the right format of date
                     let date = "";
-                    let dateFormat = post[property][j].push_ipdatetime.split(" ");
-                    if(dateFormat.length == 3){
-                        date = dateFormat[1]+ " " + dateFormat[2];
+                    let dateFormat= "";
+                    if (typeof (post[property][j].push_ipdatetime) !== 'object'){
+                        dateFormat = post[property][j].push_ipdatetime.split(" ");
+                        if(dateFormat.length == 3){
+                            date = dateFormat[1]+ " " + dateFormat[2];
+                        }
+                        else{
+                            date = dateFormat[0]+ " " + dateFormat[1];
+                        }
+                    }else{
+                        date = post[property][j].push_ipdatetime;
                     }
-                    else{
-                        date = dateFormat[0]+ " " + dateFormat[1];
-                    }
-                    let year = new Date(post.date).getFullYear();
+                        let year = new Date(post.date).getFullYear();
                     if (typeof (date) !== 'object') {
                         date = date.split(/\s|\/|\:/);
                         // console.log(date);
