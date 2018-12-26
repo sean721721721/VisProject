@@ -154,8 +154,8 @@ fieldset {
     display: inline-block;
     border: 1px #af3333 solid;
     border-radius: 10px;
-    margin: 5px;
-    padding: 5px;
+    margin: 3px;
+    padding: 3px;
 }
 
 svg {
@@ -214,6 +214,10 @@ div.tab button {
     padding: 14px 16px;
     transition: 0.3s;
     font-size: 17px;
+}
+div#report h1{
+    color: #000;
+
 }
 
 /* Change background color of buttons on hover */
@@ -332,19 +336,28 @@ path:hover {
     display: grid;
     grid-gap: 1px;
     grid-column: col1 / col2;
-    grid-template-columns: [scol1] 0.5fr [scol2] 0.5fr [scolend];
-    grid-template-rows: [srow1] minmax(auto, 1fr) [srow2] minmax(30vh, 30vh) [srowend];
+    /* grid-template-columns: [scol1] 0.5fr [scol2] 0.5fr [scolend]; */
+    grid-template-columns: [scol1] 0.333fr [scol2] 0.333fr [scol3] 0.333fr [scolend];
+    /* grid-template-rows: [srow1] minmax(auto, 1fr) [srow2] minmax(30vh, 30vh) [srowend]; */
+    grid-template-rows: [srow1] 0.333fr [srow2] 0.333fr [srow3] 0.333fr [srow4] minmax(30vh, 30vh) [srowend];
 }
 
 .overview {
+    background-color: transparent;
     overflow-y: auto;
-    grid-column: scol1 / scol2;
-    grid-row: srow1 / srow2;
+    /* grid-column: scol1 / scol2; */
+    grid-column: scol2 / scol3;
+    /* grid-row: srow1 / srow2; */
+    grid-row: srow2 / srow3;
+    z-index: 3;
 }
 
 .postview {
-    grid-column: scol2 / scolend;
-    grid-row: srow1 / srow2;
+    /* grid-column: scol2 / scolend; */
+    grid-column: scol1 / scolend;
+    /* grid-row: srow1 / srow2; */
+    grid-row: srow1 / srow4;
+    z-index: 2;
 }
 
 .detailview {
@@ -353,7 +366,8 @@ path:hover {
     background-color: white;
     border: 5px solid #444;
     grid-column: scol1 / scolend;
-    grid-row: srow2 / srowend;
+    /* grid-row: srow2 / srowend; */
+    grid-row: srow4 / srowend;
 }
 
 .detailview p {

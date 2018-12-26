@@ -109,7 +109,9 @@ function overview(data, select) {
         .attr('viewBox', '0 0 500 400')
         .attr('preserveAspectRatio', 'xMinYMin')
         .style('fill', 'none')
-        .style('pointer-events', 'all');
+        .style('pointer-events', 'all')
+        .style('border-color','transparent')
+        .style('background-color','transparent');
     // .call(zoom);
 
     let w = 500 - margin.left - margin.right;
@@ -621,7 +623,7 @@ function pageview(data, pagedata, select) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
     let ptt = data.query.posttype === 'PTT';
-    let height = '100%';
+    let height = '90%';
     let width = height;
     let w = 500;
     let h = 500;
