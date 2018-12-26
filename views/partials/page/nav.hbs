@@ -80,7 +80,7 @@
                     </select>
                 </datalist>
                 <label for="x">Since:</label>
-                <input type="date" name="date1" id="date1" placeholder="date" value="2018-02-01"></input>
+                <input type="date" name="date1" id="date1" placeholder="date" value="2018-02-27"></input>
                 <label for="x">Until:</label>
                 <input type="date" name="date2" id="date2" placeholder="date" value="2018-03-01"></input>
                 <label for="x">Topic word filter:</label>
@@ -111,7 +111,7 @@
                     </select>
                 </datalist>
                 <label for="x">Since:</label>
-                <input type="date" name="date3" id="date3" placeholder="date" value="2018-02-01"></input>
+                <input type="date" name="date3" id="date3" placeholder="date" value="2018-02-27"></input>
                 <label for="x">Until:</label>
                 <input type="date" name="date4" id="date4" placeholder="date" value="2018-03-01"></input>
                 <label for="x">Topic word filter:</label>
@@ -209,15 +209,19 @@
             <div class="box postview">
                 <!--h2>PageView</h2-->
                 <form id="pagemode">
+                    <label for="mode0"> Mode: </label>
                     <fieldset>
-                        <legend>mode</legend>
+                        {{!-- <legend>mode</legend> --}}
+                        
                         <label for="mode1">Treemap</label>
                         <input type="radio" id="mode1" name="mode" value="treemap" checked>
                         <label for="mode2">Sunburst</label>
                         <input type="radio" id="mode2" name="mode" value="sunburst">
                     </fieldset>
+                    <label for="sort0"> Sort: </label>
                     <fieldset>
-                        <legend>sort</legend>
+                        {{!-- <legend>sort</legend> --}}
+                        
                         <label for="sort1">Time</label>
                         <input type="radio" id="sort1" name="sort" value="time">
                         <label for="sort2">Size</label>
