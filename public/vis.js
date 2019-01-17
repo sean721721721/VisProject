@@ -622,6 +622,8 @@ function showselect(data, select) {
 function pageview(data, pagedata, select) {
     // graph draw
     // let width = document.querySelector('#page').offsetWidth;
+    console.log('data',data);
+    console.log('pagedata',pagedata);
     let ptt = data.query.posttype === 'PTT';
     let height = '90%';
     let width = height;
@@ -650,8 +652,9 @@ function pageview(data, pagedata, select) {
             .attr('height', height)
             .attr('viewBox', '0 0 500 500')
             .attr('preserveAspectRatio', 'xMinYMin')
-            .style('fill', 'none')
-            .style('pointer-events', 'all');
+            //.style('fill', 'none')
+            .style('pointer-events', 'all')
+            .style('font','sans-serif');
 
         let g = svg.append('g')
             .attr('id', 'pageview');
@@ -739,8 +742,27 @@ function pageview(data, pagedata, select) {
             .attr('stroke-width', 0.5)
             .attr('fill', function (d) {
                 // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                console.log(d.data.page, d.data.type, d.value);
-                return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
+                console.log(d.data.page, d.data.type, d.value, d.depth);
+                if(d.depth == 3){
+                    let mostCommentType = findMostCommentType(d); 
+                    let type = mostCommentType[0];
+                    let value = mostCommentType[1];
+                    console.log("value: " + value);
+                    return commentHclColor(type, value,0.7);
+                    
+                }else if(d.depth == 1){
+                    var textPath = g.append("text")
+                        .attr("x", 6)
+                        .attr("dy", 15);
+
+                    textPath.append("textPath")
+                        .attr("xlink:href","#"+d.data.id)
+                        .attr("startOffset","25%")
+                        .text(d.data.id);
+                    return hclcolor(3, d.data.page, d.data.type, 649/* d.data.post[0]*/, 0.7);
+                }else{
+                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.7);
+                }
             })
             .on('mouseover', (d) => {
                 mouseover(d, totalSize);
@@ -989,13 +1011,13 @@ function pageview(data, pagedata, select) {
         d3.select('#info').style('visibility', '');
         d3.select('#percentage')
             .attr('x', 0)
-            .attr('y', -20)
+            .attr('y', "20%")
             .attr('fill', 'red')
             .text(string);
 
         d3.select('#id')
             .attr('x', 0)
-            .attr('y', 0)
+            .attr('y', "25%")
             .attr('fill', 'red')
             .text(() => {
                 return id;
@@ -1003,7 +1025,7 @@ function pageview(data, pagedata, select) {
 
         d3.select('#title')
             .attr('x', 0)
-            .attr('y', 20)
+            .attr('y', "30%")
             .attr('fill', 'blue')
             .text(() => {
                 if (post !== undefined) {
@@ -1085,6 +1107,29 @@ function pageview(data, pagedata, select) {
 
     function sortBySize(a, b) {
         return b.height - a.height || b.value - a.value;
+    }
+
+    function findMostCommentType(d){
+        if(d.children[0].data.type == 3){ //Most value is push;
+            if(d.children[1].data.type == 4){ // push > neutral > boo
+                return  [3,d.children[0].value - d.children[2].value]
+            }else{  // push > boo > neutral
+                return  [3,d.children[0].value - d.children[1].value]
+            }
+        }else if(d.children[0].data.type == 4){ //Most value is neutral;
+            if(d.children[1].data.type == 3){ //push > boo
+                return  [3,d.children[1].value - d.children[2].value]
+            }else{ // boo > push
+                return  [5,d.children[1].value - d.children[2].value]
+            }
+        }else{ ////Most value is boo;
+            if(d.children[1].data.type == 3){ // boo > push > neutral
+                return  [5,d.children[0].value - d.children[1].value]
+            }else{ // boo > neutral > push
+                return  [5,d.children[0].value - d.children[2].value]
+            }
+        }
+
     }
 }
 
@@ -4185,8 +4230,33 @@ function hclcolor(n, h, c, l, o) {
     let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);
     // let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
     let paral = d3.scaleLog().domain([1, 100000]).range([0, 150]);
-    // console.log(parah(h), paras(s), paral(l));
+     console.log(parah(h), parac(c), paral(l));
     return d3.hcl(parah(h), parac(c), paral(l), o);
+};
+
+function commentHclColor(type, l, o) {
+   // let parah = d3.scaleLinear().domain([-100, 100]).range([40, 125]);
+    // let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
+    //let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);
+    // let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
+    let paral = d3.scaleLinear().domain([-100, 0]).range([40, 100]);
+    if (type == 3){  // push is the most
+        if(l > 100){
+
+            return d3.hcl(50, 100, 40, o);
+        }else{
+            console.log(paral(-l))
+            return d3.hcl(50, 100, paral(-l), o);
+        }
+    }else{  // boo is the most
+        if( l > 100){
+            return d3.hcl(125, 100, 40, o);
+        }else{
+            console.log(paral(-l))
+            return d3.hcl(125, 100, paral(-l), o);
+        }
+    }
+    
 };
 
 /**
