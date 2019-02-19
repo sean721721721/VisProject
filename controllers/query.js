@@ -149,17 +149,32 @@ let queryobj = function queryobj(req, res, time1, time2, userid, tkeyword, ckeyw
             };
         }
     }
-    if (req.params.mincomment || req.params.mincomment) {
+    // if (req.params.mincomment || req.params.mincomment) {
+    //     if (req.params.maxcomment) {
+    //         if (!req.params.mincomment) {
+    //             req.params.mincomment = 0;
+    //         }
+    //         queryobj['comments.summary'] = {
+    //             $gte: Number(req.params.mincomment),
+    //             $lt: Number(req.params.maxcomment),
+    //         };
+    //     } else {
+    //         queryobj['comments.summary'] = {
+    //             $gte: Number(req.params.mincomment),
+    //         };
+    //     }
+    // }
+    if (req.params.mincomment || req.params.mincomment) {  //for PTT 
         if (req.params.maxcomment) {
             if (!req.params.mincomment) {
                 req.params.mincomment = 0;
             }
-            queryobj['comments.summary'] = {
+            queryobj['message_count.all'] = {
                 $gte: Number(req.params.mincomment),
                 $lt: Number(req.params.maxcomment),
             };
         } else {
-            queryobj['comments.summary'] = {
+            queryobj['message_count.all'] = {
                 $gte: Number(req.params.mincomment),
             };
         }
@@ -439,7 +454,10 @@ let callback = function callback(req, res) {
                     //var response = [];
                     let ul1 = dl.newualist(result[0], ptt);
                     let ul2 = dl.newualist(result[1], ptt);
-                    let postlist = dl.bindpostlist(result[0], result[1], ptt);
+                    let datalist = dl.bindpostlist(result[0], result[1], ptt);
+                    let postlist = datalist[0];
+                    let wordlist = datalist[1];
+                    console.log('postlist:',postlist);
                     let user = Object.values(ul1);
                     let tuser = Object.values(ul2);
                     let userlist = dl.binduserobj(ul1, ul2, user, tuser);
@@ -469,7 +487,7 @@ let callback = function callback(req, res) {
                             [result[0].length, result[1].length, result[0].length + result[1].length],
                             [user.length, tuser.length, userlist.length]
                         ],
-                        data: [postlist, oldata, sortdata],
+                        data: [postlist, oldata, sortdata,wordlist],
                     };
                     //console.log(queryresult);
                     return queryresult;

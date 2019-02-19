@@ -450,14 +450,19 @@ let bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
     let l2 = qobj2.length;
     let pagea = [];
     let pageb = [];
+    let test = [[],[]];
     for (let i = 0; i < l1; i++) {
         let post = postobj(qobj1[i]);
         pagea.push(post);
     }
     list.push(pagea);
-    /*pagea = jb.cut(pagea, function () {
-        // console.log(pagea);
-    });*/
+    pagea = jb.cut(pagea, function () {
+        for(i=0;i<pagea.length;i++){
+            console.log('pagea:',pagea[i].word);
+            test[0][i] = pagea[i].word; 
+        }
+        // testlist.push(pagea);
+    });
     // for return single page query faster
     if (qobj1 !== qobj2) {
         for (let i = 0; i < l2; i++) {
@@ -476,16 +481,28 @@ let bindpostlist = function bindpostlist(qobj1, qobj2, ptt) {
             }
         }
         list.push(pageb);
+        pageb = jb.cut(pageb, function () {
+            for(i=0;i<pageb.length;i++){
+                console.log('pageb:',pageb[i].word);
+                test[1][i] = pageb[i].word; 
+            }
+            // testlist.push(pagea);
+        });
         /*pageb = jb.cut(pageb, function () {
             // console.log(pageb);
         });*/
     } else {
         list.push(pagea);
+        for(i=0;i<pagea.length;i++){
+            console.log('pagea:',pagea[i].word);
+            test[0][i] = pagea[i].word; 
+        }
     }
     console.log("postlen: " + (list[0].length + list[1].length));
     const diff = process.hrtime(time);
     console.log(`bindpostlist() Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
-    return list;
+    // console.log("list:",list);
+    return [list,test];
 }
 
 //bind two userlist

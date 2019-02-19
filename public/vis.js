@@ -198,7 +198,7 @@ function overview(data, select) {
     let tooltip2 = d3.select('body').select('.b');
 
     let ypadding = 2;
-    const colorA = d3.interpolateRdBu;
+    const colorA = d3.interpolateBlues;
     let rectA = g.selectAll('g')
         .append('g')
         .data(ovdata)
@@ -206,11 +206,12 @@ function overview(data, select) {
         .attr('class', 'A')
         .attr('data-legend', legendinfo(data.query.page1, data.query.time1, data.query.time2, data.query.user1, data.query.keyword1, data.query.keyword3, 1))
         .attr('data-legend-color', function (d) {
-            return colorA(0.25);
+            return colorA(0.5);
         })
         .attr('fill', (d, i) => {
             let diff = getBaseLog(10, d[1]) > 5 ? 5 : getBaseLog(10, d[1]) < 1 ? 1 : getBaseLog(10, d[1]);
-            let cvalue = 0.5 - (diff / 10);
+            let cvalue = 0.25 + (diff / 10);
+            // console.log("colorA:",colorA(cvalue));
             return colorA(cvalue);
         })
         .attr('stroke', 'white 5px')
@@ -254,7 +255,7 @@ function overview(data, select) {
                 .style('opacity', 0);
         });
 
-    const colorB = d3.interpolateRdBu;
+    const colorB = d3.interpolateOranges;
     let rectB = g.selectAll('g')
         .append('g')
         .data(ovdata)
@@ -262,11 +263,11 @@ function overview(data, select) {
         .attr('class', 'B')
         .attr('data-legend', legendinfo(data.query.page2, data.query.time3, data.query.time4, data.query.user2, data.query.keyword2, data.query.keyword4, 2))
         .attr('data-legend-color', function (d) {
-            return colorB(0.75);
+            return colorB(0.5);
         })
         .attr('fill', (d, i) => {
             let diff = getBaseLog(10, d[2]) > 5 ? 5 : getBaseLog(10, d[2]) < 1 ? 1 : getBaseLog(10, d[2]);
-            let cvalue = diff / 10 + 0.5;
+            let cvalue = (diff / 10) + 0.2;
             return colorB(cvalue);
         })
         .attr('stroke', 'white 5px')
@@ -687,7 +688,9 @@ function pageview(data, pagedata, select) {
             if (sorting === 'time') {
                 drawsb(g, root.sort(sortByTime));
             } else if (sorting === 'size') {
-                drawsb(g, root.sort(sortBySize));
+                root.children[0].sort(sortBySize);
+                root.children[1].sort(sortBySize);
+                drawsb(g, root);
             }
         } else if (mode === 'treemap') {
             drawtm(g, root.sort(sortBySize));
@@ -724,7 +727,7 @@ function pageview(data, pagedata, select) {
             .outerRadius(function (d) {
                 return Math.sqrt(d.y1);
             });
-
+        const pathColor = d3.interpolateRdYlGn;
         let nodes = g.selectAll('path')
             .data(root.descendants())
             .enter().append('path')
@@ -742,26 +745,24 @@ function pageview(data, pagedata, select) {
             .attr('stroke-width', 0.5)
             .attr('fill', function (d) {
                 // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                console.log(d.data.page, d.data.type, d.value, d.depth);
+               // console.log("data",d);
+            //    console.log(d.data.page, d.data.type, d.value, d.depth);
                 if(d.depth == 3){
                     let mostCommentType = findMostCommentType(d); 
                     let type = mostCommentType[0];
                     let value = mostCommentType[1];
-                    console.log("value: " + value);
-                    return commentHclColor(type, value,0.7);
-                    
+                    // return pathColor(value);
+                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.6);
                 }else if(d.depth == 1){
-                    var textPath = g.append("text")
-                        .attr("x", 6)
-                        .attr("dy", 15);
-
-                    textPath.append("textPath")
-                        .attr("xlink:href","#"+d.data.id)
-                        .attr("startOffset","25%")
-                        .text(d.data.id);
-                    return hclcolor(3, d.data.page, d.data.type, 649/* d.data.post[0]*/, 0.7);
+                    return hclcolor(3, d.data.page, d.data.type, 649/* d.data.post[0]*/, 0.6);
+                }else if(d.data.name == "neutral"){
+                    return d3.schemeSet1[1];
+                }else if(d.data.name == "push"){
+                    return d3.schemeSet3[3];
+                }else if(d.data.name == "boo"){
+                    return d3.schemeSet3[6];
                 }else{
-                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.7);
+                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.6);
                 }
             })
             .on('mouseover', (d) => {
@@ -847,7 +848,7 @@ function pageview(data, pagedata, select) {
             }).attr('fill', function (d) {
                 if (d === d.leaves()[0]) {
                     // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
+                    return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.6);
                 } else {
                     return null;
                 }
@@ -1106,31 +1107,17 @@ function pageview(data, pagedata, select) {
     }
 
     function sortBySize(a, b) {
-        return b.height - a.height || b.value - a.value;
-    }
-
-    function findMostCommentType(d){
-        if(d.children[0].data.type == 3){ //Most value is push;
-            if(d.children[1].data.type == 4){ // push > neutral > boo
-                return  [3,d.children[0].value - d.children[2].value]
-            }else{  // push > boo > neutral
-                return  [3,d.children[0].value - d.children[1].value]
+        if (a.depth ==4 ){
+            if (a.data.name == "boo" && b.data.name == "neutral"){
+                return -1;
             }
-        }else if(d.children[0].data.type == 4){ //Most value is neutral;
-            if(d.children[1].data.type == 3){ //push > boo
-                return  [3,d.children[1].value - d.children[2].value]
-            }else{ // boo > push
-                return  [5,d.children[1].value - d.children[2].value]
-            }
-        }else{ ////Most value is boo;
-            if(d.children[1].data.type == 3){ // boo > push > neutral
-                return  [5,d.children[0].value - d.children[1].value]
-            }else{ // boo > neutral > push
-                return  [5,d.children[0].value - d.children[2].value]
-            }
+            return 1;
+        }else{
+            return b.height - a.height || b.value - a.value;
         }
-
+        // return b.height - a.height || b.value - a.value;
     }
+
 }
 
 /**
@@ -2229,6 +2216,8 @@ function postdetail(data, select) {
     let initdetail = '';
     let content = {};
     let pagedata = data.data[0];
+    let worddata = data.data[3];
+    console.log(pagedata);
     // d.data.id.split('.');
     let index = select.ci.post;
     // console.log(select);
@@ -2245,7 +2234,8 @@ function postdetail(data, select) {
         content.page = page;
         content.post = post;
         content.id = pagedata[i][j].id;
-        content.word = pagedata[i][j].word;
+        content.word = worddata[i][j];
+        console.log( content.word);
         if (ptt) {
             content.url = pagedata[i][j].url;
             content.title = pagedata[i][j].article_title;
@@ -2601,6 +2591,7 @@ function activeposts(data, preselect, postselect, mode) {
         graphmode = document.querySelector('input[name="mode"]:checked').value;
         console.log(graphmode);
         if (graphmode === 'sunburst') {
+            const pathColor = d3.interpolateRdYlGn;
             let node = d3.select('#pageview').selectAll('path').datum((d) => {
                     if (!d.act) {
                         d.act = 0;
@@ -2641,7 +2632,23 @@ function activeposts(data, preselect, postselect, mode) {
                     if (d.act === 0) {
                         // console.log(chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5));
                         // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                        return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
+                        if(d.depth == 3){
+                            let mostCommentType = findMostCommentType(d); 
+                            let type = mostCommentType[0];
+                            let value = mostCommentType[1];
+                            // return pathColor(value);
+                            return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.6);
+                        }else if(d.depth == 1){
+                            return hclcolor(3, d.data.page, d.data.type, 649/* d.data.post[0]*/, 0.6);
+                        }else if(d.data.name == "neutral"){
+                            return d3.schemeSet1[1];
+                        }else if(d.data.name == "push"){
+                            return d3.schemeSet3[3];
+                        }else if(d.data.name == "boo"){
+                            return d3.schemeSet3[6];
+                        }else{
+                            return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.6);
+                        }
                     } else {
                         if (d.act > 0) {
                             // console.log(page, post, d.act);
@@ -2701,7 +2708,7 @@ function activeposts(data, preselect, postselect, mode) {
                     if (d.act === 0) {
                         if (d === d.leaves()[0]) {
                             // return chcolor(100, d.data.post[0], d.data.type, d.data.page, 0.5);
-                            return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.5);
+                            return hclcolor(3, d.data.page, d.data.type, d.value/* d.data.post[0]*/, 0.6);
                             // return '#fff';
                         } else {
                             return null;
@@ -3787,36 +3794,29 @@ function timeline(user, meta) {
             });
     }
     postg.each(drawpoints);
-    circleSize();
+    // circleSize();
     console.log('postg:');
-    // console.log(d3.select('.posts').select('.post0').select('.neutralcircle').attr('cx'));
     console.log(entries.length);
-    function circleSize(){
-        for(i = 0;i < entries.length;i++){
-            var postName = '.post'+i;
-            // var nextPostName = '.post'+(i+1);
-            var previous = d3.select('.posts').select(postName).selectAll('circle');
-            for(j = 0;j < entries.length;j++){
-                if(i ==j ){
-                    continue;
-                }
-                var nextPostName = '.post'+j;
-                var later = d3.select('.posts').select(nextPostName).selectAll('circle');
-                // console.log(postName + ' previous: '+ previous.attr('cx'));
-                // console.log(nextPostName + ' later: '+ later.attr('cx'));
-                if(later.attr('cy') == previous.attr('cy') && Math.abs(previous.attr('cx') - later.attr('cx'))< 10){
-                    console.log(Math.abs(later.attr('cx')-previous.attr('cx')));
-                    // d3.select('.posts').select(postName).select('.neutralcircle').attr('r',15);
-                    previous.attr('r','10');
-                    break;
-                    // later.attr('r','10');                
-                }else{
-                    previous.attr('r','5');
-                    // later.attr('r','5');    
-                }
-            }
-        }
-    }
+    // function circleSize(){
+    //     for(i = 0;i < entries.length;i++){
+    //         var postName = '.post'+i;
+    //         var previous = d3.select('.posts').select(postName).selectAll('circle');
+    //         for(j = 0;j < entries.length;j++){
+    //             if(i ==j ){
+    //                 continue;
+    //             }
+    //             var nextPostName = '.post'+j;
+    //             var later = d3.select('.posts').select(nextPostName).selectAll('circle');
+    //             if(later.attr('cy') == previous.attr('cy') && Math.abs(previous.attr('cx') - later.attr('cx'))< 10){
+    //                 console.log(Math.abs(later.attr('cx')-previous.attr('cx')));
+    //                 previous.attr('r','10');
+    //                 break;
+    //             }else{
+    //                 previous.attr('r','5');    
+    //             }
+    //         }
+    //     }
+    // }
     
 
     var formatMillisecond = d3.timeFormat(".%L"),
@@ -3866,7 +3866,7 @@ function timeline(user, meta) {
                     return Tscale(new Date(d.date));
                 })
                 .each(drawpoints);
-                circleSize();
+                // circleSize();
         });
 
     svg.call(zoom);
@@ -4225,37 +4225,26 @@ function docount(user, uac) {
  * @return {color}
  */
 function hclcolor(n, h, c, l, o) {
-    let parah = d3.scaleLinear().domain([-2, 2]).range([0, 360]);
-    // let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
-    let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);
-    // let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
-    let paral = d3.scaleLog().domain([1, 100000]).range([0, 150]);
-     console.log(parah(h), parac(c), paral(l));
-    return d3.hcl(parah(h), parac(c), paral(l), o);
+    let parah = d3.scaleLinear().domain([-2, 2]).range([0, 360]);   
+    let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);   
+    let paral = d3.scaleLog().domain([1, 200000]).range([0, 150]);
+    if(h==1){
+       // console.log(parah(h), parac(c), paral(l));
+        return d3.hcl(270, parac(c), 60, o);
+    }
+    //console.log(parah(h), parac(c), paral(l));
+        return d3.hcl(55, parac(c), 60, o);
 };
 
 function commentHclColor(type, l, o) {
-   // let parah = d3.scaleLinear().domain([-100, 100]).range([40, 125]);
-    // let paras = d3.scaleLinear().domain([0, 4]).range([0, 2]);
-    //let parac = d3.scaleLinear().domain([6, 1]).range([0, 100]);
-    // let paral = d3.scaleLinear().domain([0, 3]).range([0, 1]);
-    let paral = d3.scaleLinear().domain([-100, 0]).range([40, 100]);
-    if (type == 3){  // push is the most
-        if(l > 100){
-
-            return d3.hcl(50, 100, 40, o);
-        }else{
-            console.log(paral(-l))
-            return d3.hcl(50, 100, paral(-l), o);
-        }
-    }else{  // boo is the most
-        if( l > 100){
-            return d3.hcl(125, 100, 40, o);
-        }else{
-            console.log(paral(-l))
-            return d3.hcl(125, 100, paral(-l), o);
-        }
-    }
+    let value = l > 100 ? 100 : l < -100 ? -100 : l;
+    let paral = d3.scaleLinear().domain([-100, 100]).range([0, 1]);
+    let color = d3.interpolateRdYlGn;
+    console.log("l:",l);
+    console.log("value:",value);
+    console.log("paral:",paral(value));
+    console.log("color:",color(-paral(value)));
+    return -paral(value);
     
 };
 
@@ -4380,6 +4369,30 @@ d3.selection.prototype.moveToBack = function () {
     });
 };
 
+function findMostCommentType(d){
+    let origValue;
+    let paral = d3.scaleLinear().domain([-1000, 1000]).range([0.1, 0.9]);
+    let value; 
+    
+    for (i = 0; i < 3; i++){
+        if(d.children[i].data.type == 3){
+            for(j =0; j <3; j++){
+                if(d.children[j].data.type == 5){
+                    origValue = d.children[j].value - d.children[i].value > 1000 ? 1000 : 
+                                d.children[j].value - d.children[i].value < -1000 ? -1000 :
+                                d.children[j].value - d.children[i].value;
+                    // console.log("d.children[j].value - d.children[i].value:",
+                                    // d.children[j].value - d.children[i].value);
+                    value = paral(origValue); // boo minus push
+                    if(value > 0.5){
+                        return [i, value + 0.1];
+                    }
+                    return [i, value - 0.1];
+                }
+            }
+        }
+    }
+}
 /*
     var sl = sortlist.length;
     for (var i = 0; i < sl; i++) {
