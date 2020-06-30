@@ -39,9 +39,9 @@ console.log('settings loaded');
  * Start listening
  */
 if (os.platform() === "linux") {
-  app.set("port", process.env.PORT || 3000);
+  app.set("port", process.env.PORT || 3002);
 } else {
-  app.set("port", process.env.PORT || 8000);
+  app.set("port", process.env.PORT || 8002);
 }
 
 app.listen(app.get("port"), function () {
